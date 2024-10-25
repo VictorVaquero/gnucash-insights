@@ -107,7 +107,7 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
                 {table.getRowModel().rows.map(row => (
                     <tr key={row.id}>
                         {row.getVisibleCells().map(cell => (
-                            <td key={cell.id} className="border border-shark-600 p-2 ps-4">
+                            <td key={cell.id} className="border border-shark-600 p-2 ps-4 text-xs">
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </td>
                         ))}

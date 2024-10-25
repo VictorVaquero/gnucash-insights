@@ -59,7 +59,7 @@ export const TransactsPlot = (props: {data: FullTransaction[]}) => {
     }
 
     const uniqueAccounts = useMemo(()=>[...new Set(sortedData.map((d)=>d.name))], [sortedData])
-    const paths = uniqueAccounts.map((s)=> line(sortedData.filter((d) => d.name === s)))
+    //const paths = uniqueAccounts.map((s)=> line(sortedData.filter((d) => d.name === s)))
 
     return <div className='relative w-full h-full'>
         <svg className='w-full h-full' ref={svgRef}>

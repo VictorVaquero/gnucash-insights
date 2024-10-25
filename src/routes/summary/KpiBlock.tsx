@@ -17,6 +17,6 @@ export const KpiBlock = (props: {className: string, bookId: string}) => {
         <KpiCard name="Activo" value={parseNum(kpis.assets)}/>
         <KpiCard name="Corriente" value={parseNum(kpis.checking)}/>
         <KpiCard name="Ahorro" value={parseNum(kpis.savings)}/>
-        <KpiCard name="Inversion" value={'TODO'}/>
+        <KpiCard name="Inversion" value={parseNum(kpis.investments)}/>
     </section>
 }

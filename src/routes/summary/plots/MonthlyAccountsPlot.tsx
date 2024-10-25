@@ -15,6 +15,7 @@ const margin = {'t': 20, 'r': 20, 'b': 20, 'l': 50}
 const getColor = (d: string) => ({
     'Cuenta de ahorros': fullTWConfig.theme.colors.emerald[500],
     'Cuenta corriente': fullTWConfig.theme.colors.amber[500],
+    'Fondo Indexado S&P': fullTWConfig.theme.colors.red[500],
     'Metálico': fullTWConfig.theme.colors.orange[500],
     'Cuenta compartida': fullTWConfig.theme.colors.purple[500]
 }[d]?? fullTWConfig.theme.colors.gray[500])

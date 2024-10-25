@@ -30,6 +30,10 @@ const router = createBrowserRouter([
                 element: <Summary/>
             },
             {
+                path: '/investments',
+                element: <></>//<Investments/>
+            },
+            {
                 path: '/other',
                 element: <Other/>
             }

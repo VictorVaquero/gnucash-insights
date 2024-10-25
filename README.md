@@ -1,3 +1,13 @@
+# Cashpy
+
+Vite not working? Delete node_modules, run
+> yarn
+> yarn add -D vite
+
+A little tab down should be able to relaunch vite, open the server... Also to run server command directly in local do:
+
+> yarn run vite
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

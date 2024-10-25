@@ -45,7 +45,10 @@ export const SideBar = () => {
                 <Item href='/graphs' icon={faChartPie} text='Gráficos' selected={selected} setSelected={setSelected}/>
             </li>
             <li>
-                <Item href='/other' icon={faPiggyBank} text='Otros' selected={selected} setSelected={setSelected}/>
+                <Item href='/investments' icon={faPiggyBank} text='Inversiones' selected={selected} setSelected={setSelected}/>
+            </li>
+            <li>
+                <Item href='/other' icon={faPiggyBank} text='Analisis' selected={selected} setSelected={setSelected}/>
             </li>
         </ul>
     </nav>;
