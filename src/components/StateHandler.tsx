@@ -1,4 +1,4 @@
-import {Status} from "@/querys/entities";
+import {Status} from "@/services/entities";
 import {BarLoader} from "react-spinners";
 import {PropsWithChildren} from "react";
 

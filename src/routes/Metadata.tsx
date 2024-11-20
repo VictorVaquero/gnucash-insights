@@ -2,7 +2,6 @@ import {useOutletContext} from 'react-router';
 import {DropDownForm} from "@/components/DropDownForm.tsx";
 import {KpiCard} from "@/components/KpiCard.tsx";
 import {RootContext} from "@/routes/Root.tsx";
-import { DateTime } from "luxon";
 
 // TODO: Fix to datetime
 const parseDate = (dt: string) => new Date(dt).toLocaleString('es-ES', {'year': 'numeric', 'month': 'short', 'day': 'numeric'})

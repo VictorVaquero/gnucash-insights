@@ -1,3 +1,5 @@
+import S3Objects from "@/components/S3Objects"
+
 export const Home = () => {
-    return <div>Home</div>
+    return <S3Objects/> 
 }

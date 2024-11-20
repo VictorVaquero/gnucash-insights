@@ -1,7 +1,45 @@
-import { FullTransaction } from "@/querys/entities"
-import { Column, PaginationState, Table, createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
+import { FullTransaction } from "@/services/entities"
+import { Column, ColumnFiltersState, OnChangeFn, PaginationState, Table, createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
 import { DateTime } from "luxon"
 import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
+
+const deserialize = (searchParams: URLSearchParams): ColumnFiltersState=>{
+    //console.debug("Deserialize: ", searchParams);
+    return Array.from(searchParams.entries()).map(([k, v])=>({'id':k, 'value': v}));
+}
+const serialize = (filters: ColumnFiltersState): URLSearchParams=>{
+    const url = filters.map(x => [String(x.id), String(x.value)]);
+    //console.debug("Serialize: ", url);
+    return new URLSearchParams(url);
+}
+
+const useFilter = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(deserialize(searchParams));
+
+    console.debug("Current search params: ", searchParams);
+    console.debug("Current page filter: ", columnFilters);
+    
+    useEffect(()=>{
+        if(columnFilters !== deserialize(searchParams)) {
+            console.debug('Search is updated, update filters with: ', deserialize(searchParams))
+            setColumnFilters(deserialize(searchParams))
+        }
+    }, [searchParams])
+
+    const setFilters = (updater: ColumnFiltersState|((arg0: ColumnFiltersState) => ColumnFiltersState)) => {
+        console.debug('SetFilters, set search')
+        setColumnFilters((old: ColumnFiltersState)=>{
+            const newFilters = updater instanceof Function ? updater(old) : updater
+            const params = serialize(newFilters);
+            setSearchParams(params);
+            return newFilters
+        });
+    };
+
+    return [columnFilters, setFilters]
+}
 
 const columnHelper = createColumnHelper<FullTransaction>()
 
@@ -49,6 +87,8 @@ const columns = [
 ]
 
 export const TransactTable = (props: { data: FullTransaction[], setFilteredData: CallableFunction }) => {
+    
+    const [columnFilters, setColumnFilters] = useFilter();
 
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
@@ -63,8 +103,11 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         onPaginationChange: setPagination,
+        onColumnFiltersChange: setColumnFilters as OnChangeFn<ColumnFiltersState>,
         state: {
             pagination,
+            //@ts-expect-error Who knows
+            columnFilters 
         },
     })
     
@@ -73,6 +116,8 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
     useEffect(()=>{
         setFilteredData(rows.map((r)=>r.original))
     }, [setFilteredData, rows])
+
+
 
     return <div>
         <table className="border-collapse border-spacing-y-4 border-shark-600 text-white">

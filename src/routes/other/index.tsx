@@ -1,13 +1,21 @@
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext} from "react-router-dom";
 
 import { RootContext } from "@/routes/Root";
 import { TransactTable } from "./TransactsTable"
 import { StateHandler } from "@/components/StateHandler";
-import { useFullTransactions } from "@/querys/apiQueryFunctions";
+import { useFullTransactions } from "@/services/apiQueryFunctions";
 import { useState } from "react";
-import { FullTransaction } from "@/querys/entities";
+import { FullTransaction } from "@/services/entities";
 import { TransactsPlot } from "./TransactsPlot";
 import { KpiBlock } from "./KpiBlock";
+import { SearchList, SearchQuery } from "./FilterList";
+
+const queryData = [
+    { 'name': 'Gastos', 'query': { 'type': 'Gastos'} },
+    { 'name': 'Tabaco', 'query': { 'type': 'Gastos', 'description': 'Tabaco' } },
+    { 'name': 'Viajes', 'query': { 'type': 'Gastos', 'notes': 'Viaje' } },
+    { 'name': 'Deporte', 'query': { 'type': 'Gastos', 'name': 'Deporte' } }
+]
 
 export const Other = () => {
     const { bookId } = useOutletContext<RootContext>();
@@ -27,10 +35,14 @@ export const Other = () => {
         <div className="row-start-1 col-start-2">
             <KpiBlock data={filteredTransactions} />
         </div>
-        <div className='row-start-2 col-span-2'>
+        <div className='row-start-2 col-start-1'>
             <StateHandler dependencies={[transactions]}>
                 <TransactTable data={transactions.data!} setFilteredData={setFilteredTransactions} />
             </StateHandler>
+        </div>
+        <div className="row-start-2 col-start-2">
+            <h2 className="text-white">Lista de filtros</h2> 
+            <SearchList data={queryData as unknown as SearchQuery[]}/>
         </div>
     </div>
 }

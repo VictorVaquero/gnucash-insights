@@ -1,6 +1,6 @@
 import {KpiCard} from "@/components/KpiCard.tsx";
 import {parseNum} from "@/common/utils.ts";
-import { FullTransaction } from "@/querys/entities";
+import { FullTransaction } from "@/services/entities";
 import { DateTime } from "luxon";
 import * as d3 from 'd3';
 
@@ -14,6 +14,7 @@ export const KpiBlock = (props: {data: FullTransaction[]}) => {
     console.debug("KPIBLOCK:", sortedData);
     console.debug("Slice", sortedData.slice(-3));
 
+    const total_value_all_time = props.data.reduce((v, d) => v + d.value, 0);
     const mean_value_all_time = props.data.reduce((v, d) => v + d.value, 0)/sortedData.length;
     const mean_value_last_month = sortedData.slice(-1).reduce((v, d) => v + d.value, 0);
     const mean_value_last_three_months = sortedData.slice(-3).reduce((v, d) => v + d.value, 0)/3;
@@ -27,5 +28,6 @@ export const KpiBlock = (props: {data: FullTransaction[]}) => {
         <KpiCard name="Últimos 3" value={parseNum(mean_value_last_three_months)} title={parseNum(mean_value_last_three_months)}/>
         <KpiCard name="Últimos 6" value={parseNum(mean_value_last_six_months)} title={parseNum(mean_value_last_six_months)}/>
         <KpiCard name="Último año" value={parseNum(mean_value_last_year)} title={parseNum(mean_value_last_year)}/>
+        <KpiCard name="Total" value={parseNum(total_value_all_time)} title={parseNum(total_value_all_time)}/>
     </section>
 }

@@ -6,7 +6,7 @@ export const YAxis = (props: {
     scale: d3.ScaleLinear<number, number>
 }) => {
     return <g className='yaxis text-white' textAnchor='end' transform={'translate(' + props.range.x[0] + ',0)'}>
-        {props.scale.ticks(props.height / 70).map((value) =>
+        {props.scale.ticks(props.height / 40).map((value) =>
             <g className='tick' fontSize="10" key={props.scale(value)}
                transform={'translate(0,' + props.scale(value) + ')'}>
                 <line className='notch' stroke='currentColor' x2='6'></line>

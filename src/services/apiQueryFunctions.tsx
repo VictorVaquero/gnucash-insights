@@ -12,7 +12,7 @@ import {
     NetCostsYearMonth,
     ProfitLoss,
     Status,
-} from "@/querys/entities";
+} from "@/services/entities";
 
 async function fetchUrl(url: string) {
     console.log("START - Feching ", url);

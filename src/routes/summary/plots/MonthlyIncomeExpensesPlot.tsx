@@ -1,7 +1,7 @@
 import {MutableRefObject, useEffect, useMemo, useRef} from "react";
 import * as d3 from 'd3';
 
-import {IncomeExpenses} from "@/querys/entities.tsx";
+import {IncomeExpenses} from "@/services/entities";
 import {fullTWConfig, parseNum, useWindowSize} from "@/common/utils.ts";
 import {XAxis} from "@/routes/summary/plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/plots/YAxis.tsx";
@@ -9,7 +9,7 @@ import {Tooltip} from "@/routes/summary/plots/Tooltip.tsx";
 import {chooseTooltipPointLine} from "@/routes/summary/plots/tooltipFuncs.tsx";
 import {DateTime} from "luxon";
 import {StateHandler} from "@/components/StateHandler.tsx";
-import {useIncomeExpenses} from "@/querys/apiQueryFunctions.tsx";
+import {useIncomeExpenses} from "@/services/apiQueryFunctions.tsx";
 
 
 const margin = {'t': 20, 'r': 20, 'b': 20, 'l': 50}

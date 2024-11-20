@@ -10,34 +10,53 @@ import {Metadata} from "./routes/Metadata.tsx";
 import ErrorPage from "./routes/Error.tsx";
 import {Summary} from "@/routes/summary";
 import { Other } from './routes/other/index.tsx';
+import { isAuthenticated } from './services/authService.tsx';
+import { ProtectedRoute } from './routes/ProtectedRoute.tsx';
+import LoginPage from './routes/loginPage.tsx';
+import ConfirmUserPage from './routes/confirmUserPage.tsx';
+
 
 const router = createBrowserRouter([
     {
-        path: "/",
-        element: <Root/>,
+        element: <LoginPage />,
+        path: "/login"
+    },
+    {
+        element: <ConfirmUserPage />,
+        path: "/confirmLogin"
+    },
+    {
+        element: <ProtectedRoute isAuthenticated={isAuthenticated()} />,
         errorElement: <ErrorPage />,
         children: [
             {
-                path: "/home",
-                element: <Home />,
-            },
-            {
-                path: "/metadata",
-                element: <Metadata />,
-            },
-            {
-                path: '/graphs',
-                element: <Summary/>
-            },
-            {
-                path: '/investments',
-                element: <></>//<Investments/>
-            },
-            {
-                path: '/other',
-                element: <Other/>
+                path: "/",
+                element: <Root/>,
+                children: [
+                    {
+                        path: "/home",
+                        element: <Home />,
+                    },
+                    {
+                        path: "/metadata",
+                        element: <Metadata />,
+                    },
+                    {
+                        path: '/graphs',
+                        element: <Summary />
+                    },
+                    {
+                        path: '/investments',
+                        element: <></>//<Investments/>
+                    },
+                    {
+                        path: '/other',
+                        element: <Other />
+                    }
+                ]
+
             }
-        ],
+        ]
     },
 ]);
 

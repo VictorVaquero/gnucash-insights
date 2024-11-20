@@ -1,14 +1,14 @@
 import {MutableRefObject, useMemo, useRef} from "react";
 import * as d3 from 'd3';
 
-import {AssetsDebts} from "@/querys/entities.tsx";
+import {AssetsDebts} from "@/services/entities";
 import {fullTWConfig, parseNum, useWindowSize} from "@/common/utils.ts";
 import {chooseTooltipPointLine} from "@/routes/summary/plots/tooltipFuncs.tsx";
 import {XAxis} from "@/routes/summary/plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/plots/YAxis.tsx";
 import {Tooltip} from "@/routes/summary/plots/Tooltip.tsx";
 import {DateTime} from "luxon";
-import {useAssetsDebts} from "@/querys/apiQueryFunctions.tsx";
+import {useAssetsDebts} from "@/services/apiQueryFunctions.tsx";
 import {StateHandler} from "@/components/StateHandler.tsx";
 
 const margin = {'t': 20, 'r': 20, 'b': 20, 'l': 50}

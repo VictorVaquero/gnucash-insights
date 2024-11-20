@@ -8,6 +8,15 @@ A little tab down should be able to relaunch vite, open the server... Also to ru
 
 > yarn run vite
 
+## Stories
+
+For the initial setup
+> yarn storybook init 
+
+To run the server
+> yarn storybook
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

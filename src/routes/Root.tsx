@@ -3,8 +3,8 @@ import {Outlet} from "react-router-dom";
 import {Header} from "@/components/Header.tsx";
 import {useEffect, useState} from "react";
 import { DateTime } from "luxon";
-import { useBooks, useFiles } from "@/querys/apiQueryFunctions";
-import { Book, File } from "@/querys/entities";
+import { useBooks, useFiles } from "@/services/apiQueryFunctions";
+import { Book, File } from "@/services/entities";
 
 export interface RootContext {
     fileList: File[] | undefined,
@@ -17,7 +17,7 @@ export interface RootContext {
     setDomain: CallableFunction
 }
 // TODO: Fix to DateTime
-const parseDate = (dt: string) => new Date(dt).toLocaleString('es-ES', {'year': 'numeric', 'month': 'short', 'day': 'numeric'})
+//const parseDate = (dt: string) => new Date(dt).toLocaleString('es-ES', {'year': 'numeric', 'month': 'short', 'day': 'numeric'})
 
 function Root() {
     const [fileName, setFileName] = useState('');

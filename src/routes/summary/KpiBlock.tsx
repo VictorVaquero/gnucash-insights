@@ -1,5 +1,5 @@
 import {KpiCard} from "@/components/KpiCard.tsx";
-import {useKpis} from "@/querys/apiQueryFunctions.tsx";
+import {useKpis} from "@/services/apiQueryFunctions.tsx";
 import {useMemo} from "react";
 import {parseNum} from "@/common/utils.ts";
 

@@ -33,7 +33,7 @@ export const Tooltip = <D,>(props: PropsWithChildren<TooltipProps<D>>) => {
         
     if(props.onClick){
         const onClick = (event: PointerEvent) =>{
-            const [x, y, d] = props.choosePoint(event)
+            const [, , d] = props.choosePoint(event)
             if(d) props.onClick!(d)
         }
         d3.select(props.svgRef.current).on('click', onClick)
