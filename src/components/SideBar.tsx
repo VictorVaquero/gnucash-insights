@@ -9,26 +9,42 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react"
+import { Link, LinkComponent, createLink } from '@tanstack/react-router';
+import React from 'react';
 
-function Item(props: { href: string, icon: IconDefinition, text: string, selected: string, setSelected: CallableFunction, isCollapsed: boolean }) {
-    const text_color = (props.selected === props.href ? "text-sky-300" : "text-white");
-    return <Link to={props.href}
-        className="m-2 p-2 ps-4 group hover:bg-shark-600 rounded flex item-center font-light group-hover:text-white"
-        onClick={() => props.setSelected(props.href)}
+
+interface ItemLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+    icon: IconDefinition, text: string, selected: string, setSelected: CallableFunction, isCollapsed: boolean
+}
+  
+
+const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>((props, ref) => {
+    const { selected, setSelected, isCollapsed, text, ...restProps } = props;
+    const text_color = (selected === props.href ? "text-sky-300" : "text-white");
+    
+    return <Link ref={ref} {...restProps}
+        data-iscollapsed = {isCollapsed}
+        className="m-2 p-2 px-4 data-[iscollapsed=true]:w-fit group hover:bg-shark-600 rounded flex item-center font-light group-hover:text-white"
+        onClick={() => setSelected(props.href)}
     >
         <FontAwesomeIcon icon={props.icon} className="h-6 w-6 text-shark-200" />
         <AnimatePresence mode='sync'>
-            {props.isCollapsed ? <></> : 
+            {isCollapsed ? <></> : 
             <motion.span className={"ms-2 overflow-hidden whitespace-nowrap " + text_color}
-                    key={props.text}
+                    key={text}
                     initial={{ width: 0 }}
                     animate={{ width: 'auto' }}
                     exit={{ width: 0 }}
-            >{props.text}</motion.span>}
+            >{text}</motion.span>}
         </AnimatePresence>
     </Link>;
+})
+
+const CreatedLinkComponent = createLink(ItemLinkComponent)
+  
+const ItemLink: LinkComponent<typeof CreatedLinkComponent> = (props) => {
+    return <CreatedLinkComponent preload={'render'} {...props} />
 }
 
 export const SideBar = () => {
@@ -61,19 +77,22 @@ export const SideBar = () => {
                 </div>
             </li>
             <li>
-                <Item href='/home' icon={faWallet} text='Portada' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
+                <ItemLink to='/home' icon={faWallet} text='Portada' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
             </li>
             <li>
-                <Item href='/metadata' icon={faBook} text='Metadatos' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
+                <ItemLink to='/metadata' icon={faBook} text='Metadatos' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
             </li>
             <li>
-                <Item href='/graphs' icon={faChartPie} text='Gráficos' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
+                <ItemLink to='/summary' icon={faChartPie} text='Resumen' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
             </li>
             <li>
-                <Item href='/investments' icon={faPiggyBank} text='Inversiones' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
+                <ItemLink to='/expenses' icon={faChartPie} text='Gastos' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
             </li>
             <li>
-                <Item href='/other' icon={faPiggyBank} text='Analisis' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
+                <ItemLink to='/investments' icon={faPiggyBank} text='Inversiones' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
+            </li>
+            <li>
+                <ItemLink to='/analysis' icon={faPiggyBank} text='Analisis' selected={selected} setSelected={setSelected} isCollapsed={isCollapsed} />
             </li>
         </motion.ul>
     </nav>;

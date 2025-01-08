@@ -35,25 +35,6 @@ export interface AccountEnriched extends Account {
     active: boolean;
 }
 
-export interface Transaction {
-    transaction: string,
-    description?: string,
-    notes?: string,
-    posted: string,
-    created: string
-}
-
-export interface Split {
-    split: string,
-    is_reconciled: boolean,
-    value: number,
-    account: string
-}
-
-export interface FullTransaction extends Transaction, Split {
-    type: string,
-    name: string
-}
 
 export interface View {
 }
@@ -75,24 +56,8 @@ export interface AccountsHiearchy extends View {
     children?: AccountsHiearchy[]
 }
 
-export interface NetCostsYearMonth extends View {
-    account: string,
-    yearmonth: string,
-    value: number
-}
 
-export interface IncomeExpenses extends View {
-    name: 'Ingresos' | 'Gastos',
-    posted: string,
-    yearmonth: string,
-    value: number
-}
 
-export interface ProfitLoss extends View {
-    name: 'Ganancia' | 'Perdida',
-    yearmonth: string,
-    value: number
-}
 
 export interface AssetsDebts extends View {
     name: string,

@@ -18,23 +18,33 @@
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
+    "@libsql/client": "^0.14.0",
     "@storybook/addon-centered": "^5.3.21",
+    "@tanstack/react-router": "^1.94.1",
     "@tanstack/react-table": "^8.15.0",
+    "@tanstack/router-plugin": "^1.94.1",
     "@types/luxon": "^3.4.2",
+    "@types/sql.js": "^1.4.9",
     "autoprefixer": "^10.4.18",
     "d3": "^7.8.5",
+    "drizzle-orm": "^0.36.4",
     "fortawesome": "^0.0.1-security",
     "luxon": "^3.4.4",
     "motion": "^11.11.17",
+    "msw": "^2.6.5",
+    "msw-storybook-addon": "^2.0.4",
     "postcss": "^8.4.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^5.0.0",
     "react-query": "^3.39.3",
-    "react-router-dom": "^6.22.3",
     "react-spinners": "^0.13.8",
     "react-spring": "^9.7.3",
+    "sql.js": "^1.12.0",
     "storybook": "^8.4.4",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "vite-plugin-top-level-await": "^1.4.4",
+    "vite-plugin-wasm": "^3.3.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.2",
@@ -49,10 +59,10 @@
     "@types/node": "^20.11.25",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
-    "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
     "@vitejs/plugin-react": "^4.2.1",
+    "drizzle-kit": "^0.28.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
@@ -60,5 +70,10 @@
     "typescript": "^5.2.2",
     "vite": "^5.4.9",
     "webpack": "^5.90.3"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

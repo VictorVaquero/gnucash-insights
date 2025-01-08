@@ -25,3 +25,5 @@ yarn.lock
 *.sw?
 
 *storybook.log
+
+routeTree.gen.ts

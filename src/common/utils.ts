@@ -35,3 +35,7 @@ export const parseNum = (number: number, digits: number = 2, symbol: string = 'â
     return mynum.toString() + symbol
 }
 
+export const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return `Type ${error.name}: ${error.message}`
+    return String(error)
+}

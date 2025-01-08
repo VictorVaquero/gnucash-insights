@@ -6,16 +6,22 @@ import {
   SignUpCommand,
   ConfirmSignUpCommand,
   RespondToAuthChallengeCommandInput,
+  AuthenticationResultType,
 } from "@aws-sdk/client-cognito-identity-provider";
 import config from "../config.json";
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 
 
-export const getAccessToken = (): string => {
-  return sessionStorage.getItem('accessToken') as string;
+export const getAccessToken = (): string|null => {
+  return sessionStorage.getItem('accessToken');
 }
 
-export const getIdToken = (): string => {
-  return sessionStorage.getItem('idToken') as string;
+export const getIdToken = (): string|null => {
+  return sessionStorage.getItem('idToken');
+}
+
+export const getRefreshToken = (): string|null =>{
+  return sessionStorage.getItem('refreshToken');
 }
 
 export const isAuthenticated = (): boolean => {
@@ -25,6 +31,24 @@ export const isAuthenticated = (): boolean => {
 export const cognitoClient = new CognitoIdentityProviderClient({
   region: config.region,
 });
+
+const setAuthResult = (authResult: AuthenticationResultType) => {
+      sessionStorage.setItem("idToken", authResult.IdToken || "");
+      sessionStorage.setItem(
+        "accessToken",
+        authResult.AccessToken || "",
+      );
+      sessionStorage.setItem(
+        "refreshToken",
+        authResult.RefreshToken || "",
+      );
+}
+export const resetAuth = () => {
+  sessionStorage.setItem("idToken", "");
+  sessionStorage.setItem("accessToken", "",);
+  sessionStorage.setItem("refreshToken", "",);
+} 
+
 
 export const signIn = async (username: string, password: string) => {
   const params = {
@@ -38,44 +62,58 @@ export const signIn = async (username: string, password: string) => {
   try {
 
     const command = new InitiateAuthCommand(params as InitiateAuthCommandInput);
-    let { AuthenticationResult, ChallengeName, Session} = await cognitoClient.send(command);
-    console.debug("Try send auth command", AuthenticationResult, ChallengeName);
-    if (ChallengeName === 'NEW_PASSWORD_REQUIRED'){
-        console.debug("Needs to confirm password, just send the same back.");
-        const params = {
-          AuthFlow: "USER_PASSWORD_AUTH",
-          ChallengeName: 'NEW_PASSWORD_REQUIRED', 
-          ClientId: config.clientId,
-          ChallengeResponses: {
-            USERNAME: username ,
-            NEW_PASSWORD: password 
-          },
-          Session: Session
-        };
-        const command = new RespondToAuthChallengeCommand(params as RespondToAuthChallengeCommandInput);
-        const result = await cognitoClient.send(command);
-        AuthenticationResult = result.AuthenticationResult;
-        ChallengeName = result.ChallengeName;
-        Session = result.Session;
+    const result = await cognitoClient.send(command);
+    let AuthenticationResult = result.AuthenticationResult;
+
+    console.debug("AWS Try send auth command with result: ", result);
+    if (result.ChallengeName){
+      if (result.ChallengeName === 'NEW_PASSWORD_REQUIRED'){
+          console.debug("Needs to confirm password, just send the same back.");
+          const challengeResult = await newPwdRequired(username, password, result.Session!)
+          AuthenticationResult = challengeResult.AuthenticationResult;
+      }
+      else {
+        console.debug(`Challenge ${result.ChallengeName} not yet supported.`)
+        throw Error('Challenge not yet supported')
+      }
     }
     if (AuthenticationResult) {
-      console.debug("Go auth result");
-      sessionStorage.setItem("idToken", AuthenticationResult.IdToken || "");
-      sessionStorage.setItem(
-        "accessToken",
-        AuthenticationResult.AccessToken || "",
-      );
-      sessionStorage.setItem(
-        "refreshToken",
-        AuthenticationResult.RefreshToken || "",
-      );
+      console.debug("AWS Got Auth result");
+      setAuthResult(AuthenticationResult)
       return AuthenticationResult;
     }
+    throw Error('No authentication result');
   } catch (error) {
     console.error("Error signing in: ", error);
     throw error;
   }
 };
+
+const newPwdRequired = async (username: string, password: string, session: string) => {
+  console.debug("AWS Challenge: Update pwd");
+  const params = {
+    AuthFlow: "USER_PASSWORD_AUTH",
+    ChallengeName: 'NEW_PASSWORD_REQUIRED',
+    ClientId: config.clientId,
+    ChallengeResponses: {
+      USERNAME: username,
+      NEW_PASSWORD: password
+    },
+    Session: session
+  };
+
+  try {
+    const command = new RespondToAuthChallengeCommand(params as RespondToAuthChallengeCommandInput);
+    const result = await cognitoClient.send(command);
+    return result;
+  }
+  catch (error) {
+    console.error('Failure to respond to challenge', error)
+    throw error 
+  }
+}
+
+
 
 export const signUp = async (email: string, password: string) => {
   const params = {
@@ -117,14 +155,13 @@ export const confirmSignUp = async (username: string, code: string) => {
   }
 };
 
-export const refreshToken = async()=> {
-  
-  const  refreshToken =  sessionStorage.getItem('refreshToken');
+export const refreshToken = async () => {
+  console.debug("AWS Refresh token");
 
+  const refreshToken = getRefreshToken(); 
   if (!refreshToken) {
     throw new Error('No token to refresh.')
   }
-  console.log("This is the refreshToken in the cooki: ", refreshToken);
 
   const initiateAuthParams = {
     AuthFlow: 'REFRESH_TOKEN_AUTH',
@@ -134,16 +171,28 @@ export const refreshToken = async()=> {
     },
   };
 
-    const response = await cognitoClient.send(new InitiateAuthCommand(initiateAuthParams as InitiateAuthCommandInput));
-    console.log("This is the access token:", response.AuthenticationResult?.AccessToken);
-      sessionStorage.setItem("idToken", response.AuthenticationResult?.IdToken || "");
-      sessionStorage.setItem(
-        "accessToken",
-        response.AuthenticationResult?.AccessToken || "",
-      );
-      sessionStorage.setItem(
-        "refreshToken",
-        response.AuthenticationResult?.RefreshToken || "",
-      );
-
+  try {
+    const command =  new InitiateAuthCommand(initiateAuthParams as InitiateAuthCommandInput)   
+    const result = await cognitoClient.send(command);
+    if(result.ChallengeName) {
+        console.debug(`Challenge ${result.ChallengeName} not yet supported.`)
+        throw Error('Challenge not yet supported')
+    } 
+    setAuthResult(result.AuthenticationResult!)
+  }
+  catch(error) {
+    console.error("Error refreshing token: ", error);
+    throw error;
+  }
 }
+
+export const getCredentials = () => {
+  if(!isAuthenticated()) throw Error("User not authenticated, can't get credentials")
+  return fromCognitoIdentityPool({
+    clientConfig: { region: config.region },
+    identityPoolId: config.identityPoolId,
+    logins: {
+      [config.cognitoUrl]: getIdToken()!
+    },
+  })
+} 

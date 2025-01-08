@@ -1,7 +1,14 @@
 import type { Preview } from "@storybook/react";
 import '../src/index.css';
-import { MemoryRouter } from "react-router-dom";
 import React from "react";
+import { initialize, mswLoader } from 'msw-storybook-addon';
+
+/*
+ * Initializes MSW
+ * See https://github.com/mswjs/msw-storybook-addon#configuring-msw
+ * to learn how to customize it
+ */
+initialize();
     
 export const decorators = [
   (Story) => (
@@ -30,6 +37,7 @@ const preview: Preview = {
       },
     },
   },
+  loaders: [mswLoader]
 };
 
 export default preview;
