@@ -2,24 +2,18 @@ import React from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import ReactDOM from 'react-dom/client'
 import {QueryClient, QueryClientProvider} from "react-query";
-import {createRouter, RouterProvider, NotFoundRoute} from "@tanstack/react-router";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 
-import { Route as rootRoute } from './routes/__root.tsx'
 import { routeTree } from './routeTree.gen'
 
 import './index.css'
 import ErrorPage from './layout/ErrorPage.tsx';
 
-const notFoundRoute = new NotFoundRoute({
-  getParentRoute: () => rootRoute,
-  component: () => '404 Not Found',
-})
 const queryClient = new QueryClient();
 
 const router = createRouter({
   routeTree,
-  notFoundRoute,
-  context: {queryClient: queryClient}
+  context: {title: 'GnuCash'}
 })
 
 declare module '@tanstack/react-router' {
@@ -42,7 +36,6 @@ const App = () => {
             <QueryClientProvider client={queryClient}>
                 <RouterProvider router={router} />
             </QueryClientProvider>
-
         </ErrorBoundary>
     </React.StrictMode>
 }

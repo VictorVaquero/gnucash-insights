@@ -9,7 +9,9 @@ export default function ErrorPage({ error, resetErrorBoundary }: {error: Error, 
             <p>
                 <i>{error.message}</i>
             </p>
-            <button onClick={resetErrorBoundary}>Try again</button>
+            <button
+                className="p-4 rounded bg-shark-800 hover:bg-shark-600"
+                onClick={resetErrorBoundary}>Try again</button>
         </div>
     );
 }

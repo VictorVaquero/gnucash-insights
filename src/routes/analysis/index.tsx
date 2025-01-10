@@ -112,6 +112,7 @@ export const Route = createFileRoute('/analysis/')({
         search: { redirect: location.href },
       })
     }
+    return {title: 'Analysis'}
   },
   validateSearch: (
     search: Record<string, unknown>,

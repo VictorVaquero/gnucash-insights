@@ -32,10 +32,10 @@ export const SavingsBlock = (props: { className: string }) => {
 
     return <section
         className={'grid grid-cols-3 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2' + (props.className ? ' ' + props.className : '')}>
-        <KpiCard name="Ahorro medio" value={allTime.value} title={allTime.title} />
-        <KpiCard name="Último mes" value={lastMonth.value} title={lastMonth.title} />
-        <KpiCard name="Últimos 3" value={lastThreeMonths.value} title={lastThreeMonths.title} />
-        <KpiCard name="Últimos 6" value={lastSixMonths.value} title={lastSixMonths.title} />
-        <KpiCard name="Último año" value={lastYear.value} title={lastYear.title} />
+        <KpiCard name="Ahorro medio" value={allTime!.value} title={allTime!.title} />
+        <KpiCard name="Último mes" value={lastMonth!.value} title={lastMonth!.title} />
+        <KpiCard name="Últimos 3" value={lastThreeMonths!.value} title={lastThreeMonths!.title} />
+        <KpiCard name="Últimos 6" value={lastSixMonths!.value} title={lastSixMonths!.title} />
+        <KpiCard name="Último año" value={lastYear!.value} title={lastYear!.title} />
     </section>
 }

@@ -6,4 +6,5 @@ const Home = () => {
 
 export const Route = createFileRoute('/')({
   component: Home,
+  beforeLoad: ()=>({title: 'Home'})
 })

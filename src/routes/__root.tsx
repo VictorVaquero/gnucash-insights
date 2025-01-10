@@ -1,6 +1,5 @@
-import { Outlet, createRootRouteWithContext, useNavigate } from '@tanstack/react-router'
+import { Outlet, createRootRouteWithContext, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react';
-import { QueryClient } from 'react-query';
 import { DateTime } from 'luxon';
 
 import { SideBar } from "@/components/SideBar.tsx";
@@ -9,24 +8,28 @@ import { BookContext, DBContext, FileContext } from '@/contexts/GlobalContext';
 import { useFolders } from '@/hooks/useS3';
 import { useFetchDB } from '@/hooks/useDB';
 import { getBooks } from '@/db/queries';
+import { NotFoundPage } from '@/layout/NotFoundPage';
+import ErrorPage from '@/layout/ErrorPage';
 
 interface RootContext {
-   queryClient: QueryClient 
+  title: string
 }
 
 
 const RootComponent = () => {
+  const matches = useRouterState({ select: (s) => s.matches })
+  const navigate = useNavigate();
+
   const [fileName, setFileName] = useState<string>();
   const [bookId, setBookId] = useState<string>();
   const { data: folders, isError: isErrorFolders } = useFolders()
   const { data: db, isError: isErrorDB } = useFetchDB(fileName)
   
-  const navigate = useNavigate();
+  const matchWithTitle = [...matches].reverse().find((d) => d.context.title);
+  const title = matchWithTitle?.context.title || 'My App'
+  useEffect(()=>{ document.title = title; }, [title])
 
-  if (isErrorFolders || isErrorDB) navigate({
-    to: '/login',
-    search: { redirect: location.href, },
-  })
+  if ((isErrorFolders || isErrorDB) && location.pathname !== '/login') navigate({ to: '/login', search: { redirect: location.href, }, })
 
   useEffect(() => {
     if (folders && !fileName) {
@@ -71,6 +74,6 @@ const RootComponent = () => {
 export const Route = createRootRouteWithContext<RootContext>()(
   {
     component: RootComponent,
-    loader: async () => {
-    }
+    notFoundComponent: () => <NotFoundPage/>,
+    errorComponent: ({error, reset}) => <ErrorPage error={error} resetErrorBoundary={reset}/>
   });

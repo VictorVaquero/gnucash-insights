@@ -88,5 +88,6 @@ export const Route = createFileRoute('/metadata')({
         search: { redirect: location.href },
       })
     }
+    return {title: 'Metadata'}
   },
 })

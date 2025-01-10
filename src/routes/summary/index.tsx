@@ -6,7 +6,6 @@ import { KpiBlock } from '@/routes/summary/-KpiBlock.tsx'
 import { SavingsBlock } from '@/routes/summary/-SavingsBlock.tsx'
 import { MonthlyAccountsPlot } from '@/routes/summary/-plots/MonthlyAccountsPlot.tsx'
 import { MonthlyIncomeExpensesPlot } from '@/routes/summary/-plots/MonthlyIncomeExpensesPlot.tsx'
-import { MonthlyProfitLossPlot } from '@/routes/summary/-plots/MonthlyProfitLossPlot.tsx'
 import { MonthlyDetailedExpensesBarPlot } from './-plots/MonthlyDetailedExpensesBarPlot'
 import { MonthDetailedExpensesPiePlot } from './-plots/MonthDetailedExpensesPiePlot '
 import { isAuthenticated } from '@/services/authService'
@@ -63,5 +62,6 @@ export const Route = createFileRoute('/summary/')({
         search: { redirect: location.href },
       })
     }
+    return {title: 'Summary'}
   },
 })

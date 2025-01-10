@@ -76,4 +76,5 @@ export const Route = createFileRoute('/login/')({
   validateSearch: (search: Record<string, unknown>): LoginSearch => {
     return { redirect: (search.redirect as string) || '/', }
   },
+  beforeLoad: ()=>({title: 'Login'})
 })

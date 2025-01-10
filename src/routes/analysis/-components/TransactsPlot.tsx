@@ -39,7 +39,6 @@ export const TransactsPlot = (props: {data: FullTransaction[], isYearly: boolean
         'value': d3.sum(data, (d)=>d.splits.value) 
     }))
     const sortedData = [...groupedData].sort(orderyf).sort(orderxf);
-    console.debug('Sorted data', sortedData)
 
     const xDomain = [d3.min(sortedData, xf)!.minus({'month':1}), d3.max(sortedData, xf)!];
     const yDomain = [Math.min(...sortedData.map(yf)), Math.max(...sortedData.map(yf))];

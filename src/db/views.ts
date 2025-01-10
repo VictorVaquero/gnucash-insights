@@ -1,4 +1,4 @@
-import { eq, or, sum, max, sql, and, SQL, lt, gte, min, Subquery, not} from 'drizzle-orm'
+import { eq, or, sum, max, sql, and, SQL, lt, gte, min, Subquery, not, count, countDistinct} from 'drizzle-orm'
 import { integer, text, sqliteView, alias  } from "drizzle-orm/sqlite-core"
 import { accountsTable, splitsTable, timeTable, transactionsTable } from "./schema";
 import { SQLJsDatabase } from 'drizzle-orm/sql-js';
@@ -71,13 +71,14 @@ export const getAccountsQuery = (db: SQLJsDatabase, accountNames: string[], igno
     .as('accountsFiltered')
 };
 
-export const getSplitSumQuery = (db: SQLJsDatabase, bookId: string, accountNames: string[], startDate?: DateTime, endDate?: DateTime) => {
+export const getSplitSumQuery = (db: SQLJsDatabase, bookId: string, accountNames: string[], startDate?: DateTime, endDate?: DateTime, notes?: string) => {
   const ft = fullTransactionsQuery(db);
   const accounts = getAccountsQuery(db, accountNames);
   let filterQuery: SQL<unknown>|undefined = undefined; 
   if (startDate) filterQuery = and(filterQuery, gte(timeTable.ymd, startDate))
   if (endDate) filterQuery = and(filterQuery, lt(timeTable.ymd, endDate))
-  
+  if (notes) filterQuery = and(filterQuery, eq(sql<string>`substr(${ft.transactions.slNotes}, 0, ${notes.length+1})`, notes))
+
   return db
     .select({'value': sum(ft.splits.value).mapWith(Number)})
     .from(ft)
@@ -183,6 +184,39 @@ export const getTravelExpensesYearMonthQuery = (db: SQLJsDatabase, bookId: strin
 
   return db
     .select({
+      date: timeTable.yearmonth,
+      value: sql<number>`sum(abs(${ft.splits.value}))`
+    })
+    .from(ft)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`))
+    .where(and(eq(ft.transactions.bookId, bookId), eq(sql<string>`substr(${ft.transactions.slNotes}, 0, 6)`, 'Viaje') ))
+    .groupBy(timeTable.yearmonth)
+    .orderBy(timeTable.yearmonth)
+}
+export const getTravelExpensesYearQuery = (db: SQLJsDatabase, bookId: string) => {
+  const ft = fullTransactionsQuery(db);
+  const accountsFiltered = getAccountsQuery(db, ['Gastos']);
+
+  return db
+    .select({
+      date: sql<string>`cast(${timeTable.year} as text)`, 
+      value: sql<number>`sum(abs(${ft.splits.value}))`
+    })
+    .from(ft)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`))
+    .where(and(eq(ft.transactions.bookId, bookId), eq(sql<string>`substr(${ft.transactions.slNotes}, 0, 6)`, 'Viaje') ))
+    .groupBy(timeTable.year)
+    .orderBy(timeTable.year)
+}
+
+export const getTravelExpensesDetailedYearMonthQuery = (db: SQLJsDatabase, bookId: string) => {
+  const ft = fullTransactionsQuery(db);
+  const accountsFiltered = getAccountsQuery(db, ['Gastos']);
+
+  return db
+    .select({
       name: sql<string>`${ft.transactions.slNotes}`.as('name'),
       date: timeTable.yearmonth,
       value: sql<number>`sum(abs(${ft.splits.value})) `
@@ -190,15 +224,64 @@ export const getTravelExpensesYearMonthQuery = (db: SQLJsDatabase, bookId: strin
     .from(ft)
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
     .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`))
-    .where(and(eq(ft.transactions.bookId, bookId), eq(sql<string>`substr(${ft.transactions.slNotes}, 0, 4`, 'Viaje') ))
+    .where(and(eq(ft.transactions.bookId, bookId), eq(sql<string>`substr(${ft.transactions.slNotes}, 0, 6)`, 'Viaje') ))
     .groupBy(ft.transactions.slNotes, timeTable.yearmonth)
     .orderBy(ft.transactions.slNotes, timeTable.yearmonth)
 }
 
 
+export const getTravelExpensesDetailedQuery = (db: SQLJsDatabase, bookId: string) => {
+  const ft = fullTransactionsQuery(db);
+  const accountsFiltered = getAccountsQuery(db, ['Gastos']);
+
+  return db
+    .select({
+      name: sql<string>`${ft.transactions.slNotes}`.as('name'),
+      ini: min(timeTable.yearmonth)!,
+      fin: max(timeTable.yearmonth)!,
+      value: sql<number>`sum(abs(${ft.splits.value})) `
+    })
+    .from(ft)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`))
+    .where(and(eq(ft.transactions.bookId, bookId), eq(sql<string>`substr(${ft.transactions.slNotes}, 0, 6)`, 'Viaje') ))
+    .groupBy(ft.transactions.slNotes)
+    .orderBy(ft.transactions.slNotes)
+}
+
+export const getTravelKpiQuery = (db: SQLJsDatabase, bookId: string) => {
+  const ft = fullTransactionsQuery(db);
+  const accountsFiltered = getAccountsQuery(db, ['Gastos']);
+
+  return db
+    .select({
+      number: countDistinct(ft.transactions.slNotes),
+      ini: min(timeTable.yearmonth)!,
+      fin: max(timeTable.yearmonth)!
+    })
+    .from(ft)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`))
+    .where(and(eq(ft.transactions.bookId, bookId), eq(sql<string>`substr(${ft.transactions.slNotes}, 0, 6)`, 'Viaje') ))
+}
 
 
+export const getTravelExpensesByAccountQuery = (db: SQLJsDatabase, bookId: string) => {
+  const ft = fullTransactionsQuery(db);
+  const accountsFiltered = getAccountsQuery(db, ['Gastos']);
 
+  return db
+    .select({
+      name: subqueryColumnName<string>(accountsFiltered, accountsFiltered.name).as('name'),
+      value: sum(ft.splits.value).mapWith(Number)
+    })
+    .from(ft)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`))
+    .where(and(eq(ft.transactions.bookId, bookId), eq(sql<string>`substr(${ft.transactions.slNotes}, 0, 6)`, 'Viaje') ))
+    .groupBy(accountsFiltered.id)
+
+}
 
 
 
