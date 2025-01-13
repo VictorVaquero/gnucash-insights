@@ -1,4 +1,5 @@
 import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { DateTime } from "luxon";
 import { createContext } from "react";
 
 export const FileContext = createContext<{
@@ -14,3 +15,8 @@ export const BookContext = createContext<{
 export const DBContext = createContext<{
     db: SQLJsDatabase | undefined
 }>({ db: undefined })
+
+export const DomainContext = createContext<{
+    min?: DateTime<boolean>,
+    max?: DateTime<boolean>,
+}>({})

@@ -5,11 +5,11 @@ import * as d3 from 'd3';
 import {fullTWConfig, parseNum, useWindowSize} from "@/common/utils.ts";
 import {chooseTooltipPointNode} from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
-import { Account, accountsTable } from "@/db/schema";
-import { getTravelExpensesByAccountQuery } from "@/db/views";
+import { getTravelExpensesByAccountQuery } from "@/db/queries/travel";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
 
 export interface Data {
+    key: string,
     name: string,
     value: number
 }
@@ -35,7 +35,9 @@ const getColor = (d: string, v: number = 0): string => ({
     'Olvidado': fullTWConfig.theme.colors.orange[500 + v],
 }[d] ?? fullTWConfig.theme.colors.gray[500 + v])
 const yf = (d: Data) => d.value;
-const gf = (d: Data) => d.name;
+const gf = (d: Data) => d.key;
+const namef = (d: Data) => d.name;
+const color_f = (d: Data, v: number = 0) => getColor(namef(d), v)
 const orderyf = (a: Data, b: Data) => yf(a) > yf(b) ? 1 : -1;
 
 const DrawTravelExpensesPiePlot = (props: { data: Data[]}) => {
@@ -44,8 +46,6 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[]}) => {
     const range = useMemo(() => {
         return { 'x': [margin.l, width - margin.r], 'y': [height - margin.b, margin.t] }
     }, [width, height])
-
-    const color_f = (d: Data, v: number = 0) => getColor(d.name, v)
 
     const sortedData = [...props.data].sort(orderyf);
     const sumTotal = d3.sum(sortedData.map(yf));
@@ -59,10 +59,10 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[]}) => {
     const updateTooltip = (ref: MutableRefObject<HTMLDivElement | null>, d: Data) => {
         if (ref.current !== null) {
             const tooltip = d3.select(ref.current)
-            tooltip.select('#title').text(d.name)
+            tooltip.select('#title').text(namef(d))
             tooltip.select('#value').style('color', color_f(d))
-            tooltip.select('#value').text(parseNum(d.value))
-            tooltip.select('#percentage').text(parseNum(d.value/sumTotal*100, 0, '%'))
+            tooltip.select('#value').text(parseNum(yf(d)))
+            tooltip.select('#percentage').text(parseNum(yf(d)/sumTotal*100, {digits: 0, symbol: '%'}))
         }
     }
     return <div className='relative w-full h-full'>

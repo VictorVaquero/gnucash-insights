@@ -8,8 +8,9 @@ import {chooseTooltipPointLine} from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import {XAxis} from "@/routes/summary/-plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/-plots/YAxis.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
-import { getDomainQuery, getProfitLossYearMonthQuery } from "@/db/views";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
+import { getProfitLossYearMonthQuery } from "@/db/queries/summary";
+import { getDomainQuery } from "@/db/queries/global";
 
 export interface ProfitLoss {
     name: string,

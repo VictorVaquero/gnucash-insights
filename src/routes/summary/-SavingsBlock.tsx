@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 
 import {KpiCard} from "@/components/KpiCard.tsx";
 import {parseNum} from "@/common/utils.ts";
-import { getDomainQuery, getSplitSumQuery } from "@/db/views";
+import { getDomainQuery, getSplitSumQuery } from "@/db/queries/global";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
 
 const calcSavings = (db: SQLJsDatabase, bookId: string, startDate?: DateTime, endDate?: DateTime) => {
@@ -12,7 +12,7 @@ const calcSavings = (db: SQLJsDatabase, bookId: string, startDate?: DateTime, en
     const income = -getSplitSumQuery(db, bookId, ['Ingresos'], startDate, endDate).all()[0].value
     const months = startDate && endDate ? endDate.diff(startDate, ['months']).months : 1;
     
-    return { 'value': parseNum(savings / months), 'title': `${parseNum(savings)}\n${parseNum(savings / income * 100, 0, '%')}` };
+    return { 'value': parseNum(savings / months), 'title': `${parseNum(savings)}\n${parseNum(savings / income * 100, { digits: 0, symbol: '%' })}` };
 }
 
 export const SavingsBlock = (props: { className: string }) => {

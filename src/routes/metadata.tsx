@@ -4,7 +4,7 @@ import { DateTime } from 'luxon'
 import { DropDownForm } from '@/components/DropDownForm.tsx'
 import { KpiCard } from '@/components/KpiCard.tsx'
 import { useFolders } from '@/hooks/useS3'
-import { getBooks, getDomain } from '@/db/queries'
+import { getBooks, getDomain } from '@/db/queries/global'
 import { isAuthenticated } from '@/services/authService'
 import { useBook, useDB, useFile } from '@/hooks/useDB'
 

@@ -8,7 +8,8 @@ import {chooseTooltipPointNode} from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import {XAxis} from "@/routes/summary/-plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/-plots/YAxis.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
-import {getDomainQuery, getNetCostsYearMonthQuery} from "@/db/views";
+import {getDomainQuery} from "@/db/queries/global";
+import {getNetCostsYearMonthQuery} from "@/db/queries/summary";
 import { Account, accountsTable } from "@/db/schema";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
 

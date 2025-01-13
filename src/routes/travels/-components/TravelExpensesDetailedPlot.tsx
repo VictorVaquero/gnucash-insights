@@ -1,4 +1,4 @@
-import {MutableRefObject, useContext, useMemo, useRef} from "react";
+import {MutableRefObject, useMemo, useRef} from "react";
 import {BarLoader} from "react-spinners";
 import {DateTime} from "luxon";
 import * as d3 from 'd3';
@@ -8,9 +8,9 @@ import {XAxis} from "@/routes/summary/-plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/-plots/YAxis.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
 import {chooseTooltipPointNode} from "@/routes/summary/-plots/tooltipFuncs.tsx";
-import { getDomainQuery, getTravelExpensesDetailedYearMonthQuery} from "@/db/views";
-import { BookContext, DBContext } from "@/contexts/GlobalContext";
+import { useGetTravelExpensesDetailedYearMonth} from "@/db/queries/travel";
 import { getColor } from "./utils";
+import { useBook, useDB, useDomain } from "@/hooks/useDB";
 
 export interface Data { 
     name: string, 
@@ -98,15 +98,13 @@ const DrawTravelExpensesPlot = (props: { data: Data[], domain: {startDate: DateT
 
 
 export const TravelExpensesDetailedPlot = () => {
-    const { db } = useContext(DBContext);
-    const { bookId } = useContext(BookContext);
+    const { db } = useDB();
+    const { bookId } = useBook();
+    const { min, max } = useDomain()
 
-    const data = useMemo( () => !db || !bookId ? null : getTravelExpensesDetailedYearMonthQuery(db, bookId).all(), [db, bookId]);
-    const domain = useMemo( () => !db ? null : getDomainQuery(db).all()[0], [db])!;
-    console.debug("DATA", data)
+    const {data, isSuccess} = useGetTravelExpensesDetailedYearMonth(db, bookId) 
 
-    if (!db || !bookId) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7'/></div>
-    if(!domain.startDate || !domain.endDate) return <></> 
+    if (!isSuccess || min == null || max == null) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7'/></div>
 
-    return <DrawTravelExpensesPlot data={data!} domain={{startDate: domain.startDate, endDate: domain.endDate}}/>
+    return <DrawTravelExpensesPlot data={data} domain={{startDate: min, endDate: max}}/>
 }

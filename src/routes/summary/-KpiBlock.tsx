@@ -2,7 +2,7 @@ import { useContext } from "react";
 
 import {KpiCard} from "@/components/KpiCard.tsx";
 import {parseNum} from "@/common/utils.ts";
-import {getSplitSumQuery} from "@/db/views";
+import { getSplitSumQuery } from '@/db/queries/global';
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
 
 export const KpiBlock = (props: {className: string}) => {

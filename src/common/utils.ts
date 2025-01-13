@@ -22,20 +22,32 @@ export const useWindowSize = (ref: MutableRefObject<Element | null>) => {
     return size;
 }
 
-export const parseNum = (number: number, digits: number = 2, symbol: string = '€') => {
-    const mappings  = { 1e6: "M", 1e3: "K" }
-    for (const key in mappings) {
-        const ckey = (key as unknown) as keyof typeof mappings
-        if (number >= ckey) {
-            const mynum = Math.round(number / ckey * 10 ** digits) / 10 ** digits;
-            return mynum.toString() + mappings[ckey]
+export const parseNum = (number: number, options: { digits?: number, symbol?: string, fixed?: number } = {}) => {
+    const digits = options.digits ?? 2;
+    const symbol = options.symbol ?? '€' ;
+
+    const mappings = new Map([[1e6, "M"], [1e3, "K"], [1, symbol]])
+    for (const [key, symbol] of mappings) {
+        if (number >= key) {
+            const mynum = Math.round(number / key * 10 ** digits) / 10 ** digits;
+            let s = mynum.toString()
+            if (options.fixed && s.replace('.','').length > options.fixed) s = s.slice(0, s.indexOf('.')>-1 ? options.fixed+1 : options.fixed)
+            return (s[s.length-1] === '.' ? s.slice(0, s.length-1): s) + symbol 
         }
     }
+
     const mynum = Math.round(number * 10 ** digits) / 10 ** digits
-    return mynum.toString() + symbol
+    let s = mynum.toString()
+    if (options.fixed && s.replace('.', '').length > options.fixed) s = s.slice(0, s.indexOf('.') > -1 ? options.fixed + 1 : options.fixed)
+    return (s[s.length-1] === '.' ? s.slice(0, s.length-1): s) + symbol 
+    return s + symbol
 }
 
 export const getErrorMessage = (error: unknown) => {
     if (error instanceof Error) return `Type ${error.name}: ${error.message}`
     return String(error)
 }
+
+
+export const areAllUndefined = (arr: unknown[]): boolean => arr.every(item => item == null)
+export const areAnyUndefined = (arr: unknown[]): boolean => arr.some(item => item == null)

@@ -8,8 +8,10 @@ import {XAxis} from "@/routes/summary/-plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/-plots/YAxis.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
 import {chooseTooltipPointLine} from "@/routes/summary/-plots/tooltipFuncs.tsx";
-import { getDomainQuery, getTravelExpensesYearMonthQuery, getTravelExpensesYearQuery } from "@/db/views";
+import { getTravelExpensesYearMonthQuery, getTravelExpensesYearQuery } from "@/db/queries/travel";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
+import { useDomain } from "@/hooks/useDB";
+import { useQuery } from "react-query";
 
 export interface Data { 
     date: string,
@@ -101,14 +103,12 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[], dataYearly: Data[]
 export const TravelExpensesMonthlyPlot = () => {
     const { db } = useContext(DBContext);
     const { bookId } = useContext(BookContext);
+    const { min, max } = useDomain()
 
-    const data = useMemo( () => !db || !bookId ? null : getTravelExpensesYearMonthQuery(db, bookId).all(), [db, bookId]);
-    const dataYearly = useMemo( () => !db || !bookId ? null : getTravelExpensesYearQuery(db, bookId).all(), [db, bookId]);
-    const domain = useMemo( () => !db ? null : getDomainQuery(db).all()[0], [db])!;
-    console.debug("DATA", data)
+    const {data} = useQuery(['travelExpensesYearMonth', bookId], async ()=> getTravelExpensesYearMonthQuery(db!, bookId!).execute(), {enabled: [db, bookId].every(item=>Boolean(item)), staleTime: Infinity} );
+    const {data:dataYearly} = useQuery(['travelExpensesYear', bookId], async () => getTravelExpensesYearQuery(db!, bookId!).execute(), {enabled: [db, bookId].every(item=>Boolean(item)), staleTime: Infinity});
 
-    if (!db || !bookId) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7'/></div>
-    if(!domain.startDate || !domain.endDate) return <></> 
+    if (!data || !dataYearly || !min || !max) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7'/></div>
 
-    return <DrawTravelExpensesMonthlyPlot data={data!} dataYearly={dataYearly!} domain={{startDate: domain.startDate, endDate: domain.endDate}}/>
+    return <DrawTravelExpensesMonthlyPlot data={data} dataYearly={dataYearly} domain={{startDate: min, endDate: max}}/>
 }

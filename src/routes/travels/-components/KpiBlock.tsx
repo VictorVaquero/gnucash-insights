@@ -1,52 +1,52 @@
-import { useContext, useMemo } from "react";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
-import { DateTime } from "luxon";
+import { useContext } from "react";
 
-import {KpiCard} from "@/components/KpiCard.tsx";
-import {parseNum} from "@/common/utils.ts";
-import {getDomainQuery, getSplitSumQuery, getTravelKpiQuery} from "@/db/views";
+import { KpiCard } from "@/components/KpiCard.tsx";
+import { parseNum } from "@/common/utils.ts";
+import { useGetTravelExpensesKPIs, useGetUniqueTravels } from "@/db/queries/travel";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
+import { useDomain } from "@/hooks/useDB";
 
-const calcExpenses = (db: SQLJsDatabase, bookId: string, startDate?: DateTime, endDate?: DateTime) => {
-    const expenses = getSplitSumQuery(db, bookId, ['Gastos'], startDate, endDate, 'Viaje').all()[0].value
-    const all = getSplitSumQuery(db, bookId, ['Gastos'], startDate, endDate).all()[0].value
-    const months = startDate && endDate ? endDate.diff(startDate, ['months']).months : 1;
-    
-    return {'total': expenses, 'value': parseNum(expenses / months), 'title': `${parseNum(expenses)} (total)\n${parseNum(expenses / all * 100, 0, '%')} (% gasto)` };
+const calcExpenses = (total?: number, expense?: number, months?: number) => {
+    if (total == null || expense == null || months == null) return { value: 'value', title: 'title' };
+
+    return {
+        value: parseNum(expense / months),
+        title: `${parseNum(expense)} (total)\n${parseNum(expense / total * 100, { digits: 0, symbol: '%' })} (% gasto)`
+    };
 }
 
-export const KpiBlock = (props: {className?: string}) => {
-    const { db} = useContext(DBContext);
+export const KpiBlock = (props: { className?: string }) => {
+    const { db } = useContext(DBContext);
     const { bookId } = useContext(BookContext);
-    
-    const {startDate, endDate} = (!db||!bookId) ? {startDate: null, endDate: null} : getDomainQuery(db).all()[0]
-    const latestMonth =  (!db||!bookId) ? null : endDate!.startOf('month')
-    const numYears = (!db||!bookId) ? null : endDate!.diff(startDate!, ['years']).toObject().years!;
-    
-    const kpis = useMemo(() => (!db || !bookId) ? null : getTravelKpiQuery(db, bookId).all()[0], [db, bookId]);
+    const { latestMonth, numMonths, numYears } = useDomain()
 
-    const lastMonth = useMemo(() => (!db || !bookId) ? null : calcExpenses(db, bookId, latestMonth!), [db, bookId, latestMonth]);
-    const lastThreeMonths = useMemo(()=>(!db || !bookId) ? null : calcExpenses(db, bookId, latestMonth!.minus({ months: 3 }), latestMonth!), [db, bookId, latestMonth]);
-    const lastSixMonths = useMemo(()=>(!db || !bookId) ? null : calcExpenses(db, bookId, latestMonth!.minus({ months: 6 }), latestMonth!), [db, bookId, latestMonth]);
-    const lastYear = useMemo(()=>(!db || !bookId) ? null : calcExpenses(db, bookId, latestMonth!.minus({ year: 1 }), latestMonth!), [db, bookId, latestMonth]);
-    const allTime = useMemo(()=>(!db || !bookId) ? null : calcExpenses(db, bookId, startDate!, endDate!), [db, bookId, startDate, endDate]);
+    const { data: kpis } = useGetUniqueTravels(db, bookId)
+    const { data: expenses } = useGetTravelExpensesKPIs(db, bookId, latestMonth)
 
-    if(!db || !bookId) return <></> 
+    const lastMonth = calcExpenses(expenses?.total_lm, expenses?.expense_lm, 1);
+    const lastThreeMonths = calcExpenses(expenses?.total_3m, expenses?.expense_3m, 3);
+    const lastSixMonths = calcExpenses(expenses?.total_6m, expenses?.expense_6m, 6);
+    const lastYear = calcExpenses(expenses?.total_1y, expenses?.expense_1y, 12);
+    const allTime = calcExpenses(expenses?.total_all, expenses?.expense_all, numMonths ?? 1);
+
+    const travelNum = kpis?.number ?? 0;
+    const travelYearNum = kpis && numYears ? kpis?.number / numYears : 0;
+    const meanTravel = kpis && expenses ? expenses.expense_all / kpis.number : 0;
 
     return <>
         <section
             className={'grid grid-cols-3 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2' + (props.className ? ' ' + props.className : '')}>
-            <KpiCard name="Viajes totals" value={kpis!.number}/>
-            <KpiCard name="Viajes al año" value={parseNum(kpis!.number/numYears!, 2, '')}/>
-            <KpiCard name="Viaje medio" value={parseNum(allTime!.total/kpis!.number)}/>
+            <KpiCard name="Viajes totals" value={travelNum} />
+            <KpiCard name="Viajes al año" value={parseNum(travelYearNum, { digits: 2, symbol: '' })} />
+            <KpiCard name="Viaje medio" value={parseNum(meanTravel)} />
         </section>
         <section
             className={'grid grid-cols-3 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2' + (props.className ? ' ' + props.className : '')}>
-            <KpiCard name="Gasto medio" value={allTime!.value} title={allTime!.title} />
-            <KpiCard name="Último mes" value={lastMonth!.value} title={lastMonth!.title} />
-            <KpiCard name="Últimos 3" value={lastThreeMonths!.value} title={lastThreeMonths!.title} />
-            <KpiCard name="Últimos 6" value={lastSixMonths!.value} title={lastSixMonths!.title} />
-            <KpiCard name="Último año" value={lastYear!.value} title={lastYear!.title} />
+            <KpiCard name="Gasto medio" value={allTime.value} title={allTime.title} />
+            <KpiCard name="Último mes" value={lastMonth.value} title={lastMonth.title} />
+            <KpiCard name="Últimos 3" value={lastThreeMonths.value} title={lastThreeMonths.title} />
+            <KpiCard name="Últimos 6" value={lastSixMonths.value} title={lastSixMonths.title} />
+            <KpiCard name="Último año" value={lastYear.value} title={lastYear.title} />
         </section>
     </>
 }

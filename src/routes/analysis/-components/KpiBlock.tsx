@@ -11,8 +11,6 @@ export const KpiBlock = (props: {data: FullTransaction[]}) => {
         'value': d3.sum(data, (d)=>d.splits.value) 
     }))
     const sortedData = [...groupedData].sort((a,b)=> a.date > b.date ? 1 : -1);
-    console.debug("KPIBLOCK:", sortedData);
-    console.debug("Slice", sortedData.slice(-3));
 
     const total_value_all_time = props.data.reduce((v, d) => v + d.splits.value, 0);
     const mean_value_all_time = props.data.reduce((v, d) => v + d.splits.value, 0)/sortedData.length;

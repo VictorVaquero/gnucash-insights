@@ -8,8 +8,9 @@ import {XAxis} from "@/routes/summary/-plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/-plots/YAxis.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
 import {chooseTooltipPointLine} from "@/routes/summary/-plots/tooltipFuncs.tsx";
-import { getDomainQuery, getIncomeExpensesYearMonthQuery, getProfitLossYearMonthQuery, getTaxesYearMonthQuery } from "@/db/views";
+import { getIncomeExpensesYearMonthQuery, getProfitLossYearMonthQuery, getTaxesYearMonthQuery } from "@/db/queries/summary";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
+import { getDomainQuery } from "@/db/queries/global";
 
 export interface Data { 
     name: string, 
@@ -31,7 +32,7 @@ function joinArraysByKeys<
 >(
   arrs: T[], 
   commonKeys: K[]
-): MergeObjectTypes<T, K>[] { 
+): object[] { 
     return arrs[0].map(itemA => {
         return arrs.reduce((acum, arr) => {
             const matchingItem = arr.find(item =>
@@ -39,7 +40,7 @@ function joinArraysByKeys<
             );
             if (!matchingItem) throw Error('No matching data')
             return { ...acum, ...matchingItem };
-        }, itemA as MergeObjectTypes<T, K>)
+        }, itemA)
     });
 }
 
@@ -59,7 +60,7 @@ const DrawMonthlyIncomeExpensesPlot = (props: { data: Data[], profit: Data[], do
 
     const sortedData = [...props.data].sort(orderyf).sort(orderxf);
     const sortedProfit = [...props.profit].sort(orderyf).sort(orderxf);
-    const mixin: MergeObjectTypes<object[]> = [sortedData.filter((d)=>d.name==='Gastos').map((d)=>({yearmonth: d.yearmonth, expenses: d.value})), sortedProfit.map((d)=>({...d, net: d.value})), sortedData.filter((d)=>d.name==='Ingresos').map((d)=>({yearmonth: d.yearmonth, income: d.value, value:d.value})) ]
+    const mixin = [sortedData.filter((d)=>d.name==='Gastos').map((d)=>({yearmonth: d.yearmonth, expenses: d.value})), sortedProfit.map((d)=>({...d, net: d.value})), sortedData.filter((d)=>d.name==='Ingresos').map((d)=>({yearmonth: d.yearmonth, income: d.value, value:d.value})) ]
     const joined = joinArraysByKeys(mixin, ['yearmonth']);
 
 

@@ -8,7 +8,8 @@ import {chooseTooltipPointLine} from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import {XAxis} from "@/routes/summary/-plots/XAxis.tsx";
 import {YAxis} from "@/routes/summary/-plots/YAxis.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
-import { getAssetsDebtsYearMonthQuery, getDomainQuery } from "@/db/views";
+import { getDomainQuery } from "@/db/queries/global";
+import { getAssetsDebtsYearMonthQuery} from "@/db/queries/summary";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
 
 export interface AssetsDebts {

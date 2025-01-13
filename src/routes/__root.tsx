@@ -4,10 +4,10 @@ import { DateTime } from 'luxon';
 
 import { SideBar } from "@/components/SideBar.tsx";
 import { Header } from "@/components/Header.tsx";
-import { BookContext, DBContext, FileContext } from '@/contexts/GlobalContext';
+import { BookContext, DBContext, DomainContext, FileContext } from '@/contexts/GlobalContext';
 import { useFolders } from '@/hooks/useS3';
 import { useFetchDB } from '@/hooks/useDB';
-import { getBooks } from '@/db/queries';
+import { getBooks, getDomain } from '@/db/queries/global';
 import { NotFoundPage } from '@/layout/NotFoundPage';
 import ErrorPage from '@/layout/ErrorPage';
 
@@ -22,6 +22,7 @@ const RootComponent = () => {
 
   const [fileName, setFileName] = useState<string>();
   const [bookId, setBookId] = useState<string>();
+  const [domain, setDomain] = useState<{min: DateTime<boolean>, max: DateTime<boolean>}>();
   const { data: folders, isError: isErrorFolders } = useFolders()
   const { data: db, isError: isErrorDB } = useFetchDB(fileName)
   
@@ -51,6 +52,14 @@ const RootComponent = () => {
     }
   }, [db, bookId, setBookId])
 
+  useEffect(() => {
+    if (db && bookId && !domain) {
+      const domain = getDomain(db)
+      setDomain({min: domain.min!, max: domain.max!})
+      console.debug('Domain is' + domain)
+    }
+  }, [db, bookId, domain, setDomain])
+
   return <>
     <Header />
     <div className='flex h-full'>
@@ -61,7 +70,9 @@ const RootComponent = () => {
         <FileContext.Provider value={{ fileName, setFileName }}>
           <BookContext.Provider value={{ bookId, setBookId }}>
             <DBContext.Provider value={{ db }}>
-              <Outlet />
+              <DomainContext.Provider value={{min: domain?.min, max: domain?.max}}>
+                <Outlet />
+              </DomainContext.Provider>
             </DBContext.Provider>
           </BookContext.Provider>
         </FileContext.Provider>

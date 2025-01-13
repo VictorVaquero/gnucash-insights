@@ -7,10 +7,10 @@ import {fullTWConfig, parseNum, useWindowSize} from "@/common/utils.ts";
 import {chooseTooltipPointNode} from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
 import { Account, accountsTable } from "@/db/schema";
-import { getNetCostsYearMonthQuery } from "@/db/views";
+import { getNetCostsYearMonthQuery } from "@/db/queries/summary";
 import { BookContext, DBContext } from "@/contexts/GlobalContext";
 
-export interface NetCostsYearMonth {
+export interface Data {
     account: string,
     date: string,
     value: number
@@ -36,11 +36,11 @@ const getColor = (d: string, v: number = 0):string => ({
     'Gas': fullTWConfig.theme.colors.cyan[500+v],
     'Olvidado': fullTWConfig.theme.colors.orange[500+v],
 }[d]?? fullTWConfig.theme.colors.gray[500+v])
-const xf = (d: NetCostsYearMonth) => DateTime.fromISO(d.date);
-const yf = (d: NetCostsYearMonth) => d.value;
-const gf = (d: NetCostsYearMonth) => d.account;
+const xf = (d: Data) => DateTime.fromISO(d.date);
+const yf = (d: Data) => d.value;
+const gf = (d: Data) => d.account;
 
-const DrawMonthDetailedExpensesPiePlot = (props: { data: NetCostsYearMonth[], accounts: Account[], date: DateTime, hideAccounts: string[], setHideAccounts: CallableFunction}) => {
+const DrawMonthDetailedExpensesPiePlot = (props: { data: Data[], accounts: Account[], date: DateTime, hideAccounts: string[], setHideAccounts: CallableFunction}) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
     const [width, height] = useWindowSize(svgRef)
     const range = useMemo(() => {
@@ -48,19 +48,19 @@ const DrawMonthDetailedExpensesPiePlot = (props: { data: NetCostsYearMonth[], ac
     }, [width, height])
 
     const findAccount = (s: string) => props.accounts.filter((a)=>a.id === s)[0];
-    const name_f = (d: NetCostsYearMonth) => findAccount(d.account)?.name ?? 'Otros';
-    const color_f = (d: NetCostsYearMonth, v:number=0) => getColor(name_f(d), v) 
+    const name_f = (d: Data) => findAccount(d.account)?.name ?? 'Otros';
+    const color_f = (d: Data, v:number=0) => getColor(name_f(d), v) 
 
     const hide_accounts = ['']
     const filtered_data = props.data.filter(d => !hide_accounts.includes(d.account) && xf(d).year === props.date.year && xf(d).month === props.date.month)
 
     const radius = Math.min(...[range.x[1]-range.x[0], range.y[0]-range.y[1]])/2
-    const pie_generator = d3.pie<NetCostsYearMonth>().value(yf);
-    const arcGenerator = d3.arc<d3.PieArcDatum<NetCostsYearMonth>>().innerRadius(radius-25).outerRadius(radius).padAngle(0.03)
+    const pie_generator = d3.pie<Data>().value(yf);
+    const arcGenerator = d3.arc<d3.PieArcDatum<Data>>().innerRadius(radius-25).outerRadius(radius).padAngle(0.03)
 
     const dataf = (id: string)=>filtered_data.filter((d)=>(gf(d))===id)[0];
-    const choosePoint = chooseTooltipPointNode<NetCostsYearMonth>(dataf, 'path');
-    const updateTooltip = (ref: MutableRefObject<HTMLDivElement|null>, d: NetCostsYearMonth) => {
+    const choosePoint = chooseTooltipPointNode<Data>(dataf, 'path');
+    const updateTooltip = (ref: MutableRefObject<HTMLDivElement|null>, d: Data) => {
         if(ref.current !== null) {
             const tooltip = d3.select(ref.current)
             tooltip.select('#title').text(name_f(d))
@@ -69,7 +69,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: { data: NetCostsYearMonth[], ac
             tooltip.select('#value').text(parseNum(d.value))
         }
     }
-    const onClick = (d: NetCostsYearMonth) => props.setHideAccounts(d.account);
+    const onClick = (d: Data) => props.setHideAccounts(d.account);
     return <div className='relative w-full h-full'>
         <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
            <p className="text-shark-300">{props.date.toFormat('yyyy-MM')}</p> 

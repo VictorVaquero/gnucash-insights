@@ -55,7 +55,7 @@ export const SideBar = () => {
 
     return <nav className='h-full bg-shark-900'>
         <motion.ul className='flex flex-col'
-            layout='position' transition={{ duration: 0.3, delay: 0, ease: "linear" }}>
+            layout='position' transition={{ duration: 0.3, delay: 0, ease: "easeInOut" }}>
             <li>
                 <div className='flex flex-row items-center m-2 mt-4 p-2 ps-4'>
                     <Link to='/'
@@ -70,6 +70,7 @@ export const SideBar = () => {
                                     initial={{ width: 0 }}
                                     animate={{ width: 'auto' }}
                                     exit={{ width: 0 }}
+                                    transition={{ duration: 0.1, delay: 0, ease: "easeInOut" }}
                                 >Cash</motion.p>}
                         </AnimatePresence>
                     </Link>;

@@ -2,7 +2,7 @@ import { fetchDB } from "@/services/DbService";
 import { useQuery } from "react-query";
 import { useObject } from "./useS3";
 import { useContext } from "react";
-import { BookContext, DBContext, FileContext } from "@/contexts/GlobalContext";
+import { BookContext, DBContext, DomainContext, FileContext } from "@/contexts/GlobalContext";
 
 export const useFetchDB = (fileName: string|undefined) => {
     const { data: isReadyFileDb } = useObject(`gnucash/processed/${fileName}/cash.db`, Boolean(fileName))
@@ -32,4 +32,14 @@ export const useBook = () => {
     throw new Error('useBook must be used within a BookProvider');
   }
   return context
+}
+export const useDomain = () => {
+  const context = useContext(DomainContext)
+  if (!context) {
+    throw new Error('useDomain must be used within a DomainProvider');
+  }
+    const latestMonth = context.max?.startOf('month')
+    const numMonths = context.max?.diff(context.min!, ['months']).months;
+    const numYears = context.max?.diff(context.min!, ['years']).years;
+  return {...context, latestMonth, numMonths, numYears}
 }
