@@ -1,16 +1,17 @@
-import { DateTime } from 'luxon'
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { DateTime } from 'luxon'
 import { useReducer, useState } from 'react'
 
+import { accountsOptions } from '@/db/queries/global'
+import { assetsDebtsYearMonthOptions, incomeExpensesYearMonthOptions, netCostsYearMonthOptions, profitLossYearMonthOptions, taxesYearMonthOptions } from '@/db/queries/summary'
 import { KpiBlock } from '@/routes/summary/-KpiBlock.tsx'
 import { SavingsBlock } from '@/routes/summary/-SavingsBlock.tsx'
 import { MonthlyAccountsPlot } from '@/routes/summary/-plots/MonthlyAccountsPlot.tsx'
 import { MonthlyIncomeExpensesPlot } from '@/routes/summary/-plots/MonthlyIncomeExpensesPlot.tsx'
-import { MonthlyDetailedExpensesBarPlot } from './-plots/MonthlyDetailedExpensesBarPlot'
 import { MonthDetailedExpensesPiePlot } from './-plots/MonthDetailedExpensesPiePlot '
-import { isAuthenticated } from '@/services/authService'
+import { MonthlyDetailedExpensesBarPlot } from './-plots/MonthlyDetailedExpensesBarPlot'
 
-export const Summary = () => {
+const Summary = () => {
   const [date, setDate] = useState(DateTime.fromISO('2024-01'))
   const [hideAccounts, setHideAccounts] = useReducer(
     (state: string[], account: string) => {
@@ -23,8 +24,9 @@ export const Summary = () => {
   return (
     <div
       className="
-        w-full h-full p-10
-        grid grid-cols-[max-content_1fr] grid-rows-[1fr_1fr_2fr]
+        w-full md:h-full p-10 pt-0
+        flex-col
+        md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_1fr_2fr]
         gap-x-6 gap-y-6
         "
     >
@@ -55,13 +57,23 @@ export const Summary = () => {
 
 export const Route = createFileRoute('/summary/')({
   component: Summary,
-  beforeLoad: async ({ location }) => {
-    if (!isAuthenticated()) {
+  beforeLoad: async ({ location, context: { auth } }) => {
+    if (auth && !auth.isAuthenticated()) {
       throw redirect({
         to: '/login',
         search: { redirect: location.href },
       })
     }
-    return {title: 'Summary'}
+    return { title: 'Summary' }
   },
+  loader: ({ context: { queryClient, db, bookId, auth } }) => {
+    if (db && bookId && auth?.user) {
+      queryClient.ensureQueryData(accountsOptions(db, bookId))
+      queryClient.ensureQueryData(netCostsYearMonthOptions({ db, user: auth.user, bookId }))
+      queryClient.ensureQueryData(assetsDebtsYearMonthOptions({ db, user: auth.user, bookId }))
+      queryClient.ensureQueryData(incomeExpensesYearMonthOptions({ db, user: auth.user, bookId }))
+      queryClient.ensureQueryData(taxesYearMonthOptions({ db, user: auth.user, bookId }))
+      queryClient.ensureQueryData(profitLossYearMonthOptions({ db, user: auth.user, bookId }))
+    }
+  }
 })

@@ -1,15 +1,19 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
+import react from '@vitejs/plugin-react';
 import * as path from 'path';
-import wasm from "vite-plugin-wasm";
+import { defineConfig } from 'vite';
 import topLevelAwait from "vite-plugin-top-level-await";
-import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import wasm from "vite-plugin-wasm";
 
 export default defineConfig({
-  plugins: [react(), TanStackRouterVite(), wasm(), topLevelAwait(),],
+  plugins: [TanStackRouterVite(), react(), wasm(), topLevelAwait(),],
   resolve: {
     alias: [
       { find: '@', replacement: path.resolve(__dirname, 'src') },
     ],
   },
+  build: {
+    assetsDir: 'assets/'
+  },
+  base: '/dashboard/',
 })

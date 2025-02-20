@@ -1,22 +1,23 @@
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { DateTime } from 'luxon'
 
 import { DropDownForm } from '@/components/DropDownForm.tsx'
 import { KpiCard } from '@/components/KpiCard.tsx'
-import { useFolders } from '@/hooks/useS3'
+import { useAuth } from '@/contexts/useAuthContext'
 import { getBooks, getDomain } from '@/db/queries/global'
-import { isAuthenticated } from '@/services/authService'
 import { useBook, useDB, useFile } from '@/hooks/useDB'
+import { awsFolderOptions } from '@/services/s3Service'
 
-const parseDate = (dt: string): string =>
-  DateTime.fromFormat(dt.slice(0, 15), 'yyyyLLdd_hhmmss').toISODate()!
+const parseDate = (dt: string): string => DateTime.fromFormat(dt.slice(0, 15), 'yyyyLLdd_hhmmss').toISODate() ?? '';
 
 const Metadata = () => {
+  const { user, getCredentials } = useAuth()
   const { fileName, setFileName } = useFile()
-  const { bookId, setBookId } = useBook()
+  const { bookId } = useBook()
   const { db } = useDB()
 
-  const { data: folders } = useFolders()
+  const { data: folders } = useQuery(awsFolderOptions({ user, credentials: getCredentials() }))
 
   let fileOptions: { key: string; value: string }[] = []
   let bookOptions: { key: string; value: string }[] = []
@@ -37,7 +38,7 @@ const Metadata = () => {
     book = books.filter((b) => b.id === bookId)[0] ?? book
 
     const dbList = [
-      ...new Set(folders?.map((f) => f.Key!.split('/')[2])),
+      ...new Set(folders?.map((f) => f.Key).filter((k): k is string => !!k).map((k) => k.split('/')[2])),
     ].filter((n) => n)
     fileOptions =
       dbList?.map((item) => ({
@@ -47,8 +48,8 @@ const Metadata = () => {
 
     const domainDates = getDomain(db)
     domain = {
-      min: domainDates.min ? domainDates.min.toISODate()! : domain.min,
-      max: domainDates.max ? domainDates.max.toISODate()! : domain.max,
+      min: domainDates.min?.toISODate() ?? domain.min,
+      max: domainDates.max?.toISODate() ?? domain.max,
     }
   }
 
@@ -56,24 +57,25 @@ const Metadata = () => {
     <div className="p-10 flex flex-col gap-y-4">
       <DropDownForm
         id="files"
-        label="Archivo"
+        label="File"
         list={fileOptions}
         value={fileName}
         setValue={setFileName}
       />
       <DropDownForm
         id="books"
-        label="Libro"
+        label="Book Id"
         list={bookOptions}
         value={bookId}
-        setValue={setBookId}
+        //setValue={setBookId}
+        setValue={() => undefined}
       />
       <div className="mt-6 flex flex-row flex-wrap gap-x-6 gap-y-4">
-        <KpiCard name="Cuentas" value={book.countAccount} />
-        <KpiCard name="Transacciones" value={book.countTransaction} />
-        <KpiCard name="Monedas" value={book.countPrice} />
-        <KpiCard name="Fecha inicial" value={domain.min} />
-        <KpiCard name="Fecha final" value={domain.max} />
+        <KpiCard name="Accounts" value={book.countAccount} />
+        <KpiCard name="Transactions" value={book.countTransaction} />
+        <KpiCard name="Currencies" value={book.countPrice} />
+        <KpiCard name="Initial Date" value={domain.min} />
+        <KpiCard name="Final Date" value={domain.max} />
       </div>
     </div>
   )
@@ -81,13 +83,16 @@ const Metadata = () => {
 
 export const Route = createFileRoute('/metadata')({
   component: Metadata,
-  beforeLoad: async ({ location }) => {
-    if (!isAuthenticated()) {
+  beforeLoad: async () => {
+    return { title: 'Metadata' }
+  },
+  loader: async ({ location, context: { auth } }) => {
+    if (auth && !auth.isAuthenticated()) {
+      console.debug('Redirect to login')
       throw redirect({
         to: '/login',
         search: { redirect: location.href },
       })
     }
-    return {title: 'Metadata'}
   },
 })

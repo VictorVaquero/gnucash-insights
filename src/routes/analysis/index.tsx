@@ -1,14 +1,16 @@
-import { useContext, useMemo, useState } from 'react'
-import { DateTime } from 'luxon'
-
-import { TransactTable } from './-components/TransactsTable'
-import { TransactsPlot } from './-components/TransactsPlot'
-import { KpiBlock } from './-components/KpiBlock'
-import { SearchList, SearchQuery } from './-components/FilterList'
-import { fullTransactionsQuery } from '@/db/queries/global'
-import { BookContext, DBContext } from '@/contexts/GlobalContext'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { isAuthenticated } from '@/services/authService'
+import { DateTime } from 'luxon'
+import { useMemo, useState } from 'react'
+import { BarLoader } from 'react-spinners'
+
+
+import { fullTransactionsOptions } from '@/db/queries/global'
+import { useBook, useDB } from '@/hooks/useDB'
+import { SearchList, SearchQuery } from './-components/FilterList'
+import { KpiBlock } from './-components/KpiBlock'
+import { TransactsPlot } from './-components/TransactsPlot'
+import { TransactTable } from './-components/TransactsTable'
 
 export interface FullTransaction {
   accounts: {
@@ -31,51 +33,35 @@ export interface FullTransaction {
 }
 
 const queryData: SearchQuery[] = [
-  { name: 'Gastos', query: { accounts_accountType: 'EXPENSE' } },
-  {
-    name: 'Tabaco',
-    query: {
-      accounts_accountType: 'EXPENSE',
-      transactions_description: 'Tabaco',
-    },
-  },
-  {
-    name: 'Viajes',
-    query: { accounts_accountType: 'EXPENSE', transactions_slNotes: 'Viaje' },
-  },
-  {
-    name: 'Deporte',
-    query: { accounts_accountType: 'EXPENSE', accounts_name: 'Escalada' },
-  },
+  { name: 'Expenses', query: { accounts_accountType: 'EXPENSE' } },
+  { name: 'Tobaco', query: { accounts_accountType: 'EXPENSE', transactions_description: 'Tabaco', }, },
+  { name: 'Trips', query: { accounts_accountType: 'EXPENSE', transactions_slNotes: 'Viaje' }, },
+  { name: 'Sport', query: { accounts_accountType: 'EXPENSE', accounts_name: 'Escalada' }, },
 ]
 
 const Analysis = () => {
-  const { db } = useContext(DBContext)
-  const { bookId } = useContext(BookContext)
+  const { db } = useDB();
+  const { bookId } = useBook();
 
-  const [filteredTransactions, setFilteredTransactions] = useState<
-    FullTransaction[]
-  >([])
+  const [filteredTransactions, setFilteredTransactions] = useState<FullTransaction[]>([])
   const [isYearly, setIsYearly] = useState<boolean>(false)
 
-  const transactions = useMemo(
-    () => (!db ? null : db.select().from(fullTransactionsQuery(db)).all()),
-    [db],
-  )!
+  const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId))
+  const transactions = useMemo(() => data, [data])
 
-  if (!db || !bookId) return <></>
+  if (!isSuccess || !transactions) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7' /></div>
 
   return (
     <div
       className="
-        w-full h-full p-10
+        w-full h-full pr-10
         grid grid-cols-[1fr_max-content] grid-rows-2
         gap-x-6 gap-y-6
         "
     >
       <div className="row-start-1 row-end-1">
         {filteredTransactions.length !== 0 ? (
-          <TransactsPlot data={filteredTransactions!} isYearly={isYearly} />
+          <TransactsPlot data={filteredTransactions} isYearly={isYearly} />
         ) : (
           <div className="h-1/2"></div>
         )}
@@ -94,7 +80,7 @@ const Analysis = () => {
           className="m-2 p-4 group hover:bg-shark-600 rounded flex item-center font-light text-white group-hover:text-white"
           onClick={() => setIsYearly((prev) => !prev)}
         >
-          <span className="">Anual/Mensual</span>
+          <span className="">Change to {isYearly ? 'Monthly' : 'Yearly'}</span>
         </button>
         <h2 className="text-white">Lista de filtros</h2>
         <SearchList data={queryData} />
@@ -103,20 +89,27 @@ const Analysis = () => {
   )
 }
 
+
+interface AnalysisSearch {
+  query: Record<string, unknown>
+}
+
 export const Route = createFileRoute('/analysis/')({
   component: Analysis,
-  beforeLoad: async ({ location }) => {
-    if (!isAuthenticated()) {
+  beforeLoad: async ({ location, context: { auth } }) => {
+    if (auth && !auth.isAuthenticated()) {
       throw redirect({
         to: '/login',
         search: { redirect: location.href },
       })
     }
-    return {title: 'Analysis'}
+    return { title: 'Analysis' }
   },
   validateSearch: (
     search: Record<string, unknown>,
-  ): Record<string, unknown> => {
-    return search
+  ): AnalysisSearch => {
+    return {
+      query: search?.query as Record<string, unknown> ?? {}
+    }
   },
 })

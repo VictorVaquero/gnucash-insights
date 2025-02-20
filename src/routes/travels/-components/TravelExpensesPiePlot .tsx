@@ -1,12 +1,15 @@
-import {MutableRefObject, useContext, useMemo, useRef} from "react";
-import { BarLoader } from "react-spinners";
+import { useQuery } from '@tanstack/react-query';
 import * as d3 from 'd3';
+import { MutableRefObject, useMemo, useRef } from "react";
+import { BarLoader } from "react-spinners";
 
-import {fullTWConfig, parseNum, useWindowSize} from "@/common/utils.ts";
-import {chooseTooltipPointNode} from "@/routes/summary/-plots/tooltipFuncs.tsx";
-import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
-import { getTravelExpensesByAccountQuery } from "@/db/queries/travel";
-import { BookContext, DBContext } from "@/contexts/GlobalContext";
+import { getDefaultColor, getRandomColor } from '@/common/getColors';
+import { parseNum, useWindowSize } from "@/common/utils.ts";
+import { travelExpensesByAccountOptions } from "@/db/queries/travel";
+import { useBook, useDB } from '@/hooks/useDB';
+import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
+import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx";
+import { useAuth } from '@/contexts/useAuthContext';
 
 export interface Data {
     key: string,
@@ -14,33 +17,16 @@ export interface Data {
     value: number
 }
 
+const defaultAccount = 'Others'
+
 const margin = { 't': 5, 'r': 5, 'b': 5, 'l': 5 }
-// TODO: Refactor
-const getColor = (d: string, v: number = 0): string => ({
-    'Casa': fullTWConfig.theme.colors.rose[500 + v],
-    'Alquiler': fullTWConfig.theme.colors.rose[500 + v],
-    'Luz': fullTWConfig.theme.colors.rose[500 + v],
-    'Viajes': fullTWConfig.theme.colors.blue[500 + v],
-    'Compra': fullTWConfig.theme.colors.amber[700 + v],
-    'Restaurantes': fullTWConfig.theme.colors.yellow[500 + v],
-    'A domicilio': fullTWConfig.theme.colors.yellow[500 + v],
-    'Escalada': fullTWConfig.theme.colors.lime[500 + v],
-    'Gym': fullTWConfig.theme.colors.lime[500 + v],
-    'Recreación': fullTWConfig.theme.colors.green[500 + v],
-    'Bar ': fullTWConfig.theme.colors.violet[500 + v],
-    'Copas ': fullTWConfig.theme.colors.violet[500 + v],
-    'Cerveza': fullTWConfig.theme.colors.purple[500 + v],
-    'Transporte público': fullTWConfig.theme.colors.cyan[500 + v],
-    'Gas': fullTWConfig.theme.colors.cyan[500 + v],
-    'Olvidado': fullTWConfig.theme.colors.orange[500 + v],
-}[d] ?? fullTWConfig.theme.colors.gray[500 + v])
 const yf = (d: Data) => d.value;
 const gf = (d: Data) => d.key;
 const namef = (d: Data) => d.name;
-const color_f = (d: Data, v: number = 0) => getColor(namef(d), v)
+const color_f = (d: Data) => namef(d) !== defaultAccount ? getRandomColor(namef(d)) : getDefaultColor();
 const orderyf = (a: Data, b: Data) => yf(a) > yf(b) ? 1 : -1;
 
-const DrawTravelExpensesPiePlot = (props: { data: Data[]}) => {
+const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
     const [width, height] = useWindowSize(svgRef)
     const range = useMemo(() => {
@@ -62,7 +48,7 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[]}) => {
             tooltip.select('#title').text(namef(d))
             tooltip.select('#value').style('color', color_f(d))
             tooltip.select('#value').text(parseNum(yf(d)))
-            tooltip.select('#percentage').text(parseNum(yf(d)/sumTotal*100, {digits: 0, symbol: '%'}))
+            tooltip.select('#percentage').text(parseNum(yf(d) / sumTotal * 100, { digits: 0, symbol: '%' }))
         }
     }
     return <div className='relative w-full h-full'>
@@ -78,7 +64,7 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[]}) => {
                         strokeWidth='1.5'
                         shapeRendering='geometricPrecision'
                         stroke='white'
-                        d={arcGenerator(d)!}
+                        d={arcGenerator(d) ?? ''}
                     />
                 )}
             </g>
@@ -94,15 +80,13 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[]}) => {
 }
 
 export const TravelExpensesPiePlot = () => {
-    const { db } = useContext(DBContext);
-    const { bookId } = useContext(BookContext);
+    const { user } = useAuth()
+    const { db } = useDB();
+    const { bookId } = useBook();
 
-    const data = useMemo(() => !db || !bookId ? null : getTravelExpensesByAccountQuery(db, bookId).all(), [db, bookId]);
+    const { data, isSuccess } = useQuery(travelExpensesByAccountOptions({ db, user, bookId }))
 
-    if (!db || !bookId)
-        return <div className='w-full h-full flex flex-row items-center justify-center'>
-            <BarLoader color='#36d7b7' />
-        </div>
+    if (!isSuccess) return <div className='w-full h-full flex flex-row items-center justify-center'> <BarLoader color='#36d7b7' /> </div>
 
-    return <DrawTravelExpensesPiePlot data={data!} />
+    return <DrawTravelExpensesPiePlot data={data} />
 }

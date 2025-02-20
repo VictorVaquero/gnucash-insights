@@ -18,7 +18,7 @@ export function chooseTooltipPointLine<D>(
         const split = dates[u][1];
         const i = bisectY(split, y);
         const d = split[i];
-        console.debug('Event pointer: ', event, d3.pointer(event), 'X,Y: ', x, y, 'Dates: ', split, 'Selection: ', d);
+        //console.debug('Event pointer: ', event, d3.pointer(event), 'X,Y: ', x, y, 'Dates: ', split, 'Selection: ', d);
         return [xScale(xf(d)), yScale(yf(d)), d];
     }
 
@@ -32,7 +32,7 @@ export function chooseTooltipPointNode<D>(
         if(event.target instanceof Element && event.target.nodeName === node){
             const [x, y] = [d3.pointer(event)[0], d3.pointer(event)[1]]
             const d = dataf(event.target.id);
-            console.debug('Event pointer: ', d3.pointer(event), 'X,Y: ', x, y, 'Selection: ', d);
+            //console.debug('Event pointer: ', d3.pointer(event), 'X,Y: ', x, y, 'Selection: ', d);
             return [x, y, d];
         }
         return [0,0, null]

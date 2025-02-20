@@ -1,57 +1,59 @@
-import {MutableRefObject, useMemo, useRef} from "react";
-import {BarLoader} from "react-spinners";
-import {DateTime} from "luxon";
 import * as d3 from 'd3';
+import { DateTime } from "luxon";
+import { MutableRefObject, useMemo, useRef } from "react";
+import { BarLoader } from "react-spinners";
 
-import {parseNum, useWindowSize} from "@/common/utils.ts";
-import {XAxis} from "@/routes/summary/-plots/XAxis.tsx";
-import {YAxis} from "@/routes/summary/-plots/YAxis.tsx";
-import {Tooltip} from "@/routes/summary/-plots/Tooltip.tsx";
-import {chooseTooltipPointNode} from "@/routes/summary/-plots/tooltipFuncs.tsx";
-import { useGetTravelExpensesDetailedYearMonth} from "@/db/queries/travel";
-import { getColor } from "./utils";
+import { parseNum, useWindowSize } from "@/common/utils.ts";
+import { XAxis } from "@/components/XAxis";
+import { YAxis } from '@/components/YAxis';
+import { useAuth } from '@/contexts/useAuthContext';
+import { travelExpensesDetailedYearMonthOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
+import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { getColor } from "./utils";
 
-export interface Data { 
-    name: string, 
+export interface Data {
+    name: string,
     date: string,
     value: number
 }
 
 
-const margin = {'t': 20, 'r': 20, 'b': 20, 'l': 50}
+const margin = { 't': 20, 'r': 20, 'b': 20, 'l': 50 }
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const yf = (d: Data) => d.value;
 const gf = (d: Data) => d.name;
 const orderxf = (a: Data, b: Data) => xf(a) > xf(b) ? 1 : -1;
 const orderyf = (a: Data, b: Data) => yf(a) > yf(b) ? 1 : -1;
 
-const DrawTravelExpensesPlot = (props: { data: Data[], domain: {startDate: DateTime, endDate: DateTime}}) => {
+const DrawTravelExpensesPlot = (props: { data: Data[], domain: { startDate: DateTime, endDate: DateTime } }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
     const [width, height] = useWindowSize(svgRef)
     const range = useMemo(() => {
-        return {'x': [margin.l, width - margin.r], 'y': [height - margin.b, margin.t]}
+        return { 'x': [margin.l, width - margin.r], 'y': [height - margin.b, margin.t] }
     }, [width, height])
 
     const sortedData = [...props.data].sort(orderyf).sort(orderxf);
     const stack = d3.stack<[DateTime, d3.InternMap<string, Data>], string>()
         .keys(d3.union(sortedData.map(gf)))
-        .value(([,group], key) => group.get(key)?.value ?? 0)
+        .value(([, group], key) => group.get(key)?.value ?? 0)
         .order(d3.stackOrderDescending);
     const series = stack(d3.index(sortedData, xf, gf));
 
-    const xDomain = [props.domain.startDate.minus({'month': 4}), props.domain.endDate];
-    const yDomain = [0, d3.max(series.map((s)=>s.map((d)=>d[1])).flat())!]; 
+    const xDomain = [props.domain.startDate.minus({ 'month': 4 }), props.domain.endDate];
+    const yDomain = [0, d3.max(series.map((s) => s.map((d) => d[1])).flat())];
     const xScale = d3.scaleUtc(xDomain, range.x);
     const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
-    const rectWidth = width / sortedData.length *0.7
-    
-    const findAccount = (s: string) => sortedData.filter((a)=>a.name === s)[0];
+    const rectWidth = width / series.length * 1.4
 
-    const dataf = (id: string)=>props.data.filter((d)=>(gf(d)+xf(d))===id)[0];
+    const findAccount = (s: string) => sortedData.filter((a) => a.name === s)[0];
+
+    const dataf = (id: string) => props.data.filter((d) => (gf(d) + xf(d)) === id)[0];
     const choosePoint = chooseTooltipPointNode<Data>(dataf, 'rect');
-    const updateTooltip = (ref: MutableRefObject<HTMLDivElement|null>, d: Data) => {
-        if(ref.current !== null) {
+    const updateTooltip = (ref: MutableRefObject<HTMLDivElement | null>, d: Data) => {
+        if (ref.current !== null) {
             const tooltip = d3.select(ref.current)
             tooltip.select('#title').text(d.date)
             tooltip.select('#name').text(d.name)
@@ -62,8 +64,8 @@ const DrawTravelExpensesPlot = (props: { data: Data[], domain: {startDate: DateT
 
     return <div className='relative w-full h-full'>
         <svg className='w-full h-full' ref={svgRef}>
-            <XAxis width={width} range={range} xScale={xScale}/>
-            <YAxis height={height} range={range} scale={yScale}/>
+            <XAxis width={width} range={range} xScale={xScale} />
+            <YAxis height={height} range={range} scale={yScale} />
             <g className='rects'>
                 {series.map((s) =>
                     <g className='serie' key={s.key}>
@@ -75,10 +77,10 @@ const DrawTravelExpensesPlot = (props: { data: Data[], domain: {startDate: DateT
                                 strokeWidth='1.5'
                                 shapeRendering='geometricPrecision'
                                 stroke={getColor(findAccount(s.key)?.name)}
-                                  x={xScale(d.data[0]) - rectWidth / 2}
-                                  height={yScale(d[0])- yScale(d[1])}
-                                  y={yScale(d[1])}
-                                  width={rectWidth}
+                                x={xScale(d.data[0]) - rectWidth / 2}
+                                height={yScale(d[0]) - yScale(d[1])}
+                                y={yScale(d[1])}
+                                width={rectWidth}
                             />
                         )}
                     </g>
@@ -93,18 +95,19 @@ const DrawTravelExpensesPlot = (props: { data: Data[], domain: {startDate: DateT
             </div>
         </Tooltip>
     </div>
-    ;
+        ;
 }
 
 
 export const TravelExpensesDetailedPlot = () => {
+    const { user } = useAuth()
     const { db } = useDB();
     const { bookId } = useBook();
     const { min, max } = useDomain()
 
-    const {data, isSuccess} = useGetTravelExpensesDetailedYearMonth(db, bookId) 
+    const { data, isSuccess } = useQuery(travelExpensesDetailedYearMonthOptions({ db, user, bookId }));
 
-    if (!isSuccess || min == null || max == null) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7'/></div>
+    if (!isSuccess || min == null || max == null) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7' /></div>
 
-    return <DrawTravelExpensesPlot data={data} domain={{startDate: min, endDate: max}}/>
+    return <DrawTravelExpensesPlot data={data} domain={{ startDate: min, endDate: max }} />
 }

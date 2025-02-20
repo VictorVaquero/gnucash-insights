@@ -12,7 +12,7 @@ const customDateTime = customType<
     return DateTime.fromISO(value)
   },
   toDriver(value: DateTime): string {
-    return value.toISO()!
+    return value.toISO() ?? ''
   },
 });
 

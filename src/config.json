@@ -4,6 +4,35 @@
   "identityPoolId":  "eu-west-3:cd89bd5f-76aa-4f60-a2ff-fb93a72f4b66",
   "clientId": "7q9umifk44cdfavtdolspaj991",
   "cognitoUrl": "cognito-idp.eu-west-3.amazonaws.com/eu-west-3_VHPSFHPrK",
-  "bucketName": "victor-mycash"
-
+  "bucketName": "victor-mycash",
+  "folderPath": "gnucash/processed/",
+  "guestFolderPath": "guest/processed/",
+  "database": {
+    "victor": {
+      "expenses": "Gastos",
+      "income": "Ingresos",
+      "checking": "Cuenta corriente",
+      "savings": "Cuenta de ahorros",
+      "assets": "Activo",
+      "working": "Activo circulante",
+      "liability": "Pasivo",
+      "investments": "Inversiones",
+      "taxes": "Impuestos",
+      "taxesAll": ["Impuestos", "IRPF", "Seguridad Social", "Contingencias Comunes", "Desempleo", "Formacion"],
+      "tripDesc": "Viaje"
+    },
+    "guest": {
+      "expenses": "Account29",
+      "income": "Account33",
+      "checking": "Account24",
+      "savings": "Account31",
+      "assets": "Account3",
+      "working": "Account19",
+      "liability": "Account46",
+      "investments": "Account19",
+      "taxes": "Account56",
+      "taxesAll": ["Account6", "Account28", "Account5", "Account42", "Account57", "Account56"],
+      "tripDesc": "Trip"
+    }
+  }
 }

@@ -1,20 +1,26 @@
 # Cashpy
 
 Vite not working? Delete node_modules, run
-> yarn
-> yarn add -D vite
+> pnpm
+> pnpm add -D vite
 
 A little tab down should be able to relaunch vite, open the server... Also to run server command directly in local do:
 
-> yarn run vite
+> pnpm run vite
 
 ## Stories
 
 For the initial setup
-> yarn storybook init 
+> pnpm storybook init 
 
 To run the server
-> yarn storybook
+> pnpm storybook
+
+## Deploy
+
+> pnpm build
+> pnpm clean
+> pnpm run deploy
 
 
 # React + TypeScript + Vite

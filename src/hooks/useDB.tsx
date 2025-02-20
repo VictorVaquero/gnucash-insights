@@ -1,23 +1,36 @@
-import { fetchDB } from "@/services/DbService";
-import { useQuery } from "react-query";
-import { useObject } from "./useS3";
-import { useContext } from "react";
-import { BookContext, DBContext, DomainContext, FileContext } from "@/contexts/GlobalContext";
+import { useRouteContext } from "@tanstack/react-router";
+import { useContext, useEffect, useState } from "react";
 
-export const useFetchDB = (fileName: string|undefined) => {
-    const { data: isReadyFileDb } = useObject(`gnucash/processed/${fileName}/cash.db`, Boolean(fileName))
-    const result = useQuery(['DB'], fetchDB, { enabled: isReadyFileDb, staleTime: Infinity });
+import { ReturnedPromiseResolvedType } from "@/common/types";
+import { DomainContext, FileContext } from "@/contexts/GlobalContext";
+import { fetchDBOptions, removeFile, saveFile, setupDB } from "@/services/DbService";
+import { CognitoIdentityCredentialProvider } from "@aws-sdk/credential-providers";
+import { useQuery } from "@tanstack/react-query";
 
-    return result
-}
+export const useSetupDB = ({ fileName, user, credentials }: { fileName: string | undefined, user: string | undefined, credentials?: CognitoIdentityCredentialProvider, enabled?: boolean }) => {
+  const [db, setDB] = useState<ReturnedPromiseResolvedType<typeof setupDB>>();
+  const { data, isError } = useQuery(fetchDBOptions({ fileName, user, credentials }))
 
-export const useDB = () => {
-  const context = useContext(DBContext)
-  if (!context) {
-    throw new Error('useDB must be used within a DBProvider');
+  useEffect(() => {
+    const f = async () => {
+      if (data) {
+        await saveFile(data)
+        setDB(await setupDB())
+      }
+    }
+    f().catch(() => console.error('Error in db setup'))
+  }, [data])
+
+  const resetSetupDB = () => {
+    setDB(undefined);
+    removeFile()
   }
-  return context
+
+
+  return { data: db, isError, resetSetupDB }
 }
+
+export const useDB = () => { return { db: useRouteContext({ from: '__root__', select: (state) => state.db }) } }
 
 export const useFile = () => {
   const context = useContext(FileContext)
@@ -26,20 +39,15 @@ export const useFile = () => {
   }
   return context
 }
-export const useBook = () => {
-  const context = useContext(BookContext)
-  if (!context) {
-    throw new Error('useBook must be used within a BookProvider');
-  }
-  return context
-}
+export const useBook = () => { return { bookId: useRouteContext({ from: '__root__', select: (state) => state.bookId }) } }
 export const useDomain = () => {
   const context = useContext(DomainContext)
   if (!context) {
     throw new Error('useDomain must be used within a DomainProvider');
   }
-    const latestMonth = context.max?.startOf('month')
-    const numMonths = context.max?.diff(context.min!, ['months']).months;
-    const numYears = context.max?.diff(context.min!, ['years']).years;
-  return {...context, latestMonth, numMonths, numYears}
+  const { domain } = context;
+  const latestMonth = domain?.max.startOf('month')
+  const numMonths = domain?.max.diff(domain.min, ['months']).months;
+  const numYears = domain?.max.diff(domain.min, ['years']).years;
+  return { ...domain, latestMonth, numMonths, numYears }
 }

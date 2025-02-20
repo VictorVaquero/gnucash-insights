@@ -1,81 +1,71 @@
-import { Outlet, createRootRouteWithContext, useNavigate, useRouterState } from '@tanstack/react-router'
-import { useEffect, useState } from 'react';
+import { QueryClient } from '@tanstack/react-query';
+import { Outlet, createRootRouteWithContext, useRouterState } from '@tanstack/react-router';
+import { SQLJsDatabase } from 'drizzle-orm/sql-js';
 import { DateTime } from 'luxon';
+import { Suspense, useEffect, useState } from 'react';
 
-import { SideBar } from "@/components/SideBar.tsx";
+import { isMobile } from '@/common/utils';
 import { Header } from "@/components/Header.tsx";
-import { BookContext, DBContext, DomainContext, FileContext } from '@/contexts/GlobalContext';
-import { useFolders } from '@/hooks/useS3';
-import { useFetchDB } from '@/hooks/useDB';
-import { getBooks, getDomain } from '@/db/queries/global';
-import { NotFoundPage } from '@/layout/NotFoundPage';
+import { SideBar } from "@/components/SideBar.tsx";
+import { useAuthSetup } from '@/hooks/useAuth';
 import ErrorPage from '@/layout/ErrorPage';
+import { NotFoundPage } from '@/layout/NotFoundPage';
+import React from 'react';
 
-interface RootContext {
-  title: string
+interface AuthContext {
+  auth?: ReturnType<typeof useAuthSetup>
 }
+
+interface DBContext {
+  fileName?: string,
+  db?: SQLJsDatabase,
+  bookId?: string,
+  domain?: { min: DateTime, max: DateTime },
+}
+
+interface RootContext extends AuthContext, DBContext {
+  title: string,
+  queryClient: QueryClient
+}
+
+
+const TanStackRouterDevtools =
+  import.meta.env.PROD
+    ? () => null // Render nothing in production
+    : React.lazy(() =>
+      // Lazy load in development
+      import('@tanstack/router-devtools').then((res) => ({
+        default: res.TanStackRouterDevtools,
+        // For Embedded Mode
+        // default: res.TanStackRouterDevtoolsPanel
+      })),
+    )
 
 
 const RootComponent = () => {
   const matches = useRouterState({ select: (s) => s.matches })
-  const navigate = useNavigate();
+  const selected = useRouterState({ select: (state) => state.location.href, })
+  const [isCollapsed, setCollapse] = useState(true);
 
-  const [fileName, setFileName] = useState<string>();
-  const [bookId, setBookId] = useState<string>();
-  const [domain, setDomain] = useState<{min: DateTime<boolean>, max: DateTime<boolean>}>();
-  const { data: folders, isError: isErrorFolders } = useFolders()
-  const { data: db, isError: isErrorDB } = useFetchDB(fileName)
-  
   const matchWithTitle = [...matches].reverse().find((d) => d.context.title);
   const title = matchWithTitle?.context.title || 'My App'
-  useEffect(()=>{ document.title = title; }, [title])
+  // Update document title with context
+  useEffect(() => { document.title = title; }, [title])
 
-  if ((isErrorFolders || isErrorDB) && location.pathname !== '/login') navigate({ to: '/login', search: { redirect: location.href, }, })
-
+  // Hide menu when moving between options, only on mobile
   useEffect(() => {
-    if (folders && !fileName) {
-      const dbList = [...new Set(folders.map((f) => f.Key!.split('/')[2]))].filter((n) => n);
-      const parseDate = (dt: string): string => DateTime.fromFormat(dt.slice(0, 15), 'yyyyLLdd_hhmmss').toISODate()!
-      const fileOptions = dbList.map((item) => ({ key: item, value: parseDate(item), }));
-      const file = fileOptions[fileOptions.length - 1]
-      setFileName(file.key)
-      console.debug(`Set starting database file to ${file.key}`)
-    }
-  }, [folders, fileName, setFileName])
-
-  useEffect(() => {
-    if (db && !bookId) {
-      const books = getBooks(db);
-      const defaultBookId = books[0].id;
-      setBookId(defaultBookId)
-      console.debug('Set starting book id to ' + defaultBookId)
-    }
-  }, [db, bookId, setBookId])
-
-  useEffect(() => {
-    if (db && bookId && !domain) {
-      const domain = getDomain(db)
-      setDomain({min: domain.min!, max: domain.max!})
-      console.debug('Domain is' + domain)
-    }
-  }, [db, bookId, domain, setDomain])
+    if (isMobile()) setCollapse(true);
+  }, [selected])
 
   return <>
-    <Header />
-    <div className='flex h-full'>
-      <aside className='h-full'>
-        <SideBar />
-      </aside>
+    <Header isCollapsed={isCollapsed} setCollapse={setCollapse} />
+    <div className='flex h-full lg:h-[calc(100vh-6rem)] '>
+      <SideBar isCollapsed={isCollapsed} />
       <main className='h-full w-full'>
-        <FileContext.Provider value={{ fileName, setFileName }}>
-          <BookContext.Provider value={{ bookId, setBookId }}>
-            <DBContext.Provider value={{ db }}>
-              <DomainContext.Provider value={{min: domain?.min, max: domain?.max}}>
-                <Outlet />
-              </DomainContext.Provider>
-            </DBContext.Provider>
-          </BookContext.Provider>
-        </FileContext.Provider>
+        <Outlet />
+        <Suspense>
+          <TanStackRouterDevtools />
+        </Suspense>
       </main>
     </div>
   </>
@@ -85,6 +75,6 @@ const RootComponent = () => {
 export const Route = createRootRouteWithContext<RootContext>()(
   {
     component: RootComponent,
-    notFoundComponent: () => <NotFoundPage/>,
-    errorComponent: ({error, reset}) => <ErrorPage error={error} resetErrorBoundary={reset}/>
+    notFoundComponent: () => <NotFoundPage />,
+    errorComponent: ({ error, reset }) => <ErrorPage error={error} resetErrorBoundary={reset} />
   });

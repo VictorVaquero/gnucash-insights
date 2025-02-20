@@ -2,6 +2,7 @@ import type { Preview } from "@storybook/react";
 import '../src/index.css';
 import React from "react";
 import { initialize, mswLoader } from 'msw-storybook-addon';
+import { RouterProvider, createMemoryHistory, createRootRoute, createRouter } from '@tanstack/react-router';
 
 /*
  * Initializes MSW
@@ -12,9 +13,12 @@ initialize();
     
 export const decorators = [
   (Story) => (
-    <MemoryRouter initialEntries={['/']}>
-      <Story />
-    </MemoryRouter>
+    <RouterProvider router={createRouter({
+      history: createMemoryHistory(),
+      routeTree: createRootRoute({
+        component: Story
+      })
+    })} />
   ),
 ];
 

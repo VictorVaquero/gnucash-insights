@@ -1,51 +1,41 @@
-import { Column, ColumnFiltersState, OnChangeFn, PaginationState, Table, createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
-import { useEffect, useState } from "react"
+import { getRouteApi } from "@tanstack/react-router"
+import { Column, ColumnFiltersState, Table, createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, type PaginationState } from "@tanstack/react-table"
 import { DateTime } from "luxon"
-import { getRouteApi} from "@tanstack/react-router"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { FullTransaction } from ".."
+import { Checkbox } from "@/components/Checkbox"
+import { FullTransaction as Data } from ".."
 
-const deserialize = (searchParams: Record<string, unknown>): ColumnFiltersState=>{
-    return Object.entries(searchParams).map(([k, v])=>({'id':k, 'value': v}));
+const deserialize = (searchParams: Record<string, unknown>): ColumnFiltersState => {
+    return Object.entries(searchParams).map(([k, v]) => ({ 'id': k, 'value': v }));
 }
-const serialize = (filters: ColumnFiltersState): Record<string, string>=>{
+const serialize = (filters: ColumnFiltersState): Record<string, string> => {
     return Object.fromEntries(filters.map(x => [String(x.id), String(x.value)]));
 }
 
-const useFilter = () => {
+const useColumnFilters = () => {
     const routeApi = getRouteApi('/analysis/')
-    const search = routeApi.useSearch()
+    const { query } = routeApi.useSearch()
     const navigate = routeApi.useNavigate()
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(deserialize(search));
+    const columnFilters = useMemo(() => deserialize(query), [query])
 
-    console.debug("Current search params: ", search);
-    console.debug("Current page filter: ", columnFilters);
-    
-    useEffect(()=>{
-        if(columnFilters !== deserialize(search)) {
-            console.debug('Search is updated, update filters with: ', deserialize(search))
-            setColumnFilters(deserialize(search))
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search])
-
-    const setFilters = (updater: ColumnFiltersState|((arg0: ColumnFiltersState) => ColumnFiltersState)) => {
-        console.debug('SetFilters, set search')
-        setColumnFilters((old: ColumnFiltersState)=>{
-            const newFilters = updater instanceof Function ? updater(old) : updater
-            const params = serialize(newFilters);
-            navigate({search: params});
-            return newFilters
+    const setFilters = useCallback((updater: ColumnFiltersState | ((arg0: ColumnFiltersState) => ColumnFiltersState)) => {
+        navigate({
+            search: (prevSearch) => {
+                const newFilters = updater instanceof Function ? updater(deserialize(prevSearch.query)) : updater
+                const params = serialize(newFilters);
+                return { query: params }
+            }
         });
-    };
+    }, [navigate]);
 
-    return [columnFilters, setFilters]
+    return { columnFilters, setColumnFilters: setFilters }
 }
 
-const columnHelper = createColumnHelper<FullTransaction>()
-
+const columnHelper = createColumnHelper<Data>()
 const columns = [
     columnHelper.accessor('transactions.id', {
+        id: 'id',
         header: 'Id Transaccion',
         cell: info => info.getValue(),
         footer: info => info.column.id,
@@ -76,6 +66,7 @@ const columns = [
         footer: info => info.column.id,
     }),
     columnHelper.accessor('splits.account', {
+        id: 'idAccount',
         header: 'Id Cuenta',
         cell: info => info.getValue(),
         footer: info => info.column.id,
@@ -86,18 +77,38 @@ const columns = [
         footer: info => info.column.id,
         enableColumnFilter: false
     }),
+    columnHelper.display({
+        id: 'select-col',
+        header: ({ table }) => (
+            <div className="flex flex-col gap-y-4">
+                <span>Toggle</span>
+                <Checkbox
+                    checked={table.getIsAllRowsSelected()}
+                    indeterminate={table.getIsSomeRowsSelected()}
+                    onChange={table.getToggleAllRowsSelectedHandler()} //or getToggleAllPageRowsSelectedHandler
+                />
+            </div>
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                disabled={!row.getCanSelect()}
+                onChange={row.getToggleSelectedHandler()}
+            />
+        ),
+    }),
 ]
 
-export const TransactTable = (props: { data: FullTransaction[], setFilteredData: CallableFunction }) => {
-    
-    const [columnFilters, setColumnFilters] = useFilter();
+export const TransactTable = (props: { data: Data[], setFilteredData: CallableFunction }) => {
 
+    const { columnFilters, setColumnFilters } = useColumnFilters();
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
-        pageSize: 10,
+        pageSize: 8,
     })
+    const initialRowSelection = useMemo(() => props.data.reduce((d, row) => ({ ...d, [row.splits.id]: true }), {}), [props.data])
 
-    const table = useReactTable<FullTransaction>({
+    const table = useReactTable<Data>({
         data: props.data,
         columns,
         getCoreRowModel: getCoreRowModel(),
@@ -105,20 +116,26 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         onPaginationChange: setPagination,
-        onColumnFiltersChange: setColumnFilters as OnChangeFn<ColumnFiltersState>,
+        onColumnFiltersChange: setColumnFilters,
+        getRowId: row => row.splits.id,
         state: {
             pagination,
-            //@ts-expect-error Who knows
-            columnFilters 
+            columnFilters
         },
+        initialState: {
+            columnVisibility: {
+                id: false,
+                idAccount: false
+            },
+            rowSelection: initialRowSelection 
+        }
     })
-    
-    const rows = table.getFilteredRowModel().flatRows;
-    const {setFilteredData} = props;
-    useEffect(()=>{
-        setFilteredData(rows.map((r)=>r.original))
-    }, [setFilteredData, rows])
 
+    const rows = table.getSelectedRowModel().flatRows;
+    const { setFilteredData } = props;
+    useEffect(() => {
+        setFilteredData(rows.map((r) => r.original))
+    }, [setFilteredData, rows])
 
 
     return <div>
@@ -127,7 +144,7 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
                 {table.getHeaderGroups().map(hg => (
                     <tr key={hg.id}>
                         {hg.headers.map(h => (
-                            <th key={h.id}>
+                            <th key={h.id} colSpan={h.colSpan}>
                                 <div className="mb-2 p-1 ps-2">
                                     {h.isPlaceholder
                                         ? null
@@ -152,7 +169,7 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
             </thead>
             <tbody className="mt-2 bg-shark-800">
                 {table.getRowModel().rows.map(row => (
-                    <tr key={row.id}>
+                    <tr className="hover:bg-shark-600" key={row.id} onClick={row.getToggleSelectedHandler()}>
                         {row.getVisibleCells().map(cell => (
                             <td key={cell.id} className="border border-shark-600 p-2 ps-4 text-xs">
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -199,7 +216,7 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
             <span className="flex items-center gap-1">
                 <div className="text-gray-400">Page</div>
                 <span>
-                    {table.getState().pagination.pageIndex + 1} 
+                    {table.getState().pagination.pageIndex + 1}
                 </span>
                 <div className="text-gray-400">of</div>
                 <span>
@@ -232,26 +249,26 @@ export const TransactTable = (props: { data: FullTransaction[], setFilteredData:
                     </option>
                 ))}
             </select>
-            <p><span className="text-gray-400">Showing </span>{table.getRowModel().rows.length.toLocaleString()} 
+            <p><span className="text-gray-400">Showing </span>{table.getRowModel().rows.length.toLocaleString()}
                 <span className="text-gray-400"> of </span>
-            {table.getRowCount().toLocaleString()} 
+                {table.getRowCount().toLocaleString()}
                 <span className="text-gray-400"> Rows</span></p>
         </div>
     </div >
 }
 
 function Filter<D,>({ column, table, }: { column: Column<D, unknown>, table: Table<D> }) {
-  const firstValue = table
-    .getPreFilteredRowModel()
-    .flatRows[0]?.getValue(column.id)
+    const firstValue = table
+        .getPreFilteredRowModel()
+        .flatRows[0]?.getValue(column.id)
 
-  const columnFilterValue = column.getFilterValue()
+    const columnFilterValue = column.getFilterValue()
 
-  if(typeof firstValue === 'number') {
+    if (typeof firstValue === 'number') {
         return <div className="flex space-x-2 text-black">
             <input
                 type="number"
-                value={((columnFilterValue as string).split(',').map((v)=>Number(v)))?.[0] ?? ''}
+                value={((columnFilterValue as string).split(',').map((v) => Number(v)))?.[0] ?? ''}
                 onChange={e =>
                     column.setFilterValue((old: string) => String([
                         e.target.value,
@@ -263,7 +280,7 @@ function Filter<D,>({ column, table, }: { column: Column<D, unknown>, table: Tab
             />
             <input
                 type="number"
-                value={((columnFilterValue as string).split(',').map((v)=>Number(v)))?.[1] ?? ''}
+                value={((columnFilterValue as string).split(',').map((v) => Number(v)))?.[1] ?? ''}
                 onChange={e =>
                     column.setFilterValue((old: string) => String([
                         old.split(',')[0],
