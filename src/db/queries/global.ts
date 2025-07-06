@@ -1,10 +1,10 @@
-import { SQL, and, eq, gte, lt, max, min, not, or, sql, sum } from "drizzle-orm";
+import { SQL, and, eq, getTableColumns, gte, lt, max, min, not, or, sql, sum } from "drizzle-orm";
 import { SQLJsDatabase } from "drizzle-orm/sql-js";
 import { alias } from "drizzle-orm/sqlite-core";
 import { DateTime } from "luxon";
 
 import { queryOptions, skipToken } from "@tanstack/react-query";
-import { accountsTable, booksTable, splitsTable, timeTable, transactionsTable } from "../schema";
+import { accountsTable, booksTable, pricesTable, splitsTable, timeTable, transactionsTable } from "../schema";
 import { accountsClosure } from "../views";
 
 export const getBooks = (db: SQLJsDatabase) => { return db.select().from(booksTable).all(); }
@@ -58,14 +58,45 @@ export const getAccountsClosureQuery = (db: SQLJsDatabase, accountNames?: string
     .as('accountsFiltered');
 };
 
+export const maxPricesQuery = (db: SQLJsDatabase) => {
+  return db
+    .select({
+      bookId: pricesTable.bookId,
+      currency: pricesTable.currency,
+      commodity: pricesTable.commodity,
+      year: timeTable.year,
+      month: timeTable.month,
+      price: sql`COALESCE(MAX(${pricesTable.value}), 1)`.as('price'),
+    })
+    .from(timeTable)
+    .leftJoin(
+      pricesTable,
+      eq(timeTable.ymd, sql`substr(${pricesTable.time}, 0, 11)`))
+    .groupBy(pricesTable.bookId, pricesTable.currency, pricesTable.commodity, timeTable.year, timeTable.month)
+    .orderBy(pricesTable.bookId, pricesTable.currency, pricesTable.commodity, timeTable.year, timeTable.month)
+    .as('maxPrices');
+}
+
 // TODO: Don't really work in drizzle right now
 //export const fullTransactions = sqliteView("fullTransactions").as((qb) => qb.select().from(transactions).leftJoin(splits, eq(transactions.id, splits.transactionId)));
 export const fullTransactionsQuery = (db: SQLJsDatabase) => {
+  const maxPrices = maxPricesQuery(db);
   return db
-    .select()
+    .select({
+      'transactions': getTableColumns(transactionsTable),
+      'splits': {
+        ...getTableColumns(splitsTable),
+        value: sql<number>`${splitsTable.value} * COALESCE(${maxPrices.price}, 1)`.as('value'),
+      },
+      'accounts': getTableColumns(accountsTable),
+    })
     .from(transactionsTable)
     .innerJoin(splitsTable, eq(transactionsTable.id, splitsTable.transactionId))
     .innerJoin(accountsTable, eq(accountsTable.id, splitsTable.account))
+    .leftJoin(
+      timeTable,
+      eq(timeTable.ymd, sql`substr(${transactionsTable.datePosted}, 0, 11)`))
+    .leftJoin(maxPrices, and(eq(maxPrices.commodity, transactionsTable.currencyId), eq(timeTable.year, maxPrices.year), eq(timeTable.month, maxPrices.month)))
     .as('ft');
 };
 export const fullTransactionsOptions = (db?: SQLJsDatabase, bookId?: string) => {

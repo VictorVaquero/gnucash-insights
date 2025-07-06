@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { parseNum } from "@/common/utils.ts";
 import { KpiCard } from "@/components/KpiCard.tsx";
 import { useAuth } from "@/contexts/useAuthContext";
-import { splitSumOptions } from '@/db/queries/global';
+import { fullTransactionsQuery, splitSumOptions } from '@/db/queries/global';
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 
@@ -20,6 +20,8 @@ export const KpiBlock = (props: { className: string }) => {
     const { data: savings } = useQuery(splitSumOptions(db, bookId, [dbconf.savings]))
     const { data: assets } = useQuery(splitSumOptions(db, bookId, [dbconf.assets]))
     const { data: investments } = useQuery(splitSumOptions(db, bookId, [dbconf.investments]))
+
+    if (db) console.log(db.select().from(fullTransactionsQuery(db)).execute())
 
     return <section className={'grid grid-cols-2 md:grid-cols-3 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2' + (props.className ? ' ' + props.className : '')}>
         <KpiCard name="Net" value={parseNum(netGain ?? 0)} />
