@@ -1,37 +1,50 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { DateTime } from 'luxon'
-import { useReducer, useState } from 'react'
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { DateTime } from "luxon";
 
-import { accountsOptions } from '@/db/queries/global'
-import { assetsDebtsYearMonthOptions, incomeExpensesYearMonthOptions, netCostsYearMonthOptions, profitLossYearMonthOptions, taxesYearMonthOptions } from '@/db/queries/summary'
-import { KpiBlock } from '@/routes/summary/-KpiBlock.tsx'
-import { SavingsBlock } from '@/routes/summary/-SavingsBlock.tsx'
-import { MonthlyAccountsPlot } from '@/routes/summary/-plots/MonthlyAccountsPlot.tsx'
-import { MonthlyIncomeExpensesPlot } from '@/routes/summary/-plots/MonthlyIncomeExpensesPlot.tsx'
-import { MonthDetailedExpensesPiePlot } from './-plots/MonthDetailedExpensesPiePlot '
-import { MonthlyDetailedExpensesBarPlot } from './-plots/MonthlyDetailedExpensesBarPlot'
+import { accountsOptions } from "@/db/queries/global";
+import { netCostsYearMonthOptions } from "@/db/queries/summary";
+import { useBook, useDB } from "@/hooks/useDB";
+import { useQuery } from "@tanstack/react-query";
+import { useReducer, useState } from "react";
+
+import { MultiSelectTree } from "@/components/accountsDropdown";
+import DateRangeSlider from "@/components/dateSlider";
+import {
+  assetsDebtsYearMonthOptions,
+  incomeExpensesYearMonthOptions,
+  profitLossYearMonthOptions,
+  taxesYearMonthOptions,
+} from "@/db/queries/summary";
+import { KpiBlock } from "@/routes/summary/-KpiBlock.tsx";
+import { SavingsBlock } from "@/routes/summary/-SavingsBlock.tsx";
+import { MonthlyAccountsPlot } from "@/routes/summary/-plots/MonthlyAccountsPlot.tsx";
+import { MonthlyIncomeExpensesPlot } from "@/routes/summary/-plots/MonthlyIncomeExpensesPlot.tsx";
+import { MonthDetailedExpensesPiePlot } from "./-plots/MonthDetailedExpensesPiePlot ";
+import { MonthlyDetailedExpensesBarPlot } from "./-plots/MonthlyDetailedExpensesBarPlot";
 
 const Summary = () => {
-  const [date, setDate] = useState(DateTime.fromISO('2024-01'))
+  const [date, setDate] = useState(DateTime.fromISO("2024-01"));
+  const { db } = useDB();
+  const { bookId } = useBook();
+  const { data: accounts } = useQuery(accountsOptions(db, bookId));
   const [hideAccounts, setHideAccounts] = useReducer(
     (state: string[], account: string) => {
-      if (state.includes(account)) return state.filter((s) => s !== account)
-      return [...state, account]
+      if (state.includes(account)) return state.filter((s) => s !== account);
+      return [...state, account];
     },
-    [],
-  )
-
+    []
+  );
 
   return (
     <div
       className="
         w-full md:h-full p-10 pt-0
         flex-col
-        md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_1fr_2fr]
+        md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_2fr_2fr_4fr]
         gap-x-6 gap-y-6
         "
     >
-      <div className="row-start-1 row-end-4 flex flex-col gap-y-6">
+      <div className="row-start-1 row-end-5 flex flex-col gap-y-6">
         <KpiBlock className="" />
         <SavingsBlock className="" />
         <MonthDetailedExpensesPiePlot
@@ -41,40 +54,62 @@ const Summary = () => {
         />
       </div>
       <div className="col-start-2 row-start-1">
-        <MonthlyAccountsPlot />
+        <MultiSelectTree
+          options={accounts ?? []}
+          selected={hideAccounts}
+          onToggle={setHideAccounts}
+        />
+        <DateRangeSlider
+          start="2024-01-01"
+          end="2024-12-31"
+          onChange={(range) => console.log(range)}
+        />
       </div>
       <div className="col-start-2 row-start-2">
-        <MonthlyIncomeExpensesPlot />
+        <MonthlyAccountsPlot />
       </div>
       <div className="col-start-2 row-start-3">
+        <MonthlyIncomeExpensesPlot />
+      </div>
+      <div className="col-start-2 row-start-4">
         <MonthlyDetailedExpensesBarPlot
           setDate={setDate}
           hideAccounts={hideAccounts}
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export const Route = createFileRoute('/summary/')({
+export const Route = createFileRoute("/summary/")({
   component: Summary,
   beforeLoad: async ({ location, context: { auth } }) => {
     if (auth && !auth.isAuthenticated()) {
       throw redirect({
-        to: '/login',
+        to: "/login",
         search: { redirect: location.href },
-      })
+      });
     }
-    return { title: 'Summary' }
+    return { title: "Summary" };
   },
   loader: ({ context: { queryClient, db, bookId, auth } }) => {
     if (db && bookId && auth?.user) {
-      queryClient.ensureQueryData(accountsOptions(db, bookId))
-      queryClient.ensureQueryData(netCostsYearMonthOptions({ db, user: auth.user, bookId }))
-      queryClient.ensureQueryData(assetsDebtsYearMonthOptions({ db, user: auth.user, bookId }))
-      queryClient.ensureQueryData(incomeExpensesYearMonthOptions({ db, user: auth.user, bookId }))
-      queryClient.ensureQueryData(taxesYearMonthOptions({ db, user: auth.user, bookId }))
-      queryClient.ensureQueryData(profitLossYearMonthOptions({ db, user: auth.user, bookId }))
+      queryClient.ensureQueryData(accountsOptions(db, bookId));
+      queryClient.ensureQueryData(
+        netCostsYearMonthOptions({ db, user: auth.user, bookId })
+      );
+      queryClient.ensureQueryData(
+        assetsDebtsYearMonthOptions({ db, user: auth.user, bookId })
+      );
+      queryClient.ensureQueryData(
+        incomeExpensesYearMonthOptions({ db, user: auth.user, bookId })
+      );
+      queryClient.ensureQueryData(
+        taxesYearMonthOptions({ db, user: auth.user, bookId })
+      );
+      queryClient.ensureQueryData(
+        profitLossYearMonthOptions({ db, user: auth.user, bookId })
+      );
     }
-  }
-})
+  },
+});

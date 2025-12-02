@@ -4,7 +4,7 @@ import { MutableRefObject, useMemo, useRef } from "react";
 import { BarLoader } from 'react-spinners';
 
 import { getDefaultColor, getRandomColor } from '@/common/getColors';
-import { fullTWConfig, parseNum, useWindowSize } from "@/common/utils.ts";
+import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
 import { useAuth } from '@/contexts/useAuthContext';
 import { accountsOptions } from '@/db/queries/global';
 import { netCostsYearMonthOptions } from "@/db/queries/summary";
@@ -25,6 +25,7 @@ const xf = (d: Data) => DateTime.fromISO(d.date);
 const yf = (d: Data) => d.value;
 const gf = (d: Data) => d.account;
 const defaultAccount = 'Others'
+const gray = twStyles.getPropertyValue("--color-gray-400");
 
 export const DrawMonthDetailedExpensesPiePlot = (props: { data: Data[], accounts: Account[], date: DateTime, hideAccounts: string[], setHideAccounts: CallableFunction }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
@@ -64,7 +65,7 @@ export const DrawMonthDetailedExpensesPiePlot = (props: { data: Data[], accounts
         <svg className='w-full h-full' ref={svgRef}>
             <g className='paths cursor-pointer' transform={'translate(' + width / 2 + ',' + height / 2 + ')'}>
                 {pie_generator(filtered_data).map((d) =>
-                    <path fill={props.hideAccounts.includes(d.data.account) ? fullTWConfig.theme.colors.gray[400] : color_f(d.data)}
+                    <path fill={props.hideAccounts.includes(d.data.account) ? gray : color_f(d.data)}
                         key={gf(d.data)}
                         id={gf(d.data)}
                         strokeWidth='1.5'
