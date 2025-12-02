@@ -12,11 +12,16 @@ import { useBook, useDB, useDomain } from "@/hooks/useDB";
 const useSavings = (db: SQLJsDatabase | undefined, dbconf: ReturnType<typeof getConfig>, bookId: string | undefined, startDate?: DateTime, endDate?: DateTime) => {
     const { data: savings } = useQuery(splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income], startDate, endDate))
     const { data: income } = useQuery(splitSumOptions(db, bookId, [dbconf.income], startDate, endDate))
+    const { data: taxes } = useQuery(splitSumOptions(db, bookId, [dbconf.taxes], startDate, endDate))
+
     const months = startDate && endDate ? endDate.diff(startDate, ['months']).months : 1;
+    
+    const meanSavings = -(savings ?? 0) / months;
+    const netIncome = (income ?? 0) + (taxes ?? 0);
 
     return {
-        'value': parseNum(-(savings ?? 0) / months),
-        'title': `${parseNum(-(savings ?? 0))}/${parseNum(income ?? 0)}\n${parseNum((savings ?? 0) / (income ?? 1) * 100, { digits: 0, symbol: '%' })}`
+        'value': parseNum(meanSavings),
+        'title': `${parseNum(-(savings ?? 0))}/${parseNum(netIncome)}\n${parseNum((savings ?? 0) / netIncome * 100, { digits: 0, symbol: '%' })}`
     };
 }
 
