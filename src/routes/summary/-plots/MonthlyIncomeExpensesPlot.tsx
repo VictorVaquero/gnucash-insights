@@ -12,10 +12,11 @@ import {
   profitLossYearMonthOptions,
   taxesYearMonthOptions,
 } from "@/db/queries/summary";
-import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useBook, useDB } from "@/hooks/useDB";
 import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
 import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import { useQuery } from "@tanstack/react-query";
+import { useSummaryPageContext } from "../-summaryPageContext";
 
 type colorType = "g" | "r";
 export interface Data {
@@ -77,8 +78,17 @@ const DrawMonthlyIncomeExpensesPlot = (props: {
     };
   }, [width, height]);
 
-  const sortedData = [...props.data].sort(orderyf).sort(orderxf);
-  const sortedProfit = [...props.profit].sort(orderyf).sort(orderxf);
+  const sortedData = [...props.data]
+    .sort(orderyf)
+    .sort(orderxf)
+    .filter((d) => d.yearmonth >= props.domain.startDate.toString())
+    .filter((d) => d.yearmonth <= props.domain.endDate.toString());
+  const sortedProfit = [...props.profit]
+    .sort(orderyf)
+    .sort(orderxf)
+    .filter((d) => d.yearmonth >= props.domain.startDate.toString())
+    .filter((d) => d.yearmonth <= props.domain.endDate.toString());
+
   const mixin = [
     sortedData
       .filter((d) => d.type === "r")
@@ -212,7 +222,7 @@ export const MonthlyIncomeExpensesPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
-  const { min: startDate, max: endDate } = useDomain();
+  const { dateRange } = useSummaryPageContext();
 
   const { data: dataFull, isSuccess } = useQuery(
     incomeExpensesYearMonthOptions({ db, user, bookId })
@@ -229,11 +239,12 @@ export const MonthlyIncomeExpensesPlot = () => {
         ...d,
         value:
           d.value -
-          (taxes.find((t) => t.yearmonth === d.yearmonth)?.value || 0),
+          (d.type == "r" ? 1 : 1) *
+            (taxes.find((t) => t.yearmonth === d.yearmonth)?.value || 0),
       }));
   }, [dataFull, taxes, isSuccess, isSuccessTaxes]);
 
-  if (!data || !isSuccessProfit || !startDate || !endDate)
+  if (!data || !isSuccessProfit || !dateRange)
     return (
       <div className="w-full h-full flex flex-row items-center justify-center">
         <BarLoader color="#36d7b7" />
@@ -244,7 +255,7 @@ export const MonthlyIncomeExpensesPlot = () => {
     <DrawMonthlyIncomeExpensesPlot
       data={data as Data[]}
       profit={profit as Data[]}
-      domain={{ startDate, endDate }}
+      domain={{ startDate: dateRange.from, endDate: dateRange.to }}
     />
   );
 };

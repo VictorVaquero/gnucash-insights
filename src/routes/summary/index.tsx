@@ -1,14 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { DateTime } from "luxon";
 
 import { accountsOptions } from "@/db/queries/global";
 import { netCostsYearMonthOptions } from "@/db/queries/summary";
-import { useBook, useDB } from "@/hooks/useDB";
-import { useQuery } from "@tanstack/react-query";
-import { useReducer, useState } from "react";
 
-import { MultiSelectTree } from "@/components/accountsDropdown";
-import DateRangeSlider from "@/components/dateSlider";
 import {
   assetsDebtsYearMonthOptions,
   incomeExpensesYearMonthOptions,
@@ -19,23 +13,15 @@ import { KpiBlock } from "@/routes/summary/-KpiBlock.tsx";
 import { SavingsBlock } from "@/routes/summary/-SavingsBlock.tsx";
 import { MonthlyAccountsPlot } from "@/routes/summary/-plots/MonthlyAccountsPlot.tsx";
 import { MonthlyIncomeExpensesPlot } from "@/routes/summary/-plots/MonthlyIncomeExpensesPlot.tsx";
+import { SettingsBlock } from "./-SettingsBlock";
 import { MonthDetailedExpensesPiePlot } from "./-plots/MonthDetailedExpensesPiePlot ";
 import { MonthlyDetailedExpensesBarPlot } from "./-plots/MonthlyDetailedExpensesBarPlot";
+import { SummaryPageContextProvider } from "./-summaryPageContext";
 
 const Summary = () => {
-  const [date, setDate] = useState(DateTime.fromISO("2024-01"));
-  const { db } = useDB();
-  const { bookId } = useBook();
-  const { data: accounts } = useQuery(accountsOptions(db, bookId));
-  const [hideAccounts, setHideAccounts] = useReducer(
-    (state: string[], account: string) => {
-      if (state.includes(account)) return state.filter((s) => s !== account);
-      return [...state, account];
-    },
-    []
-  );
 
   return (
+    <SummaryPageContextProvider>
     <div
       className="
         w-full md:h-full p-10 pt-0
@@ -47,23 +33,10 @@ const Summary = () => {
       <div className="row-start-1 row-end-5 flex flex-col gap-y-6">
         <KpiBlock className="" />
         <SavingsBlock className="" />
-        <MonthDetailedExpensesPiePlot
-          date={date}
-          hideAccounts={hideAccounts}
-          setHideAccounts={setHideAccounts}
-        />
+        <MonthDetailedExpensesPiePlot />
       </div>
       <div className="col-start-2 row-start-1">
-        <MultiSelectTree
-          options={accounts ?? []}
-          selected={hideAccounts}
-          onToggle={setHideAccounts}
-        />
-        <DateRangeSlider
-          start="2024-01-01"
-          end="2024-12-31"
-          onChange={(range) => console.log(range)}
-        />
+        <SettingsBlock/>
       </div>
       <div className="col-start-2 row-start-2">
         <MonthlyAccountsPlot />
@@ -72,12 +45,11 @@ const Summary = () => {
         <MonthlyIncomeExpensesPlot />
       </div>
       <div className="col-start-2 row-start-4">
-        <MonthlyDetailedExpensesBarPlot
-          setDate={setDate}
-          hideAccounts={hideAccounts}
-        />
+        <MonthlyDetailedExpensesBarPlot />
       </div>
     </div>
+
+    </SummaryPageContextProvider>
   );
 };
 

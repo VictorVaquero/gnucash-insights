@@ -1,11 +1,12 @@
-import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useSummaryPageContext } from "@/routes/summary/-summaryPageContext";
+import React, { useMemo } from "react";
 
 interface Option {
   id: string;
@@ -13,17 +14,20 @@ interface Option {
   parent?: string | null;
 }
 
+type OptionExtended = Option & { children: OptionExtended[] };
+
 interface MultiSelectTreeProps {
   options: Option[];
-  selected: string[];          // selected IDs
-  onToggle: (id: string) => void;
 }
 
-export function MultiSelectTree({ options, selected, onToggle }: MultiSelectTreeProps) {
+export function MultiSelectTree({ options }: MultiSelectTreeProps) {
+  const { hideAccounts: selected, toggleHideAccount: onToggle } =
+    useSummaryPageContext();
+
   // Build a tree structure using parentId
   const tree = useMemo(() => {
-    const lookup: Record<string, Option & { children: Option[] }> = {};
-    const roots: (Option & { children: Option[] })[] = [];
+    const lookup: Record<string, OptionExtended> = {};
+    const roots: OptionExtended[] = [];
 
     options.forEach((opt) => {
       lookup[opt.id] = { ...opt, children: [] };
@@ -40,10 +44,7 @@ export function MultiSelectTree({ options, selected, onToggle }: MultiSelectTree
     return roots;
   }, [options]);
 
-  const renderNode = (
-    node: Option & { children: Option[] },
-    level = 0
-  ): React.ReactNode => {
+  const renderNode = (node: OptionExtended, level = 0): React.ReactNode => {
     const isSelected = selected.includes(node.id);
 
     return (
@@ -67,11 +68,11 @@ export function MultiSelectTree({ options, selected, onToggle }: MultiSelectTree
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="w-56 justify-between"
+          className="w-56 justify-between dark:bg-shark-800 dark:text-gray-400"
         >
           {selected.length > 0
             ? `${selected.length} selected`
-            : "Select items"}
+            : "Select accounts to hide"}
         </Button>
       </DropdownMenuTrigger>
 

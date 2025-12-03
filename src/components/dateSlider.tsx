@@ -1,74 +1,47 @@
-import React, { useState } from "react";
+import { Slider } from "@/components/ui/slider"; // uses your custom Slider
 import { DateTime } from "luxon";
+import { useEffect, useState } from "react";
 
 interface DateRangeSliderProps {
   start: string; // "2024-01-01"
-  end: string;   // "2024-12-31"
-  onChange?: (range: { from: string; to: string }) => void;
+  end: string; // "2024-12-31"
+  onChange?: (range: {
+    from: DateTime<boolean>;
+    to: DateTime<boolean>;
+  }) => void;
 }
 
-function DateRangeSlider({ start, end, onChange }: DateRangeSliderProps) {
+export default function DateRangeSlider({
+  start,
+  end,
+  onChange,
+}: DateRangeSliderProps) {
   const startDt = DateTime.fromISO(start).startOf("day");
   const endDt = DateTime.fromISO(end).startOf("day");
 
   const startMs = startDt.toMillis();
   const endMs = endDt.toMillis();
 
-  const [from, setFrom] = useState(startMs);
-  const [to, setTo] = useState(endMs);
+  const [range, setRange] = useState<[number, number]>([startMs, endMs]);
 
-  const emitChange = (f: number, t: number) => {
-    if (!onChange) return;
-
-    onChange({
-      from: DateTime.fromMillis(f).toISODate() ?? '',
-      to: DateTime.fromMillis(t).toISODate() ?? '',
-    });
-  };
-
-  const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value);
-    const newFrom = Math.min(val, to);
-    setFrom(newFrom);
-    emitChange(newFrom, to);
-  };
-
-  const handleToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value);
-    const newTo = Math.max(val, from);
-    setTo(newTo);
-    emitChange(from, newTo);
-  };
+  useEffect(() => {
+    if (onChange) {
+      onChange({
+        from: DateTime.fromMillis(range[0]),
+        to: DateTime.fromMillis(range[1]),
+      });
+    }
+  }, [range, onChange]);
 
   return (
-    <div style={{ padding: "1rem", width: "100%" }}>
-      <div style={{ position: "relative", height: "40px" }}>
-        <input
-          type="range"
-          min={startMs}
-          max={endMs}
-          value={from}
-          onChange={handleFromChange}
-          style={{ position: "absolute", width: "100%" }}
-        />
-
-        <input
-          type="range"
-          min={startMs}
-          max={endMs}
-          value={to}
-          onChange={handleToChange}
-          style={{ position: "absolute", width: "100%" }}
-        />
-      </div>
-
-      <div style={{ marginTop: "0.5rem", fontFamily: "monospace" }}>
-        From: {DateTime.fromMillis(from).toISODate()}
-        <br />
-        To: {DateTime.fromMillis(to).toISODate()}
-      </div>
+    <div className="w-full p-4">
+      <Slider
+        value={range}
+        min={startMs}
+        max={endMs}
+        step={24 * 60 * 60 * 1000} // one day
+        onValueChange={(val) => setRange(val as [number, number])}
+      ></Slider>
     </div>
   );
 }
-
-export default DateRangeSlider;
