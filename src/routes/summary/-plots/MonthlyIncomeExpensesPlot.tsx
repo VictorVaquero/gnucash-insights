@@ -147,7 +147,7 @@ const DrawMonthlyIncomeExpensesPlot = (props: {
             <rect
               fill={getColor(d.type)}
               fillOpacity={0.4}
-              key={d.name + d.yearmonth}
+              key={d.type + d.name + d.yearmonth}
               strokeWidth="1.5"
               shapeRendering="geometricPrecision"
               stroke={getColor(d.type)}
@@ -177,7 +177,7 @@ const DrawMonthlyIncomeExpensesPlot = (props: {
           {sortedData.map((d) => (
             <circle
               fill={getColor(d.type)}
-              key={d.name + d.yearmonth}
+              key={d.type + d.name + d.yearmonth}
               strokeWidth="1.5"
               shapeRendering="geometricPrecision"
               stroke="white"
@@ -222,17 +222,23 @@ export const MonthlyIncomeExpensesPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
-  const { dateRange } = useSummaryPageContext();
+  const { dateRange, hideAccounts } = useSummaryPageContext();
 
   const { data: dataFull, isSuccess } = useQuery(
-    incomeExpensesYearMonthOptions({ db, user, bookId })
+    incomeExpensesYearMonthOptions({ db, user, bookId, hideAccounts})
   );
   const { data: taxes, isSuccess: isSuccessTaxes } = useQuery(
     taxesYearMonthOptions({ db, user, bookId })
   );
-  const { data: profit, isSuccess: isSuccessProfit } = useQuery(
-    profitLossYearMonthOptions({ db, user, bookId })
+  const { data: profit } = useQuery(
+    profitLossYearMonthOptions({
+      db,
+      user,
+      bookId,
+      hideAccounts,
+    })
   );
+
   const data = useMemo(() => {
     if (isSuccess && isSuccessTaxes)
       return dataFull.map((d) => ({
@@ -244,7 +250,7 @@ export const MonthlyIncomeExpensesPlot = () => {
       }));
   }, [dataFull, taxes, isSuccess, isSuccessTaxes]);
 
-  if (!data || !isSuccessProfit || !dateRange)
+  if (!data || !profit || !dateRange)
     return (
       <div className="w-full h-full flex flex-row items-center justify-center">
         <BarLoader color="#36d7b7" />
