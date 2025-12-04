@@ -20,10 +20,14 @@ interface SummaryContextType {
   // Dates you want to see
   detailedDate: DateTime;
   setDetailedDate: (date: DateTime) => void;
+
+  // Aggregation type
+  isYearly: boolean;
+  toggleYearly: () => void;
 }
 
 // --- Context ---
-const HideAccountsContext = createContext<SummaryContextType | null>(null);
+const SummaryPageContext = createContext<SummaryContextType | null>(null);
 
 // --- Reducer ---
 function hideAccountsReducer(
@@ -41,15 +45,18 @@ export function SummaryPageContextProvider({
 }: {
   children: ReactNode;
 }) {
-  const [hideAccounts, toggleHideAccount] = useReducer(hideAccountsReducer, ["8435fd4bfa974eaf89d1e91576470074"]);
+  const [hideAccounts, toggleHideAccount] = useReducer(hideAccountsReducer, [
+    "8435fd4bfa974eaf89d1e91576470074",
+  ]);
   const [detailedDate, setDetailedDate] = useState(DateTime.fromISO("2024-01"));
   const [dateRange, setDateRange] = useState<DateRange>({
     from: DateTime.fromISO("2021-04"),
     to: DateTime.now(),
   });
+  const [isYearly, toggleYearly] = useReducer((v) => !v, false);
 
   return (
-    <HideAccountsContext
+    <SummaryPageContext
       value={{
         hideAccounts,
         toggleHideAccount,
@@ -57,16 +64,18 @@ export function SummaryPageContextProvider({
         setDetailedDate,
         dateRange,
         setDateRange,
+        isYearly,
+        toggleYearly,
       }}
     >
       {children}
-    </HideAccountsContext>
+    </SummaryPageContext>
   );
 }
 
 // --- Hook ---
 export function useSummaryPageContext() {
-  const ctx = use(HideAccountsContext);
+  const ctx = use(SummaryPageContext);
   if (!ctx) {
     throw new Error(
       "useSummaryPageContext must be used inside <SummaryPageContextProvider>"

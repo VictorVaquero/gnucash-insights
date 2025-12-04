@@ -19,36 +19,34 @@ import { MonthlyDetailedExpensesBarPlot } from "./-plots/MonthlyDetailedExpenses
 import { SummaryPageContextProvider } from "./-summaryPageContext";
 
 const Summary = () => {
-
   return (
     <SummaryPageContextProvider>
-    <div
-      className="
+      <div
+        className="
         w-full md:h-full p-10 pt-0
         flex-col
         md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_2fr_2fr_4fr]
         gap-x-6 gap-y-6
         "
-    >
-      <div className="row-start-1 row-end-5 flex flex-col gap-y-6">
-        <KpiBlock className="" />
-        <SavingsBlock className="" />
-        <MonthDetailedExpensesPiePlot />
+      >
+        <div className="row-start-1 row-end-5 flex flex-col gap-y-6">
+          <KpiBlock className="" />
+          <SavingsBlock className="" />
+          <MonthDetailedExpensesPiePlot />
+        </div>
+        <div className="col-start-2 row-start-1">
+          <SettingsBlock />
+        </div>
+        <div className="col-start-2 row-start-2">
+          <MonthlyAccountsPlot />
+        </div>
+        <div className="col-start-2 row-start-3">
+          <MonthlyIncomeExpensesPlot />
+        </div>
+        <div className="col-start-2 row-start-4">
+          <MonthlyDetailedExpensesBarPlot />
+        </div>
       </div>
-      <div className="col-start-2 row-start-1">
-        <SettingsBlock/>
-      </div>
-      <div className="col-start-2 row-start-2">
-        <MonthlyAccountsPlot />
-      </div>
-      <div className="col-start-2 row-start-3">
-        <MonthlyIncomeExpensesPlot />
-      </div>
-      <div className="col-start-2 row-start-4">
-        <MonthlyDetailedExpensesBarPlot />
-      </div>
-    </div>
-
     </SummaryPageContextProvider>
   );
 };

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { DateTime } from "luxon";
-import { MutableRefObject, useMemo, useRef, useState } from "react";
+import { MutableRefObject, useMemo, useRef } from "react";
 import { BarLoader } from "react-spinners";
 
 import { getDefaultColor, getRandomColor } from "@/common/getColors";
@@ -166,9 +166,8 @@ export const MonthlyDetailedExpensesBarPlot = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const { user } = useAuth();
-  const { hideAccounts, setDetailedDate, dateRange } = useSummaryPageContext();
-
-  const [isYearly, setIsYearly] = useState<boolean>(false);
+  const { hideAccounts, setDetailedDate, dateRange, isYearly } =
+    useSummaryPageContext();
 
   const { data: accounts, isSuccess: isSuccessAccounts } = useQuery(
     accountsOptions(db, bookId)
@@ -192,12 +191,6 @@ export const MonthlyDetailedExpensesBarPlot = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <button
-        className="inline m-2 p-4 group hover:bg-shark-600 rounded font-light text-white group-hover:text-white"
-        onClick={() => setIsYearly((prev) => !prev)}
-      >
-        <span className="">Yearly/Monthly</span>
-      </button>
       <div className="h-full">
         <DrawMonthlyDetailedExpenses
           data={collapsedData}

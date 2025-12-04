@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSummaryPageContext } from "@/routes/summary/-summaryPageContext";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
 interface Option {
   id: string;
@@ -23,26 +23,40 @@ interface MultiSelectTreeProps {
 export function MultiSelectTree({ options }: MultiSelectTreeProps) {
   const { hideAccounts: selected, toggleHideAccount: onToggle } =
     useSummaryPageContext();
+  const [search, setSearch] = useState("");
 
   // Build a tree structure using parentId
   const tree = useMemo(() => {
     const lookup: Record<string, OptionExtended> = {};
     const roots: OptionExtended[] = [];
 
-    options.forEach((opt) => {
-      lookup[opt.id] = { ...opt, children: [] };
-    });
+    options
+      .filter(
+        (node) =>
+          search === "" ||
+          node.name.toLowerCase().includes(search.toLowerCase())
+      )
+      .forEach((opt) => {
+        lookup[opt.id] = { ...opt, children: [] };
+      });
 
-    options.forEach((opt) => {
-      if (opt.parent && lookup[opt.parent]) {
-        lookup[opt.parent].children.push(lookup[opt.id]);
-      } else {
-        roots.push(lookup[opt.id]);
-      }
-    });
+    options
+      .filter(
+        (node) =>
+          search === "" ||
+          node.name.toLowerCase().includes(search.toLowerCase())
+      )
+
+      .forEach((opt) => {
+        if (opt.parent && lookup[opt.parent]) {
+          lookup[opt.parent].children.push(lookup[opt.id]);
+        } else {
+          roots.push(lookup[opt.id]);
+        }
+      });
 
     return roots;
-  }, [options]);
+  }, [options, search]);
 
   const renderNode = (node: OptionExtended, level = 0): React.ReactNode => {
     const isSelected = selected.includes(node.id);
@@ -77,7 +91,18 @@ export function MultiSelectTree({ options }: MultiSelectTreeProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="max-h-72 overflow-y-auto w-56">
+        {/* Search input */}
+        <div className="p-2">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-md border px-2 py-1 text-sm"
+          />
+        </div>
         {tree.map((node) => renderNode(node))}
+        {/* Render filtered tree */}
       </DropdownMenuContent>
     </DropdownMenu>
   );
