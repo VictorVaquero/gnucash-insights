@@ -98,6 +98,7 @@ const getAssetsDebtsYearMonthQuery = ({
     .groupBy(accounts.id, timeTable.yearmonth)
     .orderBy(timeTable.yearmonth);
 };
+
 export const assetsDebtsYearMonthOptions = ({
   db,
   user,
@@ -300,6 +301,98 @@ export const profitLossYearMonthOptions = ({
   return queryOptions({
     queryKey: ["profitLossYearMonth", user, bookId, ...hideAccounts],
     queryFn: queryFn,
+    enabled: enabled,
+  });
+};
+
+const getTransactByAccountQuery = ({
+  db,
+  accountIds,
+  periodicity,
+  accumulate = true, // New Argument
+  hideAccounts = [],
+}: {
+  db: SQLJsDatabase;
+  bookId: string;
+  accountIds: string[];
+  periodicity: "monthly" | "quarterly" | "yearly";
+  accumulate?: boolean;
+  hideAccounts?: string[];
+}) => {
+  const ft = {
+    monthly: summaryMonthlyTable,
+    quarterly: summaryQuarterlyTable,
+    yearly: summaryYearlyTable,
+  }[periodicity];
+
+  const accountsFiltered = getAccountsClosureQuery(
+    db,
+    accountIds,
+    hideAccounts
+  );
+
+  // Define the value column dynamically
+  const valueColumn = accumulate
+    ? sql<number>`SUM(${ft.totalValue}) OVER (
+        PARTITION BY ${ft.accountId} 
+        ORDER BY ${ft.date} 
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      )`.mapWith(Number)
+    : ft.totalValue; // Just the raw value for that period
+
+  return db
+    .select({
+      date: ft.date,
+      dateLabel: ft.dateLabel,
+      accountId: ft.accountId,
+      accountName: ft.accountName,
+      value: valueColumn,
+    })
+    .from(ft)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
+    // Note: groupBy might be redundant if ft is already a summary table, 
+    // but kept for consistency with your original snippet.
+    .groupBy(ft.accountId, ft.date)
+    .orderBy(ft.date);
+};
+
+export const transactByAccountOptions = ({
+  db,
+  bookId,
+  accountIds,
+  periodicity,
+  accumulate = false,
+  hideAccounts = [],
+}: {
+  db: SQLJsDatabase | undefined;
+  bookId: string | undefined;
+  accountIds: string[];
+  periodicity: "monthly" | "quarterly" | "yearly";
+  accumulate?: boolean;
+  hideAccounts?: string[];
+}) => {
+  const enabled = !!db && !!bookId && accountIds.length > 0 && !!periodicity;
+
+  return queryOptions({
+    queryKey: [
+      "transactsSumOptions",
+      bookId,
+      accountIds,
+      periodicity,
+      accumulate, // Added to queryKey to avoid cache collisions
+      hideAccounts,
+    ],
+    queryFn: enabled
+      ? async () =>
+          getTransactByAccountQuery({
+            db,
+            bookId,
+            accountIds,
+            periodicity,
+            accumulate,
+            hideAccounts,
+          }).execute()
+      : skipToken,
     enabled: enabled,
   });
 };

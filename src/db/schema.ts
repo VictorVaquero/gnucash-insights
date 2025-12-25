@@ -1,43 +1,50 @@
 import { InferSelectModel } from "drizzle-orm";
-import { AnySQLiteColumn, customType, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { DateTime } from 'luxon';
+import {
+  AnySQLiteColumn,
+  customType,
+  integer,
+  real,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
+import { DateTime } from "luxon";
 
-const customDateTime = customType<
-  { data: DateTime; driverData: string; }
->({
+const customDateTime = customType<{ data: DateTime; driverData: string }>({
   dataType() {
-    return 'DateTime'
+    return "DateTime";
   },
   fromDriver(value: string): DateTime {
-    return DateTime.fromISO(value)
+    return DateTime.fromISO(value);
   },
   toDriver(value: DateTime): string {
-    return value.toISO() ?? ''
+    return value.toISO() ?? "";
   },
 });
 
-export const metaTable = sqliteTable('meta', {
+export const metaTable = sqliteTable("meta", {
   countBook: integer(),
   parsedDate: text(),
   parsedVersion: text(),
   minDate: customDateTime(),
-  maxDate: customDateTime()
+  maxDate: customDateTime(),
 });
-export type Meta = InferSelectModel<typeof metaTable>
+export type Meta = InferSelectModel<typeof metaTable>;
 
-export const booksTable = sqliteTable('books', {
+export const booksTable = sqliteTable("books", {
   id: text().primaryKey(),
   version: text().notNull(),
   countAccount: integer().notNull(),
   countCommodity: integer().notNull(),
   countPrice: integer().notNull(),
   countSchedxaction: integer().notNull(),
-  countTransaction: integer().notNull()
+  countTransaction: integer().notNull(),
 });
-export type Book = InferSelectModel<typeof booksTable>
+export type Book = InferSelectModel<typeof booksTable>;
 
-export const accountsTable = sqliteTable('accounts', {
-  bookId: text().notNull().references(() => booksTable.id),
+export const accountsTable = sqliteTable("accounts", {
+  bookId: text()
+    .notNull()
+    .references(() => booksTable.id),
   id: text().primaryKey(),
   name: text().notNull(),
   accountType: text().notNull(),
@@ -46,10 +53,12 @@ export const accountsTable = sqliteTable('accounts', {
   scu: integer(),
   description: text(),
 });
-export type Account = InferSelectModel<typeof accountsTable>
+export type Account = InferSelectModel<typeof accountsTable>;
 
-export const commoditiesTable = sqliteTable('commodities', {
-  bookId: text().notNull().references(() => booksTable.id),
+export const commoditiesTable = sqliteTable("commodities", {
+  bookId: text()
+    .notNull()
+    .references(() => booksTable.id),
   id: text().primaryKey(),
   space: text().notNull(),
   name: text(),
@@ -57,52 +66,60 @@ export const commoditiesTable = sqliteTable('commodities', {
   version: text(),
   code: text(),
 });
-export type Commodity = InferSelectModel<typeof commoditiesTable>
+export type Commodity = InferSelectModel<typeof commoditiesTable>;
 
-export const pricesTable = sqliteTable('prices', {
-  bookId: text().notNull().references(() => booksTable.id),
+export const pricesTable = sqliteTable("prices", {
+  bookId: text()
+    .notNull()
+    .references(() => booksTable.id),
   id: text().primaryKey(),
   source: text().notNull(),
   priceType: text().notNull(),
   time: customDateTime().notNull(),
-  commodity: text().notNull().references(() => commoditiesTable.id),
-  currency: text().notNull().references(() => commoditiesTable.id),
-  value: real().notNull()
+  commodity: text()
+    .notNull()
+    .references(() => commoditiesTable.id),
+  currency: text()
+    .notNull()
+    .references(() => commoditiesTable.id),
+  value: real().notNull(),
 });
-export type Price = InferSelectModel<typeof pricesTable>
+export type Price = InferSelectModel<typeof pricesTable>;
 
-
-
-export const transactionsTable = sqliteTable('transactions', {
-  bookId: text().notNull().references(() => booksTable.id),
+export const transactionsTable = sqliteTable("transactions", {
+  bookId: text()
+    .notNull()
+    .references(() => booksTable.id),
   id: text().primaryKey(),
   dateEntered: customDateTime().notNull(),
   datePosted: customDateTime().notNull(),
   ymdPosted: customDateTime().notNull(),
-  currencyId: text().notNull().references(() => commoditiesTable.id),
+  currencyId: text()
+    .notNull()
+    .references(() => commoditiesTable.id),
   description: text(),
   slDatePosted: text(),
   slFromSchedXaction: text(),
   slNotes: text(),
 });
-export type Transaction = InferSelectModel<typeof transactionsTable>
+export type Transaction = InferSelectModel<typeof transactionsTable>;
 
-
-export const splitsTable = sqliteTable('splits', {
-  transactionId: text().notNull().references(() => transactionsTable.id),
+export const splitsTable = sqliteTable("splits", {
+  transactionId: text()
+    .notNull()
+    .references(() => transactionsTable.id),
   id: text().primaryKey(),
   account: text().notNull(),
   value: real().notNull(),
   quantity: real().notNull(),
-  isReconciled: text('isReconciled').notNull(),
+  isReconciled: text("isReconciled").notNull(),
   reconciledDate: customDateTime().notNull(),
   action: text(),
   memo: text(),
 });
-export type Split = InferSelectModel<typeof splitsTable>
+export type Split = InferSelectModel<typeof splitsTable>;
 
-
-export const timeTable = sqliteTable('timetable', {
+export const timeTable = sqliteTable("timetable", {
   ymd: customDateTime().primaryKey(),
   year: integer().notNull(),
   month: integer().notNull(),
@@ -110,33 +127,50 @@ export const timeTable = sqliteTable('timetable', {
   yearmonth: text().notNull(),
   monthName: text().notNull(),
   weekDayNum: integer(),
-  weekDayName: text().notNull()
+  weekDayName: text().notNull(),
 });
-export type Time = InferSelectModel<typeof timeTable>
+export type Time = InferSelectModel<typeof timeTable>;
 
+/// EXTRA TABLES
 
-export const summaryMonthlyTable = sqliteTable('summary_monthly', {
+export const accountsClosureTable = sqliteTable("accountsClosure", {
+  bookId: text()
+    .notNull()
+    .references(() => booksTable.id),
+  child: text().references((): AnySQLiteColumn => accountsTable.id),
+  parent: text().references((): AnySQLiteColumn => accountsTable.id),
+  depth: integer(),
+});
+export type AccountClosure = InferSelectModel<typeof accountsClosureTable>;
+
+export const summaryMonthlyTable = sqliteTable("summary_monthly", {
   date: text().notNull(),
   dateLabel: text().notNull(),
-  accountId: text().notNull().references(() => accountsTable.id),
+  accountId: text()
+    .notNull()
+    .references(() => accountsTable.id),
   accountName: text().primaryKey(),
   totalValue: real().notNull(),
 });
-export type SummaryMonthly = InferSelectModel<typeof summaryMonthlyTable>
+export type SummaryMonthly = InferSelectModel<typeof summaryMonthlyTable>;
 
-export const summaryQuarterlyTable = sqliteTable('summary_quarterly', {
+export const summaryQuarterlyTable = sqliteTable("summary_quarterly", {
   date: text().notNull(),
   dateLabel: text().notNull(),
-  accountId: text().notNull().references(() => accountsTable.id),
+  accountId: text()
+    .notNull()
+    .references(() => accountsTable.id),
   accountName: text().primaryKey(),
   totalValue: real().notNull(),
 });
-export type SummaryQuarterly= InferSelectModel<typeof summaryQuarterlyTable>
-export const summaryYearlyTable = sqliteTable('summary_yearly', {
+export type SummaryQuarterly = InferSelectModel<typeof summaryQuarterlyTable>;
+export const summaryYearlyTable = sqliteTable("summary_yearly", {
   date: text().notNull(),
   dateLabel: text().notNull(),
-  accountId: text().notNull().references(() => accountsTable.id),
+  accountId: text()
+    .notNull()
+    .references(() => accountsTable.id),
   accountName: text().primaryKey(),
   totalValue: real().notNull(),
 });
-export type SummaryYearly = InferSelectModel<typeof summaryYearlyTable>
+export type SummaryYearly = InferSelectModel<typeof summaryYearlyTable>;

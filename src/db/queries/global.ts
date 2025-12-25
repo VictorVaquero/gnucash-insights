@@ -23,8 +23,8 @@ import {
   splitsTable,
   timeTable,
   transactionsTable,
+  accountsClosureTable
 } from "../schema";
-import { accountsClosure } from "../views";
 
 export const getBooks = (db: SQLJsDatabase) => {
   return db.select().from(booksTable).all();
@@ -48,7 +48,7 @@ export const getAccounts = ({
 }) => {
   const accountsFiltered = getAccountsClosureQuery(db, accountIds);
   return db
-    .select({
+    .selectDistinct({
       ...getTableColumns(accountsTable),
     })
     .from(accountsTable)
@@ -60,11 +60,11 @@ export const accountsOptions = (
   bookId?: string,
   accountIds?: string[]
 ) => {
-  const cleanAccountIds = accountIds?.filter((id): id is string => !!id) ?? [];
-  const enabled = !!db && !!bookId && cleanAccountIds.length > 0;
+  const cleanAccountIds = accountIds?.filter(Boolean) ?? [];
+  const enabled = !!db && !!bookId;
 
   return queryOptions({
-    queryKey: ["accounts", bookId, ...cleanAccountIds],
+    queryKey: ["accounts", bookId, cleanAccountIds],
     queryFn: !enabled
       ? skipToken
       : async () => getAccounts({ db, accountIds: cleanAccountIds }).execute(),
@@ -82,30 +82,22 @@ export const getAccountsClosureQuery = (
 
   let check;
   if (accountNames)
-    check = and(
-      check,
-      or(...accountNames.map((name) => eq(parent.name, name)))
-    );
+    check = and(check, or(...accountNames.map((name) => eq(parent.id, name))));
   if (ignoreAccounts && ignoreAccounts.length > 0) {
-    // TODO: Chapuza, estandariza todo a usar referencia por ids
-    const ignore = or(
-      ...ignoreAccounts.map((name) => eq(child.name, name)),
-      ...ignoreAccounts.map((name) => eq(child.id, name))
-    );
+    const ignore = or(...ignoreAccounts.map((name) => eq(child.id, name)));
     check = and(check, not(ignore as SQL<string>));
-    console.debug("Ignore ", check);
   }
 
   return db
     .selectDistinct({
-      id: accountsClosure.child,
-      parent: accountsClosure.parent,
+      id: accountsClosureTable.child,
+      parent: accountsClosureTable.parent,
       base: sql<string>`${parent.name}`.as("base"),
       name: sql<string>`${child.name}`.as("name"),
     })
-    .from(accountsClosure)
-    .innerJoin(child, eq(accountsClosure.child, child.id))
-    .innerJoin(parent, eq(accountsClosure.parent, parent.id))
+    .from(accountsClosureTable)
+    .innerJoin(child, eq(accountsClosureTable.child, child.id))
+    .innerJoin(parent, eq(accountsClosureTable.parent, parent.id))
     .where(check)
     .as("accountsFiltered");
 };

@@ -7,7 +7,7 @@ interface DateRange {
   from: DateTime<boolean>;
   to: DateTime<boolean>;
 }
-export type CharMode = "monthly" | "quarterly" | "yearly";
+export type ChartPeriodicity = "monthly" | "quarterly" | "yearly";
 
 interface SummaryContextType {
   // Account you want to see
@@ -26,8 +26,8 @@ interface SummaryContextType {
   isYearly: boolean;
   toggleYearly: () => void;
 
-  charMode: CharMode;
-  setChartMode: (value: CharMode) => void;
+  chartPeriodicity: ChartPeriodicity;
+  setChartPeriodicity: (value: ChartPeriodicity) => void;
 }
 
 // --- Context ---
@@ -58,7 +58,8 @@ export function SummaryPageContextProvider({
     to: DateTime.now(),
   });
   const [isYearly, toggleYearly] = useReducer((v) => !v, false);
-  const [charMode, setChartMode] = useState<CharMode>("monthly");
+  const [chartPeriodicity, setChartPeriodicity] =
+    useState<ChartPeriodicity>("monthly");
 
   return (
     <SummaryPageContext
@@ -71,8 +72,8 @@ export function SummaryPageContextProvider({
         setDateRange,
         isYearly,
         toggleYearly,
-        charMode,
-        setChartMode,
+        chartPeriodicity,
+        setChartPeriodicity,
       }}
     >
       {children}

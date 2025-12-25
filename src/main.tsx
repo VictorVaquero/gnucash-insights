@@ -115,13 +115,11 @@ const GlobalCOntextProvider = () => {
 
 
   useEffect(() => {
-    console.debug('Invalidate router when context changes.')
+    console.info('Invalidate router when context changes.')
     if (!!auth && !!db && !!bookId && !!domain) router.invalidate()
   }, [auth, db, bookId, domain])
 
   console.info(`Current files ${fileName} book ${bookId} db ${!!db} user ${auth.user}`)
-  console.debug("DB", db)
-
 
   return <FileContext.Provider value={{ fileName, setFileName }} >
     <DomainContext.Provider value={{ domain: domain }} >

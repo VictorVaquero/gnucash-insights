@@ -26,16 +26,23 @@ export function chooseTooltipPointLine<D>(
 }
 
 export function chooseTooltipPointNode<D>(
-    dataf: (id: string) => D,
-    node: string) {
-    function choose(event: PointerEvent): [number, number, D|null] {
-        if(event.target instanceof Element && event.target.nodeName === node){
-            const [x, y] = [d3.pointer(event)[0], d3.pointer(event)[1]]
-            const d = dataf(event.target.id);
-            //console.debug('Event pointer: ', d3.pointer(event), 'X,Y: ', x, y, 'Selection: ', d);
+    dataf: (id: string) => D | undefined, 
+    node: string
+) {
+    function choose(event: PointerEvent): [number, number, D | undefined] {
+        const target = event.target;
+        
+        if (target instanceof Element && target.nodeName === node) {
+            const [x, y] = d3.pointer(event);
+            
+            // Ensure target has an ID, otherwise dataf might fail or return undefined anyway
+            const d = target.id ? dataf(target.id) : undefined;
+            
             return [x, y, d];
         }
-        return [0,0, null]
+        
+        return [0, 0, undefined];
     }
+    
     return choose;
 }

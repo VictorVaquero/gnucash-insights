@@ -166,7 +166,11 @@ export const MonthlyIncomeExpensesPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
-  const { dateRange, hideAccounts, charMode } = useSummaryPageContext();
+  const {
+    dateRange,
+    hideAccounts,
+    chartPeriodicity: charMode,
+  } = useSummaryPageContext();
   const dbconf = getConfig(user);
 
   const { data: expenses } = useQuery(
@@ -216,21 +220,25 @@ export const MonthlyIncomeExpensesPlot = () => {
 
       // Populate the Map
       net.forEach((d) => (getEntry(d.date, d.dateLabel).net = -d.value));
-      income.forEach((d) => (getEntry(d.date, d.dateLabel).income = Math.abs(d.value)));
-      expenses.forEach((d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(d.value)));
+      income.forEach(
+        (d) => (getEntry(d.date, d.dateLabel).income = Math.abs(d.value))
+      );
+      expenses.forEach(
+        (d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(d.value))
+      );
 
       // Convert to array and sort by date chronologically
       return Array.from(registry.values())
+        .filter((d) => d.date >= dateRange.from.toString())
+        .filter((d) => d.date <= dateRange.to.toString())
         .sort((a, b) => {
           const timeA = new Date(a.date).getTime();
           const timeB = new Date(b.date).getTime();
           return timeA - timeB;
         })
-        .filter((d) => d.date >= dateRange.from.toString())
-        .filter((d) => d.date <= dateRange.to.toString());
     }
   }, [net, income, expenses, dateRange]);
-  
+
   if (!data || !dateRange)
     return (
       <div className="w-full h-full flex flex-row items-center justify-center">
