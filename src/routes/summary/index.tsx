@@ -1,14 +1,17 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { accountsOptions } from "@/db/queries/global";
-import { netCostsYearMonthOptions } from "@/db/queries/summary";
+import {
+  netCostsYearMonthOptions,
+  transactsSumOptions,
+} from "@/db/queries/summary";
 
 import {
   assetsDebtsYearMonthOptions,
-  incomeExpensesYearMonthOptions,
   profitLossYearMonthOptions,
   taxesYearMonthOptions,
 } from "@/db/queries/summary";
+import { getConfig } from "@/db/utils";
 import { KpiBlock } from "@/routes/summary/-KpiBlock.tsx";
 import { SavingsBlock } from "@/routes/summary/-SavingsBlock.tsx";
 import { MonthlyAccountsPlot } from "@/routes/summary/-plots/MonthlyAccountsPlot.tsx";
@@ -64,6 +67,7 @@ export const Route = createFileRoute("/summary/")({
   },
   loader: ({ context: { queryClient, db, bookId, auth } }) => {
     if (db && bookId && auth?.user) {
+      const dbconf = getConfig(auth.user);
       queryClient.ensureQueryData(accountsOptions(db, bookId));
       queryClient.ensureQueryData(
         netCostsYearMonthOptions({ db, user: auth.user, bookId })
@@ -72,7 +76,12 @@ export const Route = createFileRoute("/summary/")({
         assetsDebtsYearMonthOptions({ db, user: auth.user, bookId })
       );
       queryClient.ensureQueryData(
-        incomeExpensesYearMonthOptions({ db, user: auth.user, bookId })
+        transactsSumOptions({
+          db,
+          bookId,
+          accountIds: [dbconf.income, dbconf.taxes],
+          periodicity: "monthly",
+        })
       );
       queryClient.ensureQueryData(
         taxesYearMonthOptions({ db, user: auth.user, bookId })

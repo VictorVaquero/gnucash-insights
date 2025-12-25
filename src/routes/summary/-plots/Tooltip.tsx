@@ -42,9 +42,9 @@ export const Tooltip = <D,>(props: PropsWithChildren<TooltipProps<D>>) => {
     }
 
     return <div className='tooltip
-                        bg-shark-800 text-white stroke-1 stroke-white opacity-95
+                        bg-shark-800 text-white stroke-1 stroke-white opacity-98
                         rounded invisible
-                        absolute top-[0px] left-[0px] z-10
+                        absolute top-0 left-0 z-10
                         pointer-events-none
                         before:absolute before:w-5 before:h-5 before:left-1/2 before:bottom-0
                         before:bg-shark-800 before:content-[""]

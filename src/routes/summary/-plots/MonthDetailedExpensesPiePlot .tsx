@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
 import { netCostsYearMonthOptions } from "@/db/queries/summary";
 import { Account } from "@/db/schema";
+import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
 import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx";
@@ -141,8 +142,9 @@ export const MonthDetailedExpensesPiePlot = () => {
   const { hideAccounts, toggleHideAccount, detailedDate } =
     useSummaryPageContext();
 
+  const dbconf = getConfig(user);
   const { data: accounts, isSuccess: isSuccessAccounts } = useQuery(
-    accountsOptions(db, bookId)
+    accountsOptions(db, bookId, [dbconf.expenses])
   );
   const { data, isSuccess } = useQuery(
     netCostsYearMonthOptions({ db, user, bookId })

@@ -16,12 +16,14 @@ const customDateTime = customType<
   },
 });
 
-export const meta = sqliteTable('meta', {
+export const metaTable = sqliteTable('meta', {
   countBook: integer(),
   parsedDate: text(),
-  parsedVersion: text()
+  parsedVersion: text(),
+  minDate: customDateTime(),
+  maxDate: customDateTime()
 });
-export type Meta = InferSelectModel<typeof meta>
+export type Meta = InferSelectModel<typeof metaTable>
 
 export const booksTable = sqliteTable('books', {
   id: text().primaryKey(),
@@ -76,6 +78,7 @@ export const transactionsTable = sqliteTable('transactions', {
   id: text().primaryKey(),
   dateEntered: customDateTime().notNull(),
   datePosted: customDateTime().notNull(),
+  ymdPosted: customDateTime().notNull(),
   currencyId: text().notNull().references(() => commoditiesTable.id),
   description: text(),
   slDatePosted: text(),
@@ -111,3 +114,29 @@ export const timeTable = sqliteTable('timetable', {
 });
 export type Time = InferSelectModel<typeof timeTable>
 
+
+export const summaryMonthlyTable = sqliteTable('summary_monthly', {
+  date: text().notNull(),
+  dateLabel: text().notNull(),
+  accountId: text().notNull().references(() => accountsTable.id),
+  accountName: text().primaryKey(),
+  totalValue: real().notNull(),
+});
+export type SummaryMonthly = InferSelectModel<typeof summaryMonthlyTable>
+
+export const summaryQuarterlyTable = sqliteTable('summary_quarterly', {
+  date: text().notNull(),
+  dateLabel: text().notNull(),
+  accountId: text().notNull().references(() => accountsTable.id),
+  accountName: text().primaryKey(),
+  totalValue: real().notNull(),
+});
+export type SummaryQuarterly= InferSelectModel<typeof summaryQuarterlyTable>
+export const summaryYearlyTable = sqliteTable('summary_yearly', {
+  date: text().notNull(),
+  dateLabel: text().notNull(),
+  accountId: text().notNull().references(() => accountsTable.id),
+  accountName: text().primaryKey(),
+  totalValue: real().notNull(),
+});
+export type SummaryYearly = InferSelectModel<typeof summaryYearlyTable>

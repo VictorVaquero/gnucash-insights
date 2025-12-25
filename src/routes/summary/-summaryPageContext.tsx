@@ -7,6 +7,7 @@ interface DateRange {
   from: DateTime<boolean>;
   to: DateTime<boolean>;
 }
+export type CharMode = "monthly" | "quarterly" | "yearly";
 
 interface SummaryContextType {
   // Account you want to see
@@ -24,6 +25,9 @@ interface SummaryContextType {
   // Aggregation type
   isYearly: boolean;
   toggleYearly: () => void;
+
+  charMode: CharMode;
+  setChartMode: (value: CharMode) => void;
 }
 
 // --- Context ---
@@ -46,7 +50,7 @@ export function SummaryPageContextProvider({
   children: ReactNode;
 }) {
   const [hideAccounts, toggleHideAccount] = useReducer(hideAccountsReducer, [
-    "8435fd4bfa974eaf89d1e91576470074",
+    "8435fd4bfa974eaf89d1e91576470074", // Furgo account ID
   ]);
   const [detailedDate, setDetailedDate] = useState(DateTime.fromISO("2024-01"));
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -54,6 +58,7 @@ export function SummaryPageContextProvider({
     to: DateTime.now(),
   });
   const [isYearly, toggleYearly] = useReducer((v) => !v, false);
+  const [charMode, setChartMode] = useState<CharMode>("monthly");
 
   return (
     <SummaryPageContext
@@ -66,6 +71,8 @@ export function SummaryPageContextProvider({
         setDateRange,
         isYearly,
         toggleYearly,
+        charMode,
+        setChartMode,
       }}
     >
       {children}

@@ -5,8 +5,6 @@ import {
   getTableColumns,
   gte,
   lt,
-  max,
-  min,
   not,
   or,
   sql,
@@ -20,6 +18,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 import {
   accountsTable,
   booksTable,
+  metaTable,
   pricesTable,
   splitsTable,
   timeTable,
@@ -33,34 +32,46 @@ export const getBooks = (db: SQLJsDatabase) => {
 export const getDomain = (db: SQLJsDatabase) => {
   return db
     .select({
-      min: min(transactionsTable.datePosted),
-      max: max(transactionsTable.datePosted),
+      min: metaTable.minDate,
+      max: metaTable.maxDate,
     })
-    .from(transactionsTable)
+    .from(metaTable)
     .all()[0];
 };
-export const getDomainQuery = (db: SQLJsDatabase) => {
-  const accounts = getAccountsClosureQuery(db, ["Gastos"]);
-  const ft = fullTransactionsQuery(db);
+
+export const getAccounts = ({
+  db,
+  accountIds,
+}: {
+  db: SQLJsDatabase;
+  accountIds: string[];
+}) => {
+  const accountsFiltered = getAccountsClosureQuery(db, accountIds);
   return db
     .select({
-      startDate: min(ft.transactions.datePosted),
-      endDate: max(ft.transactions.datePosted),
+      ...getTableColumns(accountsTable),
     })
-    .from(ft)
-    .innerJoin(accounts, eq(accounts.id, ft.splits.account));
+    .from(accountsTable)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, accountsTable.id));
 };
 
-export const accountsOptions = (db?: SQLJsDatabase, bookId?: string) => {
-  const enabled = !!db && !!bookId;
+export const accountsOptions = (
+  db?: SQLJsDatabase,
+  bookId?: string,
+  accountIds?: string[]
+) => {
+  const cleanAccountIds = accountIds?.filter((id): id is string => !!id) ?? [];
+  const enabled = !!db && !!bookId && cleanAccountIds.length > 0;
+
   return queryOptions({
-    queryKey: ["accounts", bookId],
+    queryKey: ["accounts", bookId, ...cleanAccountIds],
     queryFn: !enabled
       ? skipToken
-      : async () => db.select().from(accountsTable).execute(),
+      : async () => getAccounts({ db, accountIds: cleanAccountIds }).execute(),
     enabled: enabled,
   });
 };
+
 export const getAccountsClosureQuery = (
   db: SQLJsDatabase,
   accountNames?: string[],
@@ -77,9 +88,12 @@ export const getAccountsClosureQuery = (
     );
   if (ignoreAccounts && ignoreAccounts.length > 0) {
     // TODO: Chapuza, estandariza todo a usar referencia por ids
-    const ignore = or(...ignoreAccounts.map((name) => eq(child.name, name)), ...ignoreAccounts.map((name) => eq(child.id, name)));
+    const ignore = or(
+      ...ignoreAccounts.map((name) => eq(child.name, name)),
+      ...ignoreAccounts.map((name) => eq(child.id, name))
+    );
     check = and(check, not(ignore as SQL<string>));
-    console.debug("Ignore ", check)
+    console.debug("Ignore ", check);
   }
 
   return db

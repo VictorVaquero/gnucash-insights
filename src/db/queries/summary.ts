@@ -1,7 +1,12 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { eq, sql, sum } from "drizzle-orm";
 import { SQLJsDatabase } from "drizzle-orm/sql-js";
-import { timeTable } from "../schema";
+import {
+  summaryMonthlyTable,
+  summaryQuarterlyTable,
+  summaryYearlyTable,
+  timeTable,
+} from "../schema";
 import { getConfig, subqueryColumnName } from "../utils";
 import { fullTransactionsQuery, getAccountsClosureQuery } from "./global";
 
@@ -113,76 +118,72 @@ export const assetsDebtsYearMonthOptions = ({
   });
 };
 
-const getIncomeExpensesYearMonthQuery = ({
+const getTransactSumQuery = ({
   db,
-  user,
-  bookId,
+  accountIds,
+  periodicity,
   hideAccounts = [],
 }: {
   db: SQLJsDatabase;
-  user: string;
   bookId: string;
+  accountIds: string[];
+  periodicity: "monthly" | "quarterly" | "yearly";
   hideAccounts?: string[];
 }) => {
-  const dbconf = getConfig(user);
+  const ft = {
+    monthly: summaryMonthlyTable,
+    quarterly: summaryQuarterlyTable,
+    yearly: summaryYearlyTable,
+  }[periodicity];
 
-  const ft = fullTransactionsQuery(db);
   const accountsFiltered = getAccountsClosureQuery(
     db,
-    [dbconf.expenses, dbconf.income],
+    accountIds,
     hideAccounts
   );
 
   return db
     .select({
-      name: subqueryColumnName<string>(
-        accountsFiltered,
-        accountsFiltered.base
-      ).as("name"),
-      type: sql<string>`CASE WHEN ${subqueryColumnName<string>(
-        accountsFiltered,
-        accountsFiltered.base
-      )} = ${dbconf.income} THEN 'g' ELSE 'r' END`,
-      yearmonth: timeTable.yearmonth,
-      value: sql<number>`sum(abs(${ft.splits.value})) `,
+      date: ft.date,
+      dateLabel: ft.dateLabel,
+      value: sql<number>`sum(${ft.totalValue}) `,
     })
     .from(ft)
-    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`)
-    )
-    .where(eq(ft.transactions.bookId, bookId))
-    .groupBy(
-      subqueryColumnName(accountsFiltered, accountsFiltered.base),
-      timeTable.yearmonth
-    )
-    .orderBy(
-      subqueryColumnName(accountsFiltered, accountsFiltered.base),
-      timeTable.yearmonth
-    );
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
+    .groupBy(ft.date)
+    .orderBy(ft.date);
 };
-export const incomeExpensesYearMonthOptions = ({
+
+export const transactsSumOptions = ({
   db,
-  user,
   bookId,
+  accountIds,
+  periodicity,
   hideAccounts = [],
 }: {
   db: SQLJsDatabase | undefined;
-  user: string | undefined;
   bookId: string | undefined;
+  accountIds: string[];
+  periodicity: "monthly" | "quarterly" | "yearly";
   hideAccounts?: string[];
 }) => {
-  const enabled = !!db && !!bookId && !!user;
+  const enabled = !!db && !!bookId && !!accountIds && !!periodicity;
   return queryOptions({
-    queryKey: ["incomeExpensesYearMonth", user, bookId, hideAccounts],
+    queryKey: [
+      "transactsSumOptions",
+      bookId,
+      accountIds,
+      periodicity,
+      hideAccounts,
+    ],
     queryFn: !enabled
       ? skipToken
       : async () =>
-          getIncomeExpensesYearMonthQuery({
+          getTransactSumQuery({
             db,
-            user,
             bookId,
+            accountIds,
+            periodicity,
             hideAccounts,
           }).execute(),
     enabled: enabled,
@@ -253,13 +254,13 @@ const getProfitLossYearMonthQuery = ({
   const ft = fullTransactionsQuery(db);
   const accountsFiltered = getAccountsClosureQuery(
     db,
-    [dbconf.expenses, dbconf.income],
+    [dbconf.expenses, dbconf.income, dbconf.taxes],
     hideAccounts
   );
 
   return db
     .select({
-      yearmonth: timeTable.yearmonth,
+      date: timeTable.yearmonth,
       value: sql<number>`abs(sum(${ft.splits.value}))`,
       name: sql<string>`case when (sum(-${ft.splits.value})) >= 0 then 'Gain' else 'Loss' END`,
       type: sql<string>`case when (sum(-${ft.splits.value})) >= 0 then 'g' else 'r' end`,
