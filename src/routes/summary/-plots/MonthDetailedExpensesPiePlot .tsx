@@ -29,7 +29,7 @@ const gf = (d: Data) => d.account;
 const defaultAccount = "Others";
 const gray = twStyles.getPropertyValue("--color-gray-400");
 
-export const DrawMonthDetailedExpensesPiePlot = (props: {
+const DrawMonthDetailedExpensesPiePlot = (props: {
   data: Data[];
   accounts: Account[];
   date: DateTime;

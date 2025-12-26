@@ -1,3 +1,4 @@
+import './index.css';
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { RouterProvider, createRouter } from "@tanstack/react-router";
@@ -14,7 +15,6 @@ import { DomainContext, FileContext } from './contexts/GlobalContext.tsx';
 import { getBooks, getDomain } from './db/queries/global.ts';
 import { useAuthSetup } from "./hooks/useAuth.ts";
 import { useSetupDB } from './hooks/useDB.tsx';
-import './index.css';
 import ErrorPage from './layout/ErrorPage.tsx';
 import { awsFolderOptions } from "./services/s3Service.tsx";
 

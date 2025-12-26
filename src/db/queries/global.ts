@@ -39,7 +39,7 @@ export const getDomain = (db: SQLJsDatabase) => {
     .all()[0];
 };
 
-export const getAccounts = ({
+const getAccounts = ({
   db,
   accountIds,
 }: {
@@ -102,7 +102,7 @@ export const getAccountsClosureQuery = (
     .as("accountsFiltered");
 };
 
-export const maxPricesQuery = (db: SQLJsDatabase) => {
+const maxPricesQuery = (db: SQLJsDatabase) => {
   return db
     .select({
       bookId: pricesTable.bookId,
@@ -181,7 +181,7 @@ export const fullTransactionsOptions = (
   });
 };
 
-export const getSplitSumQuery = (
+const getSplitSumQuery = (
   db: SQLJsDatabase,
   bookId: string,
   accountNames: string[],
