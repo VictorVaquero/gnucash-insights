@@ -53,9 +53,9 @@ export const Header = ({ isCollapsed, setCollapse }: { isCollapsed: boolean, set
                         </button>
                         <div
                             className='absolute right-0 -translate-x-2 
-                                      border-l-[8px] border-l-transparent
-                                      border-b-[8px] border-b-shark-600
-                                      border-r-[8px] border-r-transparent
+                                      border-l-8 border-l-transparent
+                                      border-b-8 border-b-shark-600
+                                      border-r-8 border-r-transparent
                                       opacity-0 group-hover:opacity-100'
                             style={isVisible ? { opacity: 100 } : {}}
                         />
