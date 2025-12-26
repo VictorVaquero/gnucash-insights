@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
+
+
 @theme {
-  --variant-dark: :where(.dark, .dark *);
   --color-shark-50: #778490;
   --color-shark-100: #707d89;
   --color-shark-200: #65707b;

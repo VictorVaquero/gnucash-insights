@@ -120,6 +120,9 @@ importers:
       '@eslint/js':
         specifier: ^9.20.0
         version: 9.39.1
+      '@recharts/devtools':
+        specifier: ^0.0.5
+        version: 0.0.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(recharts@3.6.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@18.3.1)(react@19.2.0)(redux@5.0.1))
       '@storybook/addon-centered':
         specifier: ^5.3.21
         version: 5.3.21(react-dom@19.2.0(react@19.2.0))(regenerator-runtime@0.14.1)
@@ -1887,6 +1890,13 @@ packages:
     peerDependencies:
       react: 15.x || 16.x || 16.4.0-alpha.0911da3
       react-dom: 15.x || 16.x || 16.4.0-alpha.0911da3
+
+  '@recharts/devtools@0.0.5':
+    resolution: {integrity: sha512-sZER1IgwMX1QZXRyjqE08IXQhLI/k1uVHCutMPZqqW4jY3xl9AJnr5FJ7tmWXJAxUfS31A1In+Ug4rVacaVLcA==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+      recharts: ^3.3.0
 
   '@reduxjs/toolkit@2.11.2':
     resolution: {integrity: sha512-Kd6kAHTA6/nUpp8mySPqj3en3dm0tdMIgbttnQ1xFMVpufoj+ADi8pXLBsd4xzTRHQa7t/Jv8W5UnCuW4kuWMQ==}
@@ -7190,6 +7200,12 @@ snapshots:
       react: 16.14.0
       react-dom: 19.2.0(react@19.2.0)
       react-lifecycles-compat: 3.0.4
+
+  '@recharts/devtools@0.0.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(recharts@3.6.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@18.3.1)(react@19.2.0)(redux@5.0.1))':
+    dependencies:
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      recharts: 3.6.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@18.3.1)(react@19.2.0)(redux@5.0.1)
 
   '@reduxjs/toolkit@2.11.2(react-redux@9.2.0(@types/react@19.2.7)(react@19.2.0)(redux@5.0.1))(react@19.2.0)':
     dependencies:

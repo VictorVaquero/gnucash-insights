@@ -67,12 +67,28 @@ export const AvailableChartColors: AvailableChartColorsKeys[] = Object.keys(
 
 export const constructCategoryColors = (
   categories: string[],
-  colors: AvailableChartColorsKeys[]
+  colors: AvailableChartColorsKeys[],
+  seed = 42
 ): Map<string, AvailableChartColorsKeys> => {
   const categoryColors = new Map<string, AvailableChartColorsKeys>();
-  categories.forEach((category, index) => {
-    categoryColors.set(category, colors[index % colors.length]);
+
+  // Deterministic hash function
+  const getHash = (str: string, s: number) => {
+    let hash = s;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
+  };
+
+  categories.forEach((category) => {
+    const idHash = getHash(category, seed);
+    const colorIndex = idHash % colors.length;
+
+    categoryColors.set(category, colors[colorIndex]);
   });
+
   return categoryColors;
 };
 
@@ -94,29 +110,33 @@ export const getColorClassName = (
 export const getYAxisDomain = (
   autoMinValue: boolean,
   minValue: number | undefined,
-  maxValue: number | undefined,
+  maxValue: number | undefined
 ) => {
-  const minDomain = autoMinValue ? "auto" : minValue ?? 0
-  const maxDomain = maxValue ?? "auto"
-  return [minDomain, maxDomain]
-}
+  const minDomain = autoMinValue ? "auto" : minValue ?? 0;
+  const maxDomain = maxValue ?? "auto";
+  return [minDomain, maxDomain];
+};
 
 // Tremor hasOnlyOneValueForKey [v0.1.0]
 
-export function hasOnlyOneValueForKey(
-  array: any[],
-  keyToCheck: string,
+export function hasOnlyOneValueForKey<T extends object>(
+  array: T[],
+  keyToCheck: keyof T
 ): boolean {
-  const val: any[] = []
+  const seenValues = new Set();
 
   for (const obj of array) {
     if (Object.prototype.hasOwnProperty.call(obj, keyToCheck)) {
-      val.push(obj[keyToCheck])
-      if (val.length > 1) {
-        return false
+      const value = obj[keyToCheck];
+
+      if (seenValues.has(value)) {
+        // We found a duplicate value for this key
+        return false;
       }
+
+      seenValues.add(value);
     }
   }
 
-  return true
+  return true;
 }

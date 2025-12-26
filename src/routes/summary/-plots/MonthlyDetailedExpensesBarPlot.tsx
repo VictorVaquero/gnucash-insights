@@ -3,12 +3,15 @@ import * as d3 from "d3";
 import { useMemo } from "react";
 import { BarLoader } from "react-spinners";
 
+import { parseNum } from "@/common/utils";
 import { BarChart } from "@/components/charts/BarPlot";
 import { useAuth } from "@/contexts/useAuthContext";
+import { accountsOptions } from "@/db/queries/global";
 import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useSummaryPageContext } from "../-summaryPageContext";
+import { DateTime } from "luxon";
 
 export interface Data {
   accountId: string;
@@ -62,19 +65,43 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
 
 const DEFAULT_ACCOUNT_NAME = "Others";
 
+export type PivotedRow = {
+  date: string;
+  dateLabel: string;
+} & Record<string, number | string>;
+
 export function pivotData(data: Data[]) {
-  const accountNames = new Set<string>();
+  // 1. Get all unique account names first to ensure every row has every key
+  const accountNames = Array.from(new Set(data.map((d) => d.accountName)));
+
+  // We calculate totals by accountId to sort the returned keys by value
+  const idTotals = d3.rollup(
+    data,
+    (v) => d3.sum(v, (d) => d.value),
+    (d) => d.accountId
+  );
+
+  const accountIds = Array.from(idTotals.keys()).sort(
+    (a, b) => (idTotals.get(b) || 0) - (idTotals.get(a) || 0)
+  );
+
   const groupedByDate = d3.group(data, (d) => d.date);
 
-  const pivoted = Array.from(groupedByDate, ([date, records]) => {
-    const row: any = {
+  const pivoted = Array.from(groupedByDate, ([date, records]): PivotedRow => {
+    // 2. Initialize the row with metadata
+    const row: PivotedRow = {
       date: date,
       dateLabel: records[0].dateLabel,
     };
 
+    // 3. Pre-fill account keys with 0 to prevent 'undefined' in charts
+    accountNames.forEach((name) => {
+      row[name] = 0;
+    });
+
+    // 4. Fill in the actual values
     records.forEach((d) => {
       row[d.accountName] = d.value;
-      accountNames.add(d.accountName); // Track every name we encounter
     });
 
     return row;
@@ -82,7 +109,7 @@ export function pivotData(data: Data[]) {
 
   return {
     data: pivoted,
-    keys: Array.from(accountNames), // ["Gastos", "Ingresos", "Savings", ...]
+    keys: accountIds, // Now returning accountIds as requested
   };
 }
 
@@ -100,13 +127,16 @@ export const MonthlyDetailedExpensesBarPlot = () => {
       bookId,
       accountIds: [dbconfig.expenses],
       periodicity: chartPeriodicity,
-      hideAccounts,
     })
   );
 
+  const { data: accounts } = useQuery(
+    accountsOptions(db, bookId, [dbconfig.expenses])
+  );
+
   const { data, keys } = useMemo(() => {
-    if (rawData)
-      return pivotData(
+    if (rawData && accounts) {
+      const { data, keys } = pivotData(
         collapseMinorAccounts(
           rawData
             .filter((d) => d.date >= dateRange.from.toString())
@@ -114,8 +144,15 @@ export const MonthlyDetailedExpensesBarPlot = () => {
           14
         )
       );
+      const keyNames = keys
+        .filter((k) => !hideAccounts.includes(k))
+        .map(
+          (k) => accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
+        );
+      return { data, keys: keyNames };
+    }
     return { data: undefined, keys: undefined };
-  }, [rawData]);
+  }, [rawData, accounts, hideAccounts]);
 
   if (!data || !dateRange) {
     return (
@@ -129,17 +166,14 @@ export const MonthlyDetailedExpensesBarPlot = () => {
     <div className="h-full flex flex-col dark">
       <BarChart
         type="stacked"
-        className="h-52"
+        className="h-full"
         data={data}
-        index="date"
+        index="dateLabel"
         categories={keys}
         showLegend={false}
+        valueFormatter={(number: number) => parseNum(number, { digits: 0 })}
+        onValueChange={(v) => setDetailedDate(DateTime.fromFormat(v?.date as string, 'yyyy-LL-dd'))}
       />
     </div>
   );
 };
-//<MonthlyExpensesChart
-//data={data}
-//domain={{ startDate: dateRange.from, endDate: dateRange.to }}
-//setDate={setDetailedDate}
-///>
