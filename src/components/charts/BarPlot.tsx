@@ -1,4 +1,6 @@
 // Tremor BarChart [v1.0.0]
+/* eslint-disable */
+// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { RechartsDevtools } from "@recharts/devtools";

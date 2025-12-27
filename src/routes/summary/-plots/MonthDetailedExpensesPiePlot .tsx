@@ -1,7 +1,7 @@
+import { BarLoader } from "@/components/ui/BarLoader";
 import * as d3 from "d3";
 import { DateTime } from "luxon";
-import { MutableRefObject, useMemo, useRef } from "react";
-import { BarLoader } from '@/components/ui/BarLoader'
+import { RefObject, useMemo, useRef } from "react";
 
 import { getDefaultColor, getRandomColor } from "@/common/getColors";
 import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
 export interface Data {
-  account: string;
+  account: string | null;
   date: string;
   value: number;
 }
@@ -25,7 +25,7 @@ export interface Data {
 const margin = { t: 5, r: 5, b: 5, l: 5 };
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const yf = (d: Data) => d.value;
-const gf = (d: Data) => d.account;
+const gf = (d: Data) => d.account ?? "";
 const defaultAccount = "Others";
 const gray = twStyles.getPropertyValue("--color-gray-400");
 
@@ -45,7 +45,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
     };
   }, [width, height]);
 
-  const findAccount = (s: string) =>
+  const findAccount = (s: string | null) =>
     props.accounts.filter((a) => a.id === s)[0];
   const name_f = (d: Data) => findAccount(d.account)?.name ?? defaultAccount;
   const color_f = (d: Data) =>
@@ -56,7 +56,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
   const hide_accounts = [""];
   const filtered_data = props.data.filter(
     (d) =>
-      !hide_accounts.includes(d.account) &&
+      !hide_accounts.includes(d.account ?? "") &&
       xf(d).year === props.date.year &&
       xf(d).month === props.date.month
   );
@@ -72,10 +72,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
 
   const dataf = (id: string) => filtered_data.filter((d) => gf(d) === id)[0];
   const choosePoint = chooseTooltipPointNode<Data>(dataf, "path");
-  const updateTooltip = (
-    ref: MutableRefObject<HTMLDivElement | null>,
-    d: Data
-  ) => {
+  const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: Data) => {
     if (ref.current !== null) {
       const tooltip = d3.select(ref.current);
       tooltip.select("#title").text(name_f(d));
@@ -101,7 +98,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
           {pie_generator(filtered_data).map((d) => (
             <path
               fill={
-                props.hideAccounts.includes(d.data.account)
+                props.hideAccounts.includes(d.data.account ?? "")
                   ? gray
                   : color_f(d.data)
               }
@@ -144,7 +141,7 @@ export const MonthDetailedExpensesPiePlot = () => {
 
   const dbconf = getConfig(user);
   const { data: accounts, isSuccess: isSuccessAccounts } = useQuery(
-    accountsOptions({db, bookId, accountIds:[dbconf.expenses]})
+    accountsOptions({ db, bookId, accountIds: [dbconf.expenses] })
   );
   const { data, isSuccess } = useQuery(
     netCostsYearMonthOptions({ db, user, bookId })

@@ -12,7 +12,8 @@ export const saveFile = async (db: Uint8Array) => {
   const opfsRoot = await navigator.storage.getDirectory();
   const fileHandle = await opfsRoot.getFileHandle("cash.db", { create: true });
   const writable = await fileHandle.createWritable();
-  await writable.write(db);
+  // @ts-expect-error Who the fuck knows
+  await writable.write(db); 
   await writable.close();
   console.debug("S3 db wrote to cash.db");
 };

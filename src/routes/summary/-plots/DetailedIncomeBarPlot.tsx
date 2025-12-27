@@ -11,7 +11,6 @@ import { TransactData, transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useSummaryPageContext } from "../-summaryPageContext";
-import { D } from "node_modules/@tanstack/react-query-devtools/build/modern/ReactQueryDevtools-Cn7cKi7o";
 
 const DEFAULT_ACCOUNT_NAME = "Other";
 
@@ -89,7 +88,7 @@ export const DetailedIncomeBarPlot = () => {
           if (rawData) {
             const { data, keys } = pivotData(
               rawData
-                .map((d)=> ({...d, value: -d.value}))
+                .map((d) => ({ ...d, value: -d.value }))
                 .filter((d) => d.date >= dateRange.from.toString())
                 .filter((d) => d.date <= dateRange.to.toString())
             );
@@ -112,11 +111,10 @@ export const DetailedIncomeBarPlot = () => {
       select: useCallback(
         (accounts: AccountsData) => {
           if (keys) {
-            const keyNames = keys
-              .map(
-                (k) =>
-                  accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
-              );
+            const keyNames = keys.map(
+              (k) =>
+                accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
+            );
             return keyNames;
           }
         },
@@ -142,7 +140,7 @@ export const DetailedIncomeBarPlot = () => {
         index="dateLabel"
         categories={keyNames}
         showLegend={false}
-        showXAxis ={false}
+        showXAxis={false}
         valueFormatter={(number: number) => parseNum(number, { digits: 0 })}
       />
     </div>
