@@ -60,7 +60,7 @@ const RootComponent = () => {
   return <>
     <Header isCollapsed={isCollapsed} setCollapse={setCollapse} />
     <div className='bg-background flex h-full lg:h-[calc(100vh-6rem)] '>
-      <SideBar isCollapsed={isCollapsed} />
+      <SideBar isCollapsed={isCollapsed} toggleSidebar={()=>setCollapse((val)=>!val)} />
       <main className='h-full w-full'>
         <Outlet />
         <Suspense>
