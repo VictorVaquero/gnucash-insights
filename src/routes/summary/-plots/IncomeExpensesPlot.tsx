@@ -1,7 +1,7 @@
+import { BarLoader } from "@/components/ui/BarLoader";
 import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
-import { BarLoader } from '@/components/ui/BarLoader'
 
 import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
 import { XAxis } from "@/components/XAxis";
@@ -162,7 +162,7 @@ const DrawMonthlyIncomeExpensesPlot = ({
   );
 };
 
-export const MonthlyIncomeExpensesPlot = () => {
+export const IncomeExpensesPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
@@ -235,7 +235,7 @@ export const MonthlyIncomeExpensesPlot = () => {
           const timeA = new Date(a.date).getTime();
           const timeB = new Date(b.date).getTime();
           return timeA - timeB;
-        })
+        });
     }
   }, [net, income, expenses, dateRange]);
 

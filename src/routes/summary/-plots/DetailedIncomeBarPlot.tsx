@@ -10,8 +10,10 @@ import { AccountsData, accountsOptions } from "@/db/queries/global";
 import { TransactData, transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
-import { DateTime } from "luxon";
 import { useSummaryPageContext } from "../-summaryPageContext";
+import { D } from "node_modules/@tanstack/react-query-devtools/build/modern/ReactQueryDevtools-Cn7cKi7o";
+
+const DEFAULT_ACCOUNT_NAME = "Other";
 
 export interface Data {
   accountId: string;
@@ -20,50 +22,6 @@ export interface Data {
   dateLabel: string;
   value: number;
 }
-
-function collapseMinorAccounts(data: Data[], limit: number): Data[] {
-  // 1. Calculate totals per account to find the "Heavy Hitters"
-  const totalByAccount = d3.rollup(
-    data,
-    (v) => d3.sum(v, (d) => d.value),
-    (d) => d.accountId
-  );
-
-  // 2. Identify Top Accounts
-  const topAccounts = new Set(
-    Array.from(totalByAccount.entries())
-      .sort(([, sumA], [, sumB]) => sumB - sumA)
-      .slice(0, limit)
-      .map(([accountId]) => accountId)
-  );
-
-  // 3. Roll up data.
-  // Note: We group by BOTH date and the "Calculated AccountId"
-  const collapsed = d3.flatRollup(
-    data,
-    (v) => ({
-      // Take metadata from the first entry in the group
-      dateLabel: v[0].dateLabel,
-      // If it's a top account, keep the name; otherwise, call it "Others"
-      accountName: topAccounts.has(v[0].accountId)
-        ? v[0].accountName
-        : DEFAULT_ACCOUNT_NAME,
-      value: d3.sum(v, (d) => d.value),
-    }),
-    (d) => d.date,
-    (d) => (topAccounts.has(d.accountId) ? d.accountId : DEFAULT_ACCOUNT_NAME)
-  );
-
-  // 4. Map back to your Data structure
-  // collapsed is an array of [key1, key2, rollupValue]
-  return collapsed.map(([date, accountId, details]) => ({
-    date,
-    accountId,
-    ...details,
-  }));
-}
-
-const DEFAULT_ACCOUNT_NAME = "Others";
 
 export type PivotedRow = {
   date: string;
@@ -113,30 +71,27 @@ export function pivotData(data: Data[]) {
   };
 }
 
-export const MonthlyDetailedExpensesBarPlot = () => {
+export const DetailedIncomeBarPlot = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const { user } = useAuth();
   const dbconfig = getConfig(user);
-  const { hideAccounts, setDetailedDate, dateRange, chartPeriodicity } =
-    useSummaryPageContext();
+  const { dateRange, chartPeriodicity } = useSummaryPageContext();
 
   const { data: transactData } = useQuery(
     transactByAccountOptions({
       db,
       bookId,
-      accountIds: [dbconfig.expenses],
+      accountIds: [dbconfig.income],
       periodicity: chartPeriodicity,
       select: useCallback(
         (rawData: TransactData) => {
           if (rawData) {
             const { data, keys } = pivotData(
-              collapseMinorAccounts(
-                rawData
-                  .filter((d) => d.date >= dateRange.from.toString())
-                  .filter((d) => d.date <= dateRange.to.toString()),
-                14
-              )
+              rawData
+                .map((d)=> ({...d, value: -d.value}))
+                .filter((d) => d.date >= dateRange.from.toString())
+                .filter((d) => d.date <= dateRange.to.toString())
             );
             return { data, keys };
           }
@@ -153,12 +108,11 @@ export const MonthlyDetailedExpensesBarPlot = () => {
     accountsOptions({
       db,
       bookId,
-      accountIds: [dbconfig.expenses],
+      accountIds: [dbconfig.income],
       select: useCallback(
         (accounts: AccountsData) => {
           if (keys) {
             const keyNames = keys
-              .filter((k) => !hideAccounts.includes(k))
               .map(
                 (k) =>
                   accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
@@ -188,10 +142,8 @@ export const MonthlyDetailedExpensesBarPlot = () => {
         index="dateLabel"
         categories={keyNames}
         showLegend={false}
+        showXAxis ={false}
         valueFormatter={(number: number) => parseNum(number, { digits: 0 })}
-        onValueChange={(v) =>
-          setDetailedDate(DateTime.fromFormat(v?.date as string, "yyyy-LL-dd"))
-        }
       />
     </div>
   );

@@ -14,12 +14,13 @@ import {
 import { getConfig } from "@/db/utils";
 import { KpiBlock } from "@/routes/summary/-KpiBlock.tsx";
 import { SavingsBlock } from "@/routes/summary/-SavingsBlock.tsx";
-import { MonthlyAccountsPlot } from "@/routes/summary/-plots/MonthlyAccountsPlot.tsx";
-import { MonthlyIncomeExpensesPlot } from "@/routes/summary/-plots/MonthlyIncomeExpensesPlot.tsx";
+import { AssetAccountsPlot } from "@/routes/summary/-plots/AssetAccountsPlot.tsx";
+import { IncomeExpensesPlot } from "@/routes/summary/-plots/IncomeExpensesPlot.tsx";
 import { SettingsBlock } from "./-SettingsBlock";
+import { DetailedExpensesBarPlot } from "./-plots/DetailedExpensesBarPlot";
 import { MonthDetailedExpensesPiePlot } from "./-plots/MonthDetailedExpensesPiePlot ";
-import { MonthlyDetailedExpensesBarPlot } from "./-plots/MonthlyDetailedExpensesBarPlot";
 import { SummaryPageContextProvider } from "./-summaryPageContext";
+import { DetailedIncomeBarPlot } from "./-plots/DetailedIncomeBarPlot";
 
 const Summary = () => {
   return (
@@ -28,7 +29,7 @@ const Summary = () => {
         className="
         w-full md:h-full p-10 pt-0
         flex-col
-        md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_2fr_2fr_4fr]
+        md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_2fr_2fr_4fr_2fr]
         gap-x-6 gap-y-6
         "
       >
@@ -41,13 +42,16 @@ const Summary = () => {
           <SettingsBlock />
         </div>
         <div className="col-start-2 row-start-2">
-          <MonthlyAccountsPlot />
+          <AssetAccountsPlot />
         </div>
         <div className="col-start-2 row-start-3">
-          <MonthlyIncomeExpensesPlot />
+          <IncomeExpensesPlot />
         </div>
         <div className="col-start-2 row-start-4">
-          <MonthlyDetailedExpensesBarPlot />
+          <DetailedExpensesBarPlot />
+        </div>
+        <div className="col-start-2 row-start-5">
+          <DetailedIncomeBarPlot />
         </div>
       </div>
     </SummaryPageContextProvider>
@@ -68,7 +72,7 @@ export const Route = createFileRoute("/summary/")({
   loader: ({ context: { queryClient, db, bookId, auth } }) => {
     if (db && bookId && auth?.user) {
       const dbconf = getConfig(auth.user);
-      queryClient.ensureQueryData(accountsOptions({db, bookId}));
+      queryClient.ensureQueryData(accountsOptions({ db, bookId }));
       queryClient.ensureQueryData(
         netCostsYearMonthOptions({ db, user: auth.user, bookId })
       );

@@ -1,7 +1,7 @@
+import { BarLoader } from "@/components/ui/BarLoader";
 import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
-import { BarLoader } from '@/components/ui/BarLoader'
 
 import { getRandomColor } from "@/common/getColors";
 import { parseNum, useWindowSize } from "@/common/utils.ts";
@@ -9,13 +9,13 @@ import { XAxis } from "@/components/XAxis";
 import { YAxis } from "@/components/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
+import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
 import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
-import { transactByAccountOptions } from "@/db/queries/summary";
 
 interface Data {
   date: string;
@@ -60,7 +60,7 @@ const DrawMonthlyAccountsPlot = ({
     .y((d) => yScale(yf(d)));
 
   const findPointById = (id: string): Data | undefined =>
-    data.find((d) => ("circle" + d.accountId + d.date) === id);
+    data.find((d) => "circle" + d.accountId + d.date === id);
 
   const choosePoint = chooseTooltipPointNode<Data>(findPointById, "circle");
   const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: Data) => {
@@ -97,8 +97,8 @@ const DrawMonthlyAccountsPlot = ({
           {data.map((d) => (
             <circle
               fill={"#00000000"}
-              key={"circle"+d.accountId+d.date}
-              id={"circle"+d.accountId+d.date}
+              key={"circle" + d.accountId + d.date}
+              id={"circle" + d.accountId + d.date}
               strokeWidth="1.5"
               shapeRendering="geometricPrecision"
               r="20"
@@ -127,7 +127,7 @@ const DrawMonthlyAccountsPlot = ({
   );
 };
 
-export const MonthlyAccountsPlot = () => {
+export const AssetAccountsPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
@@ -140,12 +140,12 @@ export const MonthlyAccountsPlot = () => {
       bookId,
       accountIds: [dbconfig.assets],
       periodicity: chartPeriodicity,
-      accumulate: true
+      accumulate: true,
     })
   );
 
   const { data: accounts } = useQuery(
-    accountsOptions({db, bookId, accountIds:[dbconfig.assets]})
+    accountsOptions({ db, bookId, accountIds: [dbconfig.assets] })
   );
 
   const data = useMemo(() => {
