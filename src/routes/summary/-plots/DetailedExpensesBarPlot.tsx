@@ -166,7 +166,7 @@ export const DetailedExpensesBarPlot = () => {
             return keyNames;
           }
         },
-        [keys]
+        [keys, hideAccounts]
       ),
     })
   );
