@@ -10,6 +10,7 @@ import { yearlyExpensesOptions } from "@/db/queries/expenses";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 
 // Types
 interface ExpenseData {
@@ -19,7 +20,6 @@ interface ExpenseData {
   total: number;
   [year: number]: number;
 }
-
 
 // Sub-component for a single row to reduce main component bloat
 const ExpenseRow = ({
@@ -34,34 +34,32 @@ const ExpenseRow = ({
   const overallMean = item.total / numMonths;
 
   return (
-    <div className="w-full flex flex-row gap-x-0 lg:gap-x-6 py-4 border-b border-shark-500 text-sm lg:text-base hover:bg-shark-700 transition-colors">
-      <span className="grow text-left font-medium">{item.name}</span>
+    <div className="grid grid-cols-subgrid col-start-2 col-span-full py-3 border-b border-shark-500 text-sm lg:text-base hover:bg-shark-700 transition-colors">
+      <span className="col-start-1 text-left font-medium">{item.name}</span>
 
       {/* Total Column */}
-      <span className="grow-0 basis-10 md:basis-14 shrink-0 text-left">
+      <span className="col-start-4 text-left">
         {parseNum(item.total, { digits: 0 })}
       </span>
 
       {/* Yearly Totals */}
-      {yearRange.map((year) => (
+      {yearRange.map((year, index) => (
         <span
           key={`val-${item.id}-${year}`}
-          className="grow-0 basis-10 md:basis-14 shrink-0 text-left"
+          className={"text-left col-start-"+(index+5)}
         >
           {parseNum(item[year], { digits: 2, fixed: 3 })}
         </span>
       ))}
 
-      {/* Spacer */}
-      <span className="grow-0 basis-10 md:basis-14 shrink-0" />
 
       {/* Overall Mean */}
-      <span className="grow-0 basis-10 md:basis-14 shrink-0 text-left font-semibold">
+      <span className="text-left font-semibold col-start-11">
         {parseNum(overallMean, { digits: 0 })}
       </span>
 
       {/* Yearly Means vs Overall Mean */}
-      {yearRange.map((year) => {
+      {yearRange.map((year, index) => {
         const yearMean = (item[year] || 0) / 12;
         const isUnderBudget = overallMean > yearMean;
         const diff = Math.abs(overallMean - yearMean);
@@ -72,9 +70,10 @@ const ExpenseRow = ({
             title={`${parseNum(diff)} ${
               isUnderBudget ? "less" : "more"
             } than average`}
-            className={`grow-0 basis-10 md:basis-14 shrink-0 text-left ${
-              isUnderBudget ? "text-emerald-500" : "text-red-500"
-            }`}
+            className={cn('text-left',
+              isUnderBudget ? "text-emerald-500" : "text-red-500",
+              "col-start-"+(index+12)
+            )}
           >
             {parseNum(yearMean, { digits: 2, fixed: 3 })}
           </span>
@@ -126,34 +125,28 @@ export const Expenses = () => {
   );
 
   return (
-    <div className="w-full h-full p-4 pt-10 lg:p-10 grid grid-cols-1 gap-y-2 lg:gap-y-6">
-      <div className="flex flex-col overflow-x-auto">
-        {/* Table Header */}
-        <div className="px-4 w-full flex flex-row gap-x-0 lg:gap-x-6 pb-6 text-white text-left border-b border-shark-500 font-bold">
-          <span className="grow">Category</span>
-          <h4 className="grow-0 basis-10 md:basis-14 shrink-0">Total</h4>
+    <div className="w-full  p-4 pt-10 lg:p-10 grid grid-cols-[120px_repeat(16,1fr)] gap-y-2 lg:gap-y-6">
+      {/* Table Header */}
+      <div className="grid grid-cols-subgrid col-span-full py-4 text-white text-left border-b border-shark-500 font-bold">
+        <span className="col-start-1">Category</span>
+        <h4 className="col-start-5">Total</h4>
 
-          {yearRange.map((year) => (
-            <h4 key={year} className="grow-0 basis-10 md:basis-14 shrink-0">
-              {year}
-            </h4>
-          ))}
+        {yearRange.map((year, index) => (
+          <h4 key={year} className={"col-start-" + (index + 6)}>
+            {year}
+          </h4>
+        ))}
 
-          <span className="grow-0 basis-10 md:basis-14 shrink-0" />
-          <h4 className="grow-0 basis-10 md:basis-14 shrink-0">Mean</h4>
+        <h4 className="col-start-12">Mean</h4>
 
-          {yearRange.map((year) => (
-            <h4
-              key={`${year}-m`}
-              className="grow-0 basis-10 md:basis-14 shrink-0 "
-            >
-              {year}
-            </h4>
-          ))}
-        </div>
-
-        <TreeList data={[hierarchy]} className="text-white w-full" />
+        {yearRange.map((year, index) => (
+          <h4 key={`${year}-m`} className={"col-start-" + (index + 13)}>
+            {year}
+          </h4>
+        ))}
       </div>
+      <TreeList data={[hierarchy]} className="text-white w-full grid grid-cols-subgrid col-span-full" />
+
     </div>
   );
 };

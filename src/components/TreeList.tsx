@@ -25,16 +25,16 @@ export const TreeList = ({data, className}: {data: TreeListItem[], className?: s
 const TreeNode = ({ item }: {item: TreeListItem}) => {
     const [collapse, isCollapsed] = useState(false);
 
-    if (!item.children || item.children.length == 0) return <li className="px-4 hover:bg-shark-700 rounded-sm" key={item.key}>{item.node}</li>
-    return <li className="w-full" key={item.key}>
-        <button className="flex flex-row w-full px-4 hover:bg-shark-700 rounded-sm" onClick={() => isCollapsed((prev) => !prev)}>
-            <div className="pr-2 flex items-center justify-center">
+    if (!item.children || item.children.length == 0) return <li className="grid grid-cols-subgrid col-span-full hover:bg-shark-700 rounded-sm" key={item.key}>{item.node}</li>
+    return <li className="grid grid-cols-subgrid col-span-full" key={item.key}>
+        <button className="grid grid-cols-subgrid col-span-full  hover:bg-shark-700 rounded-sm" onClick={() => isCollapsed((prev) => !prev)}>
+            <div className="col-start-1 flex items-center justify-center">
                 <motion.span className="" style={{originX: 0.3}} animate={{ rotate: collapse ? 0 : 90, translateY: -2 }}>&gt;</motion.span>
             </div>
             {item.node}
         </button>
         <AnimatePresence mode='sync'>
-            {collapse && <TreeList data={item.children} className="ml-2 md:ml-10" />}
+            {collapse && <TreeList data={item.children} className="grid grid-cols-subgrid col-span-full ml-2 md:ml-10" />}
         </AnimatePresence>
     </li>
 }
