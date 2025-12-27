@@ -1,8 +1,7 @@
 @import "tailwindcss";
 
-
-
 @theme {
+  /* COLORS*/
   --color-shark-50: #778490;
   --color-shark-100: #707d89;
   --color-shark-200: #65707b;
@@ -15,5 +14,18 @@
   --color-shark-900: #151719;
   --color-shark-950: #0f1112;
   --color-shark: #202427;
-}
 
+  /* Animations */
+  --animate-bar-slide: bar-slide 1s cubic-bezier(0, 0.3, 1, 0.3) infinite;
+
+  @keyframes bar-slide {
+    0% {
+      left: -40%;
+      width: 30%;
+    }
+    100% {
+      left: 100%;
+      width: 30%;
+    }
+  }
+}

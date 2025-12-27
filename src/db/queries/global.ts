@@ -55,20 +55,33 @@ const getAccounts = ({
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, accountsTable.id));
 };
 
-export const accountsOptions = (
-  db?: SQLJsDatabase,
-  bookId?: string,
-  accountIds?: string[]
-) => {
+
+export type AccountsData = Awaited<ReturnType<ReturnType<typeof getAccounts>['execute']>>;
+export const accountsOptions = <TData = AccountsData>(args: {
+  db: SQLJsDatabase | undefined;
+  bookId: string | undefined;
+  accountIds?: string[];
+  select?: (data: AccountsData) => TData;
+}) => {
+  const { db, bookId, accountIds, select } = args;
+  
   const cleanAccountIds = accountIds?.filter(Boolean) ?? [];
-  const enabled = !!db && !!bookId;
+  const isEnabled = !!db && !!bookId;
 
   return queryOptions({
-    queryKey: ["accounts", bookId, cleanAccountIds],
-    queryFn: !enabled
+    queryKey: ["accounts", bookId, [...cleanAccountIds].sort()] as const,
+    queryFn: !isEnabled
       ? skipToken
-      : async () => getAccounts({ db, accountIds: cleanAccountIds }).execute(),
-    enabled: enabled,
+      : async () => {
+          const query = getAccounts({ 
+            db: db, 
+            accountIds: cleanAccountIds 
+          });
+          return await query.execute();
+        },
+        
+    enabled: isEnabled,
+    select,
   });
 };
 

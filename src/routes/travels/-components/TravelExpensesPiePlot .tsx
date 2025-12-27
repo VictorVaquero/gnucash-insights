@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import * as d3 from 'd3';
 import { MutableRefObject, useMemo, useRef } from "react";
-import { BarLoader } from "react-spinners";
+import { BarLoader } from '@/components/ui/BarLoader'
 
 import { getDefaultColor, getRandomColor } from '@/common/getColors';
 import { parseNum, useWindowSize } from "@/common/utils.ts";

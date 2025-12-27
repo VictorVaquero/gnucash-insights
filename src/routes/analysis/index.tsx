@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { DateTime } from 'luxon'
 import { useMemo, useState } from 'react'
-import { BarLoader } from 'react-spinners'
+import { BarLoader } from '@/components/ui/BarLoader'
 
 
 import { fullTransactionsOptions } from '@/db/queries/global'

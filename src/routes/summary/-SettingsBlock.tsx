@@ -14,7 +14,7 @@ export const SettingsBlock = () => {
   const { user } = useAuth();
   const dbconf = getConfig(user);
   const { data: accounts } = useQuery(
-    accountsOptions(db, bookId, [dbconf.expenses])
+    accountsOptions({db, bookId, accountIds: [dbconf.expenses]})
   );
 
   const {

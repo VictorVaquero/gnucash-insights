@@ -356,43 +356,57 @@ const getTransactByAccountQuery = ({
     .orderBy(ft.date);
 };
 
-export const transactByAccountOptions = ({
-  db,
-  bookId,
-  accountIds,
-  periodicity,
-  accumulate = false,
-  hideAccounts = [],
-}: {
+
+// Helper to extract the actual data type from the execute() promise
+export type TransactData = Awaited<ReturnType<ReturnType<typeof getTransactByAccountQuery>['execute']>>;
+
+export const transactByAccountOptions = <TData = TransactData>(args: {
   db: SQLJsDatabase | undefined;
   bookId: string | undefined;
   accountIds: string[];
   periodicity: "monthly" | "quarterly" | "yearly";
   accumulate?: boolean;
   hideAccounts?: string[];
+  // TData defaults to the raw data, or whatever the select function returns
+  select?: (data: TransactData) => TData;
 }) => {
-  const enabled = !!db && !!bookId && accountIds.length > 0 && !!periodicity;
+  const {
+    db,
+    bookId,
+    accountIds,
+    periodicity,
+    accumulate = false,
+    hideAccounts = [],
+    select,
+  } = args;
+
+  const isEnabled = !!db && !!bookId && accountIds.length > 0;
 
   return queryOptions({
     queryKey: [
       "transactsSumOptions",
       bookId,
-      accountIds,
+      [...accountIds].sort(),
       periodicity,
-      accumulate, // Added to queryKey to avoid cache collisions
-      hideAccounts,
-    ],
-    queryFn: enabled
-      ? async () =>
-          getTransactByAccountQuery({
-            db,
-            bookId,
+      accumulate,
+      [...hideAccounts].sort(),
+    ] as const,
+
+    queryFn: isEnabled
+      ? async () => {
+          const query = getTransactByAccountQuery({
+            db: db,
+            bookId: bookId,
             accountIds,
             periodicity,
             accumulate,
             hideAccounts,
-          }).execute()
+          });
+          return await query.execute();
+        }
       : skipToken,
-    enabled: enabled,
+
+    enabled: isEnabled,
+    select, 
   });
 };

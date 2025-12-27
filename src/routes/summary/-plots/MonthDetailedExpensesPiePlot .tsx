@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { MutableRefObject, useMemo, useRef } from "react";
-import { BarLoader } from "react-spinners";
+import { BarLoader } from '@/components/ui/BarLoader'
 
 import { getDefaultColor, getRandomColor } from "@/common/getColors";
 import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
@@ -144,7 +144,7 @@ export const MonthDetailedExpensesPiePlot = () => {
 
   const dbconf = getConfig(user);
   const { data: accounts, isSuccess: isSuccessAccounts } = useQuery(
-    accountsOptions(db, bookId, [dbconf.expenses])
+    accountsOptions({db, bookId, accountIds:[dbconf.expenses]})
   );
   const { data, isSuccess } = useQuery(
     netCostsYearMonthOptions({ db, user, bookId })

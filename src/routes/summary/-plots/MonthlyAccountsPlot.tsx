@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
-import { BarLoader } from "react-spinners";
+import { BarLoader } from '@/components/ui/BarLoader'
 
 import { getRandomColor } from "@/common/getColors";
 import { parseNum, useWindowSize } from "@/common/utils.ts";
@@ -145,7 +145,7 @@ export const MonthlyAccountsPlot = () => {
   );
 
   const { data: accounts } = useQuery(
-    accountsOptions(db, bookId, [dbconfig.assets])
+    accountsOptions({db, bookId, accountIds:[dbconfig.assets]})
   );
 
   const data = useMemo(() => {

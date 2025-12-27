@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { BarLoader } from 'react-spinners';
+import { BarLoader } from '@/components/ui/BarLoader'
 
 import { toHierarchy } from '@/common/toHierarchy';
 import { parseNum } from '@/common/utils';

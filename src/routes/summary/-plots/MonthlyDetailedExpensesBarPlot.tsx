@@ -1,17 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import * as d3 from "d3";
-import { useMemo } from "react";
-import { BarLoader } from "react-spinners";
+import { useCallback } from "react";
 
 import { parseNum } from "@/common/utils";
 import { BarChart } from "@/components/charts/BarPlot";
+import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuth } from "@/contexts/useAuthContext";
-import { accountsOptions } from "@/db/queries/global";
-import { transactByAccountOptions } from "@/db/queries/summary";
+import { AccountsData, accountsOptions } from "@/db/queries/global";
+import { TransactData, transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
-import { useSummaryPageContext } from "../-summaryPageContext";
 import { DateTime } from "luxon";
+import { useSummaryPageContext } from "../-summaryPageContext";
 
 export interface Data {
   accountId: string;
@@ -121,40 +121,57 @@ export const MonthlyDetailedExpensesBarPlot = () => {
   const { hideAccounts, setDetailedDate, dateRange, chartPeriodicity } =
     useSummaryPageContext();
 
-  const { data: rawData } = useQuery(
+  const { data: transactData } = useQuery(
     transactByAccountOptions({
       db,
       bookId,
       accountIds: [dbconfig.expenses],
       periodicity: chartPeriodicity,
+      select: useCallback(
+        (rawData: TransactData) => {
+          if (rawData) {
+            const { data, keys } = pivotData(
+              collapseMinorAccounts(
+                rawData
+                  .filter((d) => d.date >= dateRange.from.toString())
+                  .filter((d) => d.date <= dateRange.to.toString()),
+                14
+              )
+            );
+            return { data, keys };
+          }
+          return { data: undefined, keys: undefined };
+        },
+        [dateRange]
+      ),
     })
   );
 
-  const { data: accounts } = useQuery(
-    accountsOptions(db, bookId, [dbconfig.expenses])
+  const { data, keys } = transactData ?? { data: undefined, keys: undefined };
+
+  const { data: keyNames } = useQuery(
+    accountsOptions({
+      db,
+      bookId,
+      accountIds: [dbconfig.expenses],
+      select: useCallback(
+        (accounts: AccountsData) => {
+          if (keys) {
+            const keyNames = keys
+              .filter((k) => !hideAccounts.includes(k))
+              .map(
+                (k) =>
+                  accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
+              );
+            return keyNames;
+          }
+        },
+        [keys]
+      ),
+    })
   );
 
-  const { data, keys } = useMemo(() => {
-    if (rawData && accounts) {
-      const { data, keys } = pivotData(
-        collapseMinorAccounts(
-          rawData
-            .filter((d) => d.date >= dateRange.from.toString())
-            .filter((d) => d.date <= dateRange.to.toString()),
-          14
-        )
-      );
-      const keyNames = keys
-        .filter((k) => !hideAccounts.includes(k))
-        .map(
-          (k) => accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
-        );
-      return { data, keys: keyNames };
-    }
-    return { data: undefined, keys: undefined };
-  }, [rawData, accounts, hideAccounts]);
-
-  if (!data || !dateRange) {
+  if (!data || !dateRange || !keyNames) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <BarLoader color="#36d7b7" />
@@ -169,10 +186,12 @@ export const MonthlyDetailedExpensesBarPlot = () => {
         className="h-full"
         data={data}
         index="dateLabel"
-        categories={keys}
+        categories={keyNames}
         showLegend={false}
         valueFormatter={(number: number) => parseNum(number, { digits: 0 })}
-        onValueChange={(v) => setDetailedDate(DateTime.fromFormat(v?.date as string, 'yyyy-LL-dd'))}
+        onValueChange={(v) =>
+          setDetailedDate(DateTime.fromFormat(v?.date as string, "yyyy-LL-dd"))
+        }
       />
     </div>
   );

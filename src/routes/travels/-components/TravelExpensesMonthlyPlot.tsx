@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { MutableRefObject, useMemo, useRef } from "react";
-import { BarLoader } from "react-spinners";
+import { BarLoader } from '@/components/ui/BarLoader'
 
 import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
 import { XAxis } from "@/components/XAxis";

@@ -68,7 +68,7 @@ export const Route = createFileRoute("/summary/")({
   loader: ({ context: { queryClient, db, bookId, auth } }) => {
     if (db && bookId && auth?.user) {
       const dbconf = getConfig(auth.user);
-      queryClient.ensureQueryData(accountsOptions(db, bookId));
+      queryClient.ensureQueryData(accountsOptions({db, bookId}));
       queryClient.ensureQueryData(
         netCostsYearMonthOptions({ db, user: auth.user, bookId })
       );
