@@ -9,8 +9,8 @@ import { useAuth } from "@/contexts/useAuthContext";
 import { yearlyExpensesOptions } from "@/db/queries/expenses";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
-import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 // Types
 interface ExpenseData {
@@ -34,11 +34,9 @@ const ExpenseRow = ({
   const overallMean = item.total / numMonths;
 
   return (
-    <div className="grid grid-cols-subgrid col-start-2 col-span-full py-3 border-b border-shark-500 text-sm lg:text-base hover:bg-shark-700 transition-colors">
-      <span className="col-start-1 text-left font-medium">{item.name}</span>
-
+    <div className="grid grid-cols-subgrid col-start-6 col-span-full py-3 border-b border-shark-500 text-sm lg:text-base hover:bg-shark-700 transition-colors">
       {/* Total Column */}
-      <span className="col-start-4 text-left">
+      <span className="col-start-1 text-left">
         {parseNum(item.total, { digits: 0 })}
       </span>
 
@@ -46,15 +44,14 @@ const ExpenseRow = ({
       {yearRange.map((year, index) => (
         <span
           key={`val-${item.id}-${year}`}
-          className={"text-left col-start-"+(index+5)}
+          className={"text-left col-start-" + (index + 2)}
         >
           {parseNum(item[year], { digits: 2, fixed: 3 })}
         </span>
       ))}
 
-
       {/* Overall Mean */}
-      <span className="text-left font-semibold col-start-11">
+      <span className="text-left font-semibold col-start-8">
         {parseNum(overallMean, { digits: 0 })}
       </span>
 
@@ -70,9 +67,10 @@ const ExpenseRow = ({
             title={`${parseNum(diff)} ${
               isUnderBudget ? "less" : "more"
             } than average`}
-            className={cn('text-left',
+            className={cn(
+              "text-left",
               isUnderBudget ? "text-emerald-500" : "text-red-500",
-              "col-start-"+(index+12)
+              "col-start-" + (index + 9)
             )}
           >
             {parseNum(yearMean, { digits: 2, fixed: 3 })}
@@ -117,36 +115,41 @@ export const Expenses = () => {
     head,
     others,
     (d) => d.id ?? "",
+    (d) => d.name ?? "",
     (d) => d.parentId ?? "",
     (a, b) => b.total - a.total, // Simplified sort
     (d: ExpenseData) => (
       <ExpenseRow item={d} yearRange={yearRange} numMonths={numMonths} />
-    )
+    ),
+    0
   );
+  
 
   return (
-    <div className="w-full  p-4 pt-10 lg:p-10 grid grid-cols-[120px_repeat(16,1fr)] gap-y-2 lg:gap-y-6">
+    <div className="w-full  p-4 pt-10 lg:p-10 grid grid-cols-[repeat(4,1fr)_100px_repeat(6,1fr)_20px_repeat(6,1fr)] gap-y-2 lg:gap-y-6">
       {/* Table Header */}
       <div className="grid grid-cols-subgrid col-span-full py-4 text-white text-left border-b border-shark-500 font-bold">
         <span className="col-start-1">Category</span>
-        <h4 className="col-start-5">Total</h4>
+        <h4 className="col-start-6">Total</h4>
 
         {yearRange.map((year, index) => (
-          <h4 key={year} className={"col-start-" + (index + 6)}>
+          <h4 key={year} className={"col-start-" + (index + 7)}>
             {year}
           </h4>
         ))}
 
-        <h4 className="col-start-12">Mean</h4>
+        <h4 className="col-start-13">Mean</h4>
 
         {yearRange.map((year, index) => (
-          <h4 key={`${year}-m`} className={"col-start-" + (index + 13)}>
+          <h4 key={`${year}-m`} className={"col-start-" + (index + 14)}>
             {year}
           </h4>
         ))}
       </div>
-      <TreeList data={[hierarchy]} className="text-white w-full grid grid-cols-subgrid col-span-full" />
-
+      <TreeList
+        data={[hierarchy]}
+        className="text-white w-full grid grid-cols-subgrid col-span-full"
+      />
     </div>
   );
 };

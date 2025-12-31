@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source inline("col-start-{1..17}");
+
 @theme {
   /* COLORS*/
   --color-shark-50: #778490;
