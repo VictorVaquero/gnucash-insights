@@ -174,3 +174,25 @@ export const summaryYearlyTable = sqliteTable("summary_yearly", {
   totalValue: real().notNull(),
 });
 export type SummaryYearly = InferSelectModel<typeof summaryYearlyTable>;
+
+// TODO: Add slNotes, dsecription
+export const fullTransactionsTable = sqliteTable("fullTransactions", {
+  bookId: text()
+    .notNull()
+    .references(() => booksTable.id),
+  transactionId: text()
+    .notNull()
+    .references(() => transactionsTable.id),
+  accountId: text()
+    .notNull()
+    .references(() => accountsTable.id),
+  splitId: text().primaryKey(),
+  accountName: text().notNull(),
+  datePosted: customDateTime().notNull(),
+  ymdPosted: text().notNull(),
+  currencyId: text()
+    .notNull()
+    .references(() => commoditiesTable.id),
+  value: real().notNull(),
+});
+export type FullTransaction = InferSelectModel<typeof fullTransactionsTable>;

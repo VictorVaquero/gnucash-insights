@@ -1,55 +1,66 @@
-import { useQuery } from '@tanstack/react-query'
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { DateTime } from 'luxon'
-import { useMemo, useState } from 'react'
-import { BarLoader } from '@/components/ui/BarLoader'
+import { BarLoader } from "@/components/ui/BarLoader";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { DateTime } from "luxon";
+import { useMemo, useState } from "react";
 
-
-import { fullTransactionsOptions } from '@/db/queries/global'
-import { useBook, useDB } from '@/hooks/useDB'
-import { SearchList, SearchQuery } from './-components/FilterList'
-import { KpiBlock } from './-components/KpiBlock'
-import { TransactsPlot } from './-components/TransactsPlot'
-import { TransactTable } from './-components/TransactsTable'
+import { fullTransactionsOptions } from "@/db/queries/global";
+import { useBook, useDB } from "@/hooks/useDB";
+import { SearchList, SearchQuery } from "./-components/FilterList";
+import { KpiBlock } from "./-components/KpiBlock";
+import { TransactsPlot } from "./-components/TransactsPlot";
+import { TransactTable } from "./-components/TransactsTable";
 
 export interface FullTransaction {
-  accounts: {
-    accountType: string
-    name: string
-  }
-  transactions: {
-    id: string
-    description: string | null
-    slNotes: string | null
-    datePosted: DateTime<boolean>
-    dateEntered: DateTime<boolean>
-  }
-  splits: {
-    id: string
-    isReconciled: string
-    value: number
-    account: string
-  }
+  accountId: string;
+  accountType: string;
+  accountName: string;
+  transactionId: string;
+  datePosted: DateTime<boolean>;
+  ymdPosted: string;
+  splitId: string;
+  description: string | null;
+  slNotes: string | null;
+  value: number;
 }
 
 const queryData: SearchQuery[] = [
-  { name: 'Expenses', query: { accounts_accountType: 'EXPENSE' } },
-  { name: 'Tobaco', query: { accounts_accountType: 'EXPENSE', transactions_description: 'Tabaco', }, },
-  { name: 'Trips', query: { accounts_accountType: 'EXPENSE', transactions_slNotes: 'Viaje' }, },
-  { name: 'Sport', query: { accounts_accountType: 'EXPENSE', accounts_name: 'Escalada' }, },
-]
+  { name: "Expenses", query: { accountType: "EXPENSE" } },
+  {
+    name: "Tobaco",
+    query: {
+      accountType: "EXPENSE",
+      description: "Tabaco",
+    },
+  },
+  {
+    name: "Trips",
+    query: { accountType: "EXPENSE", slNotes: "Viaje" },
+  },
+  {
+    name: "Sport",
+    query: { accountType: "EXPENSE", accountName: "Escalada" },
+  },
+];
 
 const Analysis = () => {
   const { db } = useDB();
   const { bookId } = useBook();
 
-  const [filteredTransactions, setFilteredTransactions] = useState<FullTransaction[]>([])
-  const [isYearly, setIsYearly] = useState<boolean>(false)
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    FullTransaction[]
+  >([]);
+  const [isYearly, setIsYearly] = useState<boolean>(false);
 
-  const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId))
-  const transactions = useMemo(() => data, [data])
+  const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
+  const transactions = useMemo(() => data, [data]);
 
-  if (!isSuccess || !transactions) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7' /></div>
+  if (!isSuccess || !transactions)
+    return (
+      <div className="w-full h-full flex flex-row items-center justify-center">
+        <BarLoader color="#36d7b7" />
+      </div>
+    );
 
   return (
     <div
@@ -80,36 +91,33 @@ const Analysis = () => {
           className="m-2 p-4 group hover:bg-shark-600 rounded flex item-center font-light text-white group-hover:text-white"
           onClick={() => setIsYearly((prev) => !prev)}
         >
-          <span className="">Change to {isYearly ? 'Monthly' : 'Yearly'}</span>
+          <span className="">Change to {isYearly ? "Monthly" : "Yearly"}</span>
         </button>
         <h2 className="text-white">Lista de filtros</h2>
         <SearchList data={queryData} />
       </div>
     </div>
-  )
-}
-
+  );
+};
 
 interface AnalysisSearch {
-  query: Record<string, unknown>
+  query: Record<string, unknown>;
 }
 
-export const Route = createFileRoute('/analysis/')({
+export const Route = createFileRoute("/analysis/")({
   component: Analysis,
   beforeLoad: async ({ location, context: { auth } }) => {
     if (auth && !auth.isAuthenticated()) {
       throw redirect({
-        to: '/login',
+        to: "/login",
         search: { redirect: location.href },
-      })
+      });
     }
-    return { title: 'Analysis' }
+    return { title: "Analysis" };
   },
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): AnalysisSearch => {
+  validateSearch: (search: Record<string, unknown>): AnalysisSearch => {
     return {
-      query: search?.query as Record<string, unknown> ?? {}
-    }
+      query: (search?.query as Record<string, unknown>) ?? {},
+    };
   },
-})
+});

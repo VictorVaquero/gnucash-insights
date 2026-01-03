@@ -32,15 +32,12 @@ const getNetCostsYearMonthQuery = (
     .select({
       account: accounts.id,
       date: dateCol,
-      value: sum(ft.splits.value).mapWith(Number),
+      value: sum(ft.value).mapWith(Number),
     })
     .from(ft)
-    .innerJoin(accounts, eq(accounts.id, ft.splits.account))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`)
-    )
-    .where(eq(ft.transactions.bookId, bookId))
+    .innerJoin(accounts, eq(accounts.id, ft.accountId))
+    .innerJoin(timeTable, eq(timeTable.ymd, ft.ymdPosted))
+    .where(eq(ft.bookId, bookId))
     .groupBy(accounts.id, timeTable.yearmonth);
 };
 export const netCostsYearMonthOptions = ({
@@ -86,15 +83,12 @@ const getAssetsDebtsYearMonthQuery = ({
     .select({
       name: subqueryColumnName<string>(accounts, accounts.name).as("name"),
       yearmonth: timeTable.yearmonth,
-      value: sql<number>`abs(sum(sum(${ft.splits.value})) OVER (partition by ${accounts.id} order by ${timeTable.yearmonth} ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))`,
+      value: sql<number>`abs(sum(sum(${ft.value})) OVER (partition by ${accounts.id} order by ${timeTable.yearmonth} ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))`,
     })
     .from(ft)
-    .innerJoin(accounts, eq(accounts.id, ft.splits.account))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`)
-    )
-    .where(eq(ft.transactions.bookId, bookId))
+    .innerJoin(accounts, eq(accounts.id, ft.accountId))
+    .innerJoin(timeTable, eq(timeTable.ymd, ft.ymdPosted))
+    .where(eq(ft.bookId, bookId))
     .groupBy(accounts.id, timeTable.yearmonth)
     .orderBy(timeTable.yearmonth);
 };
@@ -208,15 +202,12 @@ const getTaxesYearMonthQuery = ({
   return db
     .select({
       yearmonth: timeTable.yearmonth,
-      value: sql<number>`sum(abs(${ft.splits.value})) `,
+      value: sql<number>`sum(abs(${ft.value})) `,
     })
     .from(ft)
-    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`)
-    )
-    .where(eq(ft.transactions.bookId, bookId))
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
+    .innerJoin(timeTable, eq(timeTable.ymd, ft.ymdPosted))
+    .where(eq(ft.bookId, bookId))
     .groupBy(timeTable.yearmonth)
     .orderBy(timeTable.yearmonth);
 };
@@ -262,17 +253,14 @@ const getProfitLossYearMonthQuery = ({
   return db
     .select({
       date: timeTable.yearmonth,
-      value: sql<number>`abs(sum(${ft.splits.value}))`,
-      name: sql<string>`case when (sum(-${ft.splits.value})) >= 0 then 'Gain' else 'Loss' END`,
-      type: sql<string>`case when (sum(-${ft.splits.value})) >= 0 then 'g' else 'r' end`,
+      value: sql<number>`abs(sum(${ft.value}))`,
+      name: sql<string>`case when (sum(-${ft.value})) >= 0 then 'Gain' else 'Loss' END`,
+      type: sql<string>`case when (sum(-${ft.value})) >= 0 then 'g' else 'r' end`,
     })
     .from(ft)
-    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.splits.account))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`)
-    )
-    .where(eq(ft.transactions.bookId, bookId))
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
+    .innerJoin(timeTable, eq(timeTable.ymd, ft.ymdPosted))
+    .where(eq(ft.bookId, bookId))
     .groupBy(timeTable.yearmonth)
     .orderBy(timeTable.yearmonth);
 };
@@ -340,25 +328,28 @@ const getTransactByAccountQuery = ({
       )`.mapWith(Number)
     : ft.totalValue; // Just the raw value for that period
 
-  return db
-    .select({
-      date: ft.date,
-      dateLabel: ft.dateLabel,
-      accountId: ft.accountId,
-      accountName: ft.accountName,
-      value: valueColumn,
-    })
-    .from(ft)
-    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
-    // Note: groupBy might be redundant if ft is already a summary table, 
-    // but kept for consistency with your original snippet.
-    .groupBy(ft.accountId, ft.date)
-    .orderBy(ft.date);
+  return (
+    db
+      .select({
+        date: ft.date,
+        dateLabel: ft.dateLabel,
+        accountId: ft.accountId,
+        accountName: ft.accountName,
+        value: valueColumn,
+      })
+      .from(ft)
+      .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
+      // Note: groupBy might be redundant if ft is already a summary table,
+      // but kept for consistency with your original snippet.
+      .groupBy(ft.accountId, ft.date)
+      .orderBy(ft.date)
+  );
 };
 
-
 // Helper to extract the actual data type from the execute() promise
-export type TransactData = Awaited<ReturnType<ReturnType<typeof getTransactByAccountQuery>['execute']>>;
+export type TransactData = Awaited<
+  ReturnType<ReturnType<typeof getTransactByAccountQuery>["execute"]>
+>;
 
 export const transactByAccountOptions = <TData = TransactData>(args: {
   db: SQLJsDatabase | undefined;
@@ -407,6 +398,6 @@ export const transactByAccountOptions = <TData = TransactData>(args: {
       : skipToken,
 
     enabled: isEnabled,
-    select, 
+    select,
   });
 };

@@ -16,14 +16,14 @@ import { DateTime } from "luxon";
 
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import {
+  accountsClosureTable,
   accountsTable,
   booksTable,
+  fullTransactionsTable,
   metaTable,
   pricesTable,
-  splitsTable,
   timeTable,
   transactionsTable,
-  accountsClosureTable
 } from "../schema";
 
 export const getBooks = (db: SQLJsDatabase) => {
@@ -55,8 +55,9 @@ const getAccounts = ({
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, accountsTable.id));
 };
 
-
-export type AccountsData = Awaited<ReturnType<ReturnType<typeof getAccounts>['execute']>>;
+export type AccountsData = Awaited<
+  ReturnType<ReturnType<typeof getAccounts>["execute"]>
+>;
 export const accountsOptions = <TData = AccountsData>(args: {
   db: SQLJsDatabase | undefined;
   bookId: string | undefined;
@@ -64,7 +65,7 @@ export const accountsOptions = <TData = AccountsData>(args: {
   select?: (data: AccountsData) => TData;
 }) => {
   const { db, bookId, accountIds, select } = args;
-  
+
   const cleanAccountIds = accountIds?.filter(Boolean) ?? [];
   const isEnabled = !!db && !!bookId;
 
@@ -73,13 +74,13 @@ export const accountsOptions = <TData = AccountsData>(args: {
     queryFn: !isEnabled
       ? skipToken
       : async () => {
-          const query = getAccounts({ 
-            db: db, 
-            accountIds: cleanAccountIds 
+          const query = getAccounts({
+            db: db,
+            accountIds: cleanAccountIds,
           });
           return await query.execute();
         },
-        
+
     enabled: isEnabled,
     select,
   });
@@ -147,36 +148,22 @@ const maxPricesQuery = (db: SQLJsDatabase) => {
     .as("maxPrices");
 };
 
-// TODO: Don't really work in drizzle right now
-//export const fullTransactions = sqliteView("fullTransactions").as((qb) => qb.select().from(transactions).leftJoin(splits, eq(transactions.id, splits.transactionId)));
 export const fullTransactionsQuery = (db: SQLJsDatabase) => {
-  const maxPrices = maxPricesQuery(db);
   return db
     .select({
-      transactions: getTableColumns(transactionsTable),
-      splits: {
-        ...getTableColumns(splitsTable),
-        value:
-          sql<number>`${splitsTable.value} * COALESCE(${maxPrices.price}, 1)`.as(
-            "value"
-          ),
-      },
-      accounts: getTableColumns(accountsTable),
+      ...getTableColumns(fullTransactionsTable),
+      accountType: accountsTable.accountType,
+      description: transactionsTable.description,
+      slNotes: transactionsTable.slNotes,
     })
-    .from(transactionsTable)
-    .innerJoin(splitsTable, eq(transactionsTable.id, splitsTable.transactionId))
-    .innerJoin(accountsTable, eq(accountsTable.id, splitsTable.account))
-    .leftJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${transactionsTable.datePosted}, 0, 11)`)
+    .from(fullTransactionsTable)
+    .innerJoin(
+      accountsTable,
+      eq(accountsTable.id, fullTransactionsTable.accountId)
     )
-    .leftJoin(
-      maxPrices,
-      and(
-        eq(maxPrices.commodity, transactionsTable.currencyId),
-        eq(timeTable.year, maxPrices.year),
-        eq(timeTable.month, maxPrices.month)
-      )
+    .innerJoin(
+      transactionsTable,
+      eq(transactionsTable.id, fullTransactionsTable.transactionId)
     )
     .as("ft");
 };
@@ -211,20 +198,20 @@ const getSplitSumQuery = (
     filterQuery = and(
       filterQuery,
       eq(
-        sql<string>`substr(${ft.transactions.slNotes}, 0, ${notes.length + 1})`,
+        sql<string>`substr(${transactionsTable.slNotes}, 0, ${
+          notes.length + 1
+        })`,
         notes
       )
     );
 
   return db
-    .select({ value: sum(ft.splits.value).mapWith(Number) })
+    .select({ value: sum(ft.value).mapWith(Number) })
     .from(ft)
-    .innerJoin(accounts, eq(accounts.id, ft.splits.account))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.transactions.datePosted}, 0, 11)`)
-    )
-    .where(and(eq(ft.transactions.bookId, bookId), filterQuery));
+    .innerJoin(accounts, eq(accounts.id, ft.accountId))
+    .innerJoin(transactionsTable, eq(transactionsTable.id, ft.transactionId))
+    .innerJoin(timeTable, eq(timeTable.ymd, ft.ymdPosted))
+    .where(and(eq(ft.bookId, bookId), filterQuery));
 };
 export const splitSumOptions = (
   db: SQLJsDatabase | undefined,

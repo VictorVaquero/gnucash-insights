@@ -1,6 +1,6 @@
 import { twStyles } from "@/common/utils";
 import * as d3 from "d3";
-import { MutableRefObject, useMemo, useRef } from "react";
+import { RefObject, useMemo, useRef } from "react";
 
 import { parseNum, useWindowSize } from "@/common/utils.ts";
 import { XAxis } from "@/components/XAxis";
@@ -45,18 +45,18 @@ export const TransactsPlot = (props: {
   const format = props.isYearly ? "yyyy" : "yyyy-LL";
 
   const groupedData = d3
-    .groups(props.data, (d) => d.transactions.datePosted.toFormat(format))
+    .groups(props.data, (d) => d.datePosted.toFormat(format))
     .map(([date, data]) => ({
       split: DateTime.fromFormat(date, format),
       posted: DateTime.fromFormat(date, format),
       name: "Mixin",
-      value: d3.sum(data, (d) => d.splits.value),
+      value: d3.sum(data, (d) => d.value),
     }));
   const sortedData = [...groupedData].sort(orderyf).sort(orderxf);
 
   const xDomain = [
-    d3.min(sortedData, xf)!.minus({ month: 1 }),
-    d3.max(sortedData, xf)!,
+    (d3.min(sortedData, xf) as DateTime).minus({ month: 1 }),
+    d3.max(sortedData, xf) as DateTime,
   ];
   const yDomain = [
     Math.min(...sortedData.map(yf)),
@@ -78,7 +78,7 @@ export const TransactsPlot = (props: {
     yScale
   );
   const updateTooltip = (
-    ref: MutableRefObject<HTMLDivElement | null>,
+    ref: RefObject<HTMLDivElement | null>,
     d: GroupedTransaction
   ) => {
     if (ref.current !== null) {
@@ -111,7 +111,7 @@ export const TransactsPlot = (props: {
               strokeLinejoin="round"
               strokeOpacity="1"
               shapeRendering="geometricPrecision"
-              d={line(sortedData.filter((d) => d.name === s))!}
+              d={line(sortedData.filter((d) => d.name === s)) ?? ""}
             />
           ))}
         </g>
