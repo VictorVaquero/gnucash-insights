@@ -1,3 +1,4 @@
+import { PeriodicityTabs } from "@/components/PeriodicityTabs";
 import { MultiSelectTree } from "@/components/accountsDropdown";
 import DateRangeSlider from "@/components/dateSlider";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -6,7 +7,7 @@ import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useQuery } from "@tanstack/react-query";
 import { DateTime } from "luxon";
-import { ChartPeriodicity, useSummaryPageContext } from "./-summaryPageContext";
+import { useSummaryPageContext } from "./-summaryPageContext";
 
 export const SettingsBlock = () => {
   const { bookId } = useBook();
@@ -14,12 +15,12 @@ export const SettingsBlock = () => {
   const { user } = useAuth();
   const dbconf = getConfig(user);
   const { data: accounts } = useQuery(
-    accountsOptions({db, bookId, accountIds: [dbconf.expenses]})
+    accountsOptions({ db, bookId, accountIds: [dbconf.expenses] })
   );
 
   const {
     setDateRange,
-    chartPeriodicity: charMode,
+    chartPeriodicity: chartMode,
     setChartPeriodicity: setChartMode,
   } = useSummaryPageContext();
   const { min, max } = useDomain();
@@ -30,26 +31,7 @@ export const SettingsBlock = () => {
     <>
       <div className="flex flex-row items-center">
         <MultiSelectTree options={options} />
-        <div className="flex bg-shark-900 p-1 rounded-lg ">
-          {(["monthly", "quarterly", "yearly"] as ChartPeriodicity[]).map(
-            (option) => (
-              <button
-                key={option}
-                className={`
-              px-4 py-2 rounded capitalize font-light transition-all duration-10
-              ${
-                charMode === option
-                  ? "bg-shark-600 text-white shadow-sm"
-                  : "text-shark-300 hover:text-white hover:bg-shark-800"
-              }
-            `}
-                onClick={() => setChartMode(option)}
-              >
-                {option}
-              </button>
-            )
-          )}
-        </div>
+        <PeriodicityTabs activeMode={chartMode} onChange={setChartMode} />
       </div>
       <DateRangeSlider
         start={min?.toString() ?? "2021-03-01"}

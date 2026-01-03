@@ -16,6 +16,7 @@ interface GroupedTransaction {
   name: string;
   value: number;
 }
+type Periodicity = "monthly" | "quarterly" | "yearly";
 
 const green = twStyles.getPropertyValue("--color-green-500");
 const red = twStyles.getPropertyValue("--color-red-500");
@@ -29,9 +30,12 @@ const orderxf = (a: GroupedTransaction, b: GroupedTransaction) =>
 const orderyf = (a: GroupedTransaction, b: GroupedTransaction) =>
   yf(a) > yf(b) ? 1 : -1;
 
-export const TransactsPlot = (props: {
+export const TransactsPlot = ({
+  data,
+  periodicity,
+}: {
   data: FullTransaction[];
-  isYearly: boolean;
+  periodicity: Periodicity;
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, height] = useWindowSize(svgRef);
@@ -42,10 +46,15 @@ export const TransactsPlot = (props: {
     };
   }, [width, height]);
 
-  const format = props.isYearly ? "yyyy" : "yyyy-LL";
+  const format =
+    periodicity == "yearly"
+      ? "yyyy"
+      : periodicity == "monthly"
+      ? "yyyy-LL"
+      : "yyyy-qq";
 
   const groupedData = d3
-    .groups(props.data, (d) => d.datePosted.toFormat(format))
+    .groups(data, (d) => d.datePosted.toFormat(format))
     .map(([date, data]) => ({
       split: DateTime.fromFormat(date, format),
       posted: DateTime.fromFormat(date, format),

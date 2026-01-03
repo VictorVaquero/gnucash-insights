@@ -4,12 +4,15 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { DateTime } from "luxon";
 import { useMemo, useState } from "react";
 
+import { PeriodicityTabs } from "@/components/PeriodicityTabs";
 import { fullTransactionsOptions } from "@/db/queries/global";
 import { useBook, useDB } from "@/hooks/useDB";
 import { SearchList, SearchQuery } from "./-components/FilterList";
 import { KpiBlock } from "./-components/KpiBlock";
 import { TransactsPlot } from "./-components/TransactsPlot";
 import { TransactTable } from "./-components/TransactsTable";
+
+export type ChartPeriodicity = "monthly" | "quarterly" | "yearly";
 
 export interface FullTransaction {
   accountId: string;
@@ -50,7 +53,8 @@ const Analysis = () => {
   const [filteredTransactions, setFilteredTransactions] = useState<
     FullTransaction[]
   >([]);
-  const [isYearly, setIsYearly] = useState<boolean>(false);
+  const [chartPeriodicity, setChartPeriodicity] =
+    useState<ChartPeriodicity>("monthly");
 
   const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
   const transactions = useMemo(() => data, [data]);
@@ -72,7 +76,10 @@ const Analysis = () => {
     >
       <div className="row-start-1 row-end-1">
         {filteredTransactions.length !== 0 ? (
-          <TransactsPlot data={filteredTransactions} isYearly={isYearly} />
+          <TransactsPlot
+            data={filteredTransactions}
+            periodicity={chartPeriodicity}
+          />
         ) : (
           <div className="h-1/2"></div>
         )}
@@ -87,12 +94,10 @@ const Analysis = () => {
         />
       </div>
       <div className="row-start-2 col-start-2">
-        <button
-          className="m-2 p-4 group hover:bg-shark-600 rounded flex item-center font-light text-white group-hover:text-white"
-          onClick={() => setIsYearly((prev) => !prev)}
-        >
-          <span className="">Change to {isYearly ? "Monthly" : "Yearly"}</span>
-        </button>
+        <PeriodicityTabs
+          activeMode={chartPeriodicity}
+          onChange={setChartPeriodicity}
+        />
         <h2 className="text-white">Lista de filtros</h2>
         <SearchList data={queryData} />
       </div>
