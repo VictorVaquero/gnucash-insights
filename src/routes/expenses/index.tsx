@@ -123,7 +123,6 @@ export const Expenses = () => {
     ),
     0
   );
-  
 
   return (
     <div className="w-full  p-4 pt-10 lg:p-10 grid grid-cols-[repeat(4,1fr)_100px_repeat(6,1fr)_20px_repeat(6,1fr)] gap-y-2 lg:gap-y-6">
