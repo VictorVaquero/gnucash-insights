@@ -9,6 +9,7 @@ import { Tooltip } from "@/routes/summary/-plots/Tooltip";
 import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs";
 import { DateTime } from "luxon";
 import { FullTransaction } from "..";
+import { Periodicity } from "@/types/domain";
 
 interface GroupedTransaction {
   split: DateTime;
@@ -16,7 +17,6 @@ interface GroupedTransaction {
   name: string;
   value: number;
 }
-type Periodicity = "monthly" | "quarterly" | "yearly";
 
 const green = twStyles.getPropertyValue("--color-green-500");
 const red = twStyles.getPropertyValue("--color-red-500");

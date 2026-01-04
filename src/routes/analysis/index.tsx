@@ -7,12 +7,11 @@ import { useMemo, useState } from "react";
 import { PeriodicityTabs } from "@/components/PeriodicityTabs";
 import { fullTransactionsOptions } from "@/db/queries/global";
 import { useBook, useDB } from "@/hooks/useDB";
+import { Periodicity } from "@/types/domain";
 import { SearchList, SearchQuery } from "./-components/FilterList";
 import { KpiBlock } from "./-components/KpiBlock";
 import { TransactsPlot } from "./-components/TransactsPlot";
 import { TransactTable } from "./-components/TransactsTable";
-
-export type ChartPeriodicity = "monthly" | "quarterly" | "yearly";
 
 export interface FullTransaction {
   accountId: string;
@@ -54,7 +53,7 @@ const Analysis = () => {
     FullTransaction[]
   >([]);
   const [chartPeriodicity, setChartPeriodicity] =
-    useState<ChartPeriodicity>("monthly");
+    useState<Periodicity>("monthly");
 
   const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
   const transactions = useMemo(() => data, [data]);

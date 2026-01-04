@@ -1,19 +1,14 @@
 import { cn } from "@/lib/utils";
+import { Periodicity } from "@/types/domain";
 
-export type ChartPeriodicity = "monthly" | "quarterly" | "yearly";
-
-const PERIODICITY_OPTIONS: ChartPeriodicity[] = [
-  "monthly",
-  "quarterly",
-  "yearly",
-];
+const PERIODICITY_OPTIONS: Periodicity[] = ["monthly", "quarterly", "yearly"];
 
 export const PeriodicityTabs = ({
   activeMode,
   onChange,
 }: {
-  activeMode: ChartPeriodicity;
-  onChange: (mode: ChartPeriodicity) => void;
+  activeMode: Periodicity;
+  onChange: (mode: Periodicity) => void;
 }) => {
   return (
     <div className="flex bg-shark-900 p-1 rounded-lg w-fit">

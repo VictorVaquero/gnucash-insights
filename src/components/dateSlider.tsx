@@ -1,14 +1,12 @@
 import { Slider } from "@/components/ui/slider"; // uses your custom Slider
+import type { DateRange } from "@/types/domain";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 
 interface DateRangeSliderProps {
   start: string; // "2024-01-01"
   end: string; // "2024-12-31"
-  onChange?: (range: {
-    from: DateTime<boolean>;
-    to: DateTime<boolean>;
-  }) => void;
+  onChange?: (range: DateRange) => void;
 }
 
 export default function DateRangeSlider({

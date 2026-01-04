@@ -1,13 +1,9 @@
+import type { DateRange, Periodicity } from "@/types/domain";
 import { DateTime } from "luxon";
 import { ReactNode, createContext, use, useReducer, useState } from "react";
 
 // --- Types ---
 type AccountId = string;
-interface DateRange {
-  from: DateTime<boolean>;
-  to: DateTime<boolean>;
-}
-export type ChartPeriodicity = "monthly" | "quarterly" | "yearly";
 
 interface SummaryContextType {
   // Account you want to see
@@ -26,8 +22,8 @@ interface SummaryContextType {
   isYearly: boolean;
   toggleYearly: () => void;
 
-  chartPeriodicity: ChartPeriodicity;
-  setChartPeriodicity: (value: ChartPeriodicity) => void;
+  chartPeriodicity: Periodicity;
+  setChartPeriodicity: (value: Periodicity) => void;
 }
 
 // --- Context ---
@@ -59,7 +55,7 @@ export function SummaryPageContextProvider({
   });
   const [isYearly, toggleYearly] = useReducer((v) => !v, false);
   const [chartPeriodicity, setChartPeriodicity] =
-    useState<ChartPeriodicity>("monthly");
+    useState<Periodicity>("monthly");
 
   return (
     <SummaryPageContext
