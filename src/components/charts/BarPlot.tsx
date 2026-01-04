@@ -24,7 +24,7 @@ import {
   constructCategoryColors,
   getColorClassName,
   getYAxisDomain,
-} from "@/components/charts/chartUtils";
+} from "@/components/charts/utils";
 import { useOnWindowResize } from "@/hooks/useOnWindowResize";
 import { cn } from "@/lib/utils";
 

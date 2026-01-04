@@ -54,7 +54,7 @@ const useSavings = (
 export const SavingsBlock = (props: { className: string }) => {
   const { db } = useDB();
   const { bookId } = useBook();
-  const { min: startDate, max: endDate, latestMonth } = useDomain();
+  const { from: startDate, to: endDate, latestMonth } = useDomain();
   const { user } = useAuth();
   const dbconf = getConfig(user);
 

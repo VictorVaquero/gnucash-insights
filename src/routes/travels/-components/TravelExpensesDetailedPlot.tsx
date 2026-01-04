@@ -4,8 +4,8 @@ import { MutableRefObject, useMemo, useRef } from "react";
 import { BarLoader } from '@/components/ui/BarLoader'
 
 import { parseNum, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/XAxis";
-import { YAxis } from '@/components/YAxis';
+import { XAxis } from "@/components/charts/XAxis";
+import { YAxis } from '@/components/charts/YAxis';
 import { useAuth } from '@/contexts/useAuthContext';
 import { travelExpensesDetailedYearMonthOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
@@ -103,11 +103,11 @@ export const TravelExpensesDetailedPlot = () => {
     const { user } = useAuth()
     const { db } = useDB();
     const { bookId } = useBook();
-    const { min, max } = useDomain()
+    const { from,  to } = useDomain()
 
     const { data, isSuccess } = useQuery(travelExpensesDetailedYearMonthOptions({ db, user, bookId }));
 
-    if (!isSuccess || min == null || max == null) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7' /></div>
+    if (!isSuccess || from == null || to == null) return <div className='w-full h-full flex flex-row items-center justify-center'><BarLoader color='#36d7b7' /></div>
 
-    return <DrawTravelExpensesPlot data={data} domain={{ startDate: min, endDate: max }} />
+    return <DrawTravelExpensesPlot data={data} domain={{ startDate: from, endDate: to }} />
 }

@@ -1,6 +1,6 @@
+import { DateRangeSlider } from "@/components/DateSlider";
 import { PeriodicityTabs } from "@/components/PeriodicityTabs";
-import { MultiSelectTree } from "@/components/accountsDropdown";
-import DateRangeSlider from "@/components/dateSlider";
+import { MultiSelectTree } from "@/components/features/AccountsDropdown";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
@@ -23,7 +23,7 @@ export const SettingsBlock = () => {
     chartPeriodicity: chartMode,
     setChartPeriodicity: setChartMode,
   } = useSummaryPageContext();
-  const { min, max } = useDomain();
+  const {  from, to } = useDomain();
 
   const options = accounts ?? [];
 
@@ -34,8 +34,8 @@ export const SettingsBlock = () => {
         <PeriodicityTabs activeMode={chartMode} onChange={setChartMode} />
       </div>
       <DateRangeSlider
-        start={min?.toString() ?? "2021-03-01"}
-        end={max?.toString() ?? DateTime.now().toString()}
+        start={from?.toString() ?? "2021-03-01"}
+        end={to?.toString() ?? DateTime.now().toString()}
         onChange={setDateRange}
       />
     </>

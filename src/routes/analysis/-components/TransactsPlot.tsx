@@ -3,8 +3,8 @@ import * as d3 from "d3";
 import { RefObject, useMemo, useRef } from "react";
 
 import { parseNum, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/XAxis";
-import { YAxis } from "@/components/YAxis";
+import { XAxis } from "@/components/charts/XAxis";
+import { YAxis } from "@/components/charts/YAxis";
 import { Tooltip } from "@/routes/summary/-plots/Tooltip";
 import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs";
 import { DateTime } from "luxon";

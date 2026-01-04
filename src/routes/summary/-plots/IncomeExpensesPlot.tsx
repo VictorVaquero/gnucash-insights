@@ -4,8 +4,8 @@ import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
 
 import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/XAxis";
-import { YAxis } from "@/components/YAxis";
+import { XAxis } from "@/components/charts/XAxis";
+import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
 import { transactsSumOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";

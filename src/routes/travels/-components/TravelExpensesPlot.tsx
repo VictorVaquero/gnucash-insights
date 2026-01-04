@@ -4,8 +4,8 @@ import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
 
 import { parseNum, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/XAxis";
-import { YAxis } from "@/components/YAxis";
+import { XAxis } from "@/components/charts/XAxis";
+import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesDetailedOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
@@ -115,13 +115,13 @@ export const TravelExpensesPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
-  const { min, max } = useDomain();
+  const { from, to } = useDomain();
 
   const { data, isSuccess } = useQuery(
     travelExpensesDetailedOptions({ db, user, bookId })
   );
 
-  if (!isSuccess || min == null || max == null)
+  if (!isSuccess || from == null || to == null)
     return (
       <div className="w-full h-full flex flex-row items-center justify-center">
         <BarLoader color="#36d7b7" />
@@ -131,7 +131,7 @@ export const TravelExpensesPlot = () => {
   return (
     <DrawTravelExpensesPlot
       data={data as Data[]}
-      domain={{ startDate: min, endDate: max }}
+      domain={{ startDate: from, endDate: to }}
     />
   );
 };

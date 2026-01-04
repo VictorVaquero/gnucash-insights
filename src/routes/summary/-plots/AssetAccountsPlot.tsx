@@ -5,8 +5,8 @@ import { RefObject, useMemo, useRef } from "react";
 
 import { getRandomColor } from "@/common/getColors";
 import { parseNum, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/XAxis";
-import { YAxis } from "@/components/YAxis";
+import { XAxis } from "@/components/charts/XAxis";
+import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
 import { transactByAccountOptions } from "@/db/queries/summary";

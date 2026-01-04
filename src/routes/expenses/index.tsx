@@ -85,19 +85,19 @@ export const Expenses = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
-  const { min, numMonths, numYears } = useDomain();
+  const { from, numMonths, numYears } = useDomain();
 
   const { data, isSuccess } = useQuery(yearlyExpensesOptions({ db, bookId }));
   const dbConfig = getConfig(user);
 
   // 1. Calculate Year Range
   const yearRange = useMemo(() => {
-    if (min?.year == null || numYears == null) return [];
-    return Array.from({ length: numYears + 1 }, (_, i) => min.year + i);
-  }, [min?.year, numYears]);
+    if (from?.year == null || numYears == null) return [];
+    return Array.from({ length: numYears + 1 }, (_, i) => from.year + i);
+  }, [from?.year, numYears]);
 
   // 2. Loading State
-  if (!isSuccess || !data || !min || numMonths == null) {
+  if (!isSuccess || !data || !from || numMonths == null) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <BarLoader color="#36d7b7" />

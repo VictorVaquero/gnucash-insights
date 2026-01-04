@@ -9,7 +9,7 @@ interface DateRangeSliderProps {
   onChange?: (range: DateRange) => void;
 }
 
-export default function DateRangeSlider({
+export function DateRangeSlider({
   start,
   end,
   onChange,
