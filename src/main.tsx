@@ -14,7 +14,7 @@ import "./index.css";
 import { routeTree } from "./routeTree.gen";
 
 import { _Object } from "@aws-sdk/client-s3";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { AppDatabase } from "./db/dbType";
 import { DomainContext, FileContext } from "./contexts/GlobalContext.tsx";
 import { getBooks, getDomain } from "./db/queries/global.ts";
 import { useAuthSetup } from "./hooks/useAuth.ts";
@@ -52,7 +52,7 @@ const GlobalCOntextProvider = () => {
   const auth = useAuthSetup();
   //const [, forceUpdate] = useReducer(x => x + 1, 0);
   const [folders, setFolders] = useState<_Object[]>();
-  const [db, setDB] = useState<SQLJsDatabase>();
+  const [db, setDB] = useState<AppDatabase>();
   const [fileName, setFileName] = useState<string>();
   const [bookId, setBookId] = useState<string>();
   const [domain, setDomain] = useState<DateRange>();
@@ -68,6 +68,7 @@ const GlobalCOntextProvider = () => {
     fileName,
     user: auth.user,
     credentials: auth.getCredentials(),
+    getIdToken: auth.getIdToken,
   });
 
   // On sign out reset global state & invalidate router
@@ -129,22 +130,26 @@ const GlobalCOntextProvider = () => {
 
   useEffect(() => {
     if (!!fileName && !!queryDb && !db) {
-      // Set DB
-      setDB(queryDb);
-      // Set default book
-      const books = getBooks(queryDb);
-      const defaultBookId = books[0].id;
-      setBookId(defaultBookId);
-      console.info(`DEFAULT BOOK ID ${defaultBookId}`);
-      // Set domain
-      const domain = getDomain(queryDb);
-      if (!domain.min || !domain.max) throw Error("Problematic domain defined");
-      setDomain({ from: domain.min, to: domain.max });
-      console.info(
-        "DEFAULT DOMAIN: ",
-        domain.min.toISODate(),
-        domain.max.toISODate()
-      );
+      const f = async () => {
+        // Set DB
+        setDB(queryDb);
+        // Set default book
+        const books = await getBooks(queryDb);
+        const defaultBookId = books[0].id;
+        setBookId(defaultBookId);
+        console.info(`DEFAULT BOOK ID ${defaultBookId}`);
+        // Set domain
+        const domain = await getDomain(queryDb);
+        if (!domain.min || !domain.max)
+          throw Error("Problematic domain defined");
+        setDomain({ from: domain.min, to: domain.max });
+        console.info(
+          "DEFAULT DOMAIN: ",
+          domain.min.toISODate(),
+          domain.max.toISODate()
+        );
+      };
+      f().catch(() => console.error("Error setting default book/domain"));
     }
   }, [fileName, queryDb, db]);
 

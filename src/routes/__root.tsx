@@ -4,7 +4,7 @@ import {
   createRootRouteWithContext,
   useRouterState,
 } from "@tanstack/react-router";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
 import { Suspense, useEffect, useState } from "react";
 
@@ -22,7 +22,7 @@ interface AuthContext {
 
 interface DBContext {
   fileName?: string;
-  db?: SQLJsDatabase;
+  db?: AppDatabase;
   bookId?: string;
   domain?: { min: DateTime; max: DateTime };
 }

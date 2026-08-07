@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
 
 import { parseNum } from "@/common/utils.ts";
@@ -10,7 +10,7 @@ import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 
 const useSavings = (
-  db: SQLJsDatabase | undefined,
+  db: AppDatabase | undefined,
   dbconf: ReturnType<typeof getConfig>,
   bookId: string | undefined,
   startDate?: DateTime,

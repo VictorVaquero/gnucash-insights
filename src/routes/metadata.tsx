@@ -5,7 +5,7 @@ import { DateTime } from 'luxon'
 import { DropDownForm } from '@/components/DropDownForm.tsx'
 import { KpiCard } from '@/components/KpiCard.tsx'
 import { useAuth } from '@/contexts/useAuthContext'
-import { getBooks, getDomain } from '@/db/queries/global'
+import { booksOptions, domainOptions } from '@/db/queries/global'
 import { useBook, useDB, useFile } from '@/hooks/useDB'
 import { awsFolderOptions } from '@/services/s3Service'
 
@@ -18,6 +18,8 @@ const Metadata = () => {
   const { db } = useDB()
 
   const { data: folders } = useQuery(awsFolderOptions({ user, credentials: getCredentials() }))
+  const { data: books = [] } = useQuery(booksOptions(db))
+  const { data: domainDates } = useQuery(domainOptions(db))
 
   let fileOptions: { key: string; value: string }[] = []
   let bookOptions: { key: string; value: string }[] = []
@@ -33,7 +35,6 @@ const Metadata = () => {
   let domain = { min: '-', max: '-' }
 
   if (db) {
-    const books = getBooks(db)
     bookOptions = books.map((b) => ({ key: b.id, value: b.id }))
     book = books.filter((b) => b.id === bookId)[0] ?? book
 
@@ -46,10 +47,9 @@ const Metadata = () => {
         value: parseDate(item),
       })) ?? []
 
-    const domainDates = getDomain(db)
     domain = {
-      min: domainDates.min?.toISODate() ?? domain.min,
-      max: domainDates.max?.toISODate() ?? domain.max,
+      min: domainDates?.min?.toISODate() ?? domain.min,
+      max: domainDates?.max?.toISODate() ?? domain.max,
     }
   }
 

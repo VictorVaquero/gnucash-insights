@@ -6,7 +6,10 @@ import { toHierarchy } from "@/common/toHierarchy";
 import { parseNum } from "@/common/utils";
 import { TreeList } from "@/components/TreeList";
 import { useAuth } from "@/contexts/useAuthContext";
-import { yearlyExpensesOptions } from "@/db/queries/expenses";
+import {
+  ExpensesYearlyRow,
+  yearlyExpensesOptions,
+} from "@/db/queries/expenses";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { cn } from "@/lib/utils";
@@ -106,8 +109,8 @@ export const Expenses = () => {
   }
 
   // 3. Process Hierarchy
-  const head = data.find((d) => d.id === dbConfig.expenses);
-  const others = data.filter((d) => d.id !== head?.id);
+  const head = data.find((d: ExpensesYearlyRow) => d.id === dbConfig.expenses);
+  const others = data.filter((d: ExpensesYearlyRow) => d.id !== head?.id);
 
   if (!head) return null;
 

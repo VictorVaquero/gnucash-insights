@@ -10,11 +10,11 @@ import {
   sql,
   sum,
 } from "drizzle-orm";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
 import { alias } from "drizzle-orm/sqlite-core";
 import { DateTime } from "luxon";
 
 import { queryOptions, skipToken } from "@tanstack/react-query";
+import { AnyDB, AppDatabase } from "../dbType";
 import {
   accountsClosureTable,
   accountsTable,
@@ -25,24 +25,42 @@ import {
   transactionsTable,
 } from "../schema";
 
-export const getBooks = (db: SQLJsDatabase) => {
-  return db.select().from(booksTable).all();
+export const getBooks = async (db: AppDatabase) => {
+  return await db.select().from(booksTable).all();
 };
-export const getDomain = (db: SQLJsDatabase) => {
-  return db
+export const getDomain = async <TDB extends AnyDB>(db: TDB) => {
+  const rows = await db
     .select({
       min: metaTable.minDate,
       max: metaTable.maxDate,
     })
     .from(metaTable)
-    .all()[0];
+    .all();
+  return rows[0];
 };
 
-const getAccounts = ({
+export const booksOptions = (db: AppDatabase | undefined) => {
+  const enabled = !!db;
+  return queryOptions({
+    queryKey: ["books"],
+    queryFn: !enabled ? skipToken : async () => await getBooks(db),
+    enabled,
+  });
+};
+export const domainOptions = (db: AppDatabase | undefined) => {
+  const enabled = !!db;
+  return queryOptions({
+    queryKey: ["domain"],
+    queryFn: !enabled ? skipToken : async () => await getDomain(db),
+    enabled,
+  });
+};
+
+const getAccounts = <TDB extends AnyDB>({
   db,
   accountIds,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   accountIds: string[];
 }) => {
   const accountsFiltered = getAccountsClosureQuery(db, accountIds);
@@ -57,8 +75,8 @@ const getAccounts = ({
 export type AccountsData = Awaited<
   ReturnType<ReturnType<typeof getAccounts>["execute"]>
 >;
-export const accountsOptions = <TData = AccountsData>(args: {
-  db: SQLJsDatabase | undefined;
+export const accountsOptions = <TDB extends AnyDB, TData = AccountsData>(args: {
+  db: TDB | undefined;
   bookId: string | undefined;
   accountIds?: string[];
   select?: (data: AccountsData) => TData;
@@ -85,8 +103,8 @@ export const accountsOptions = <TData = AccountsData>(args: {
   });
 };
 
-export const getAccountsClosureQuery = (
-  db: SQLJsDatabase,
+export const getAccountsClosureQuery = <TDB extends AnyDB>(
+  db: TDB,
   accountNames?: string[],
   ignoreAccounts?: string[]
 ) => {
@@ -115,7 +133,7 @@ export const getAccountsClosureQuery = (
     .as("accountsFiltered");
 };
 
-export const fullTransactionsQuery = (db: SQLJsDatabase) => {
+export const fullTransactionsQuery = <TDB extends AnyDB>(db: TDB) => {
   return db
     .select({
       ...getTableColumns(fullTransactionsTable),
@@ -134,8 +152,8 @@ export const fullTransactionsQuery = (db: SQLJsDatabase) => {
     )
     .as("ft");
 };
-export const fullTransactionsOptions = (
-  db?: SQLJsDatabase,
+export const fullTransactionsOptions = <TDB extends AnyDB>(
+  db?: TDB,
   bookId?: string
 ) => {
   const enabled = !!db && !!bookId;
@@ -148,8 +166,8 @@ export const fullTransactionsOptions = (
   });
 };
 
-const getSplitSumQuery = (
-  db: SQLJsDatabase,
+const getSplitSumQuery = <TDB extends AnyDB>(
+  db: TDB,
   bookId: string,
   accountNames: string[],
   startDate?: DateTime,
@@ -180,8 +198,8 @@ const getSplitSumQuery = (
     .innerJoin(timeTable, eq(timeTable.ymd, ft.ymdPosted))
     .where(and(eq(ft.bookId, bookId), filterQuery));
 };
-export const splitSumOptions = (
-  db: SQLJsDatabase | undefined,
+export const splitSumOptions = <TDB extends AnyDB>(
+  db: TDB | undefined,
   bookId: string | undefined,
   accountNames: string[],
   startDate?: DateTime,

@@ -10,7 +10,7 @@ import {
   sql,
   sum,
 } from "drizzle-orm";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { AnyDB } from "../dbType";
 
 import { DateTime } from "luxon";
 import {
@@ -22,12 +22,12 @@ import {
 import { getConfig, subqueryColumnName } from "../utils";
 import { fullTransactionsQuery, getAccountsClosureQuery } from "./global";
 
-const getTravelExpensesByAccountQuery = ({
+const getTravelExpensesByAccountQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -59,12 +59,12 @@ const getTravelExpensesByAccountQuery = ({
     )
     .groupBy(accountsFiltered.id);
 };
-export const travelExpensesByAccountOptions = ({
+export const travelExpensesByAccountOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {
@@ -79,12 +79,12 @@ export const travelExpensesByAccountOptions = ({
     enabled: enabled,
   });
 };
-const getTravelExpensesDetailedQuery = ({
+const getTravelExpensesDetailedQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -114,12 +114,12 @@ const getTravelExpensesDetailedQuery = ({
     .groupBy(ft.slNotes)
     .orderBy(ft.slNotes);
 };
-export const travelExpensesDetailedOptions = ({
+export const travelExpensesDetailedOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {
@@ -134,12 +134,12 @@ export const travelExpensesDetailedOptions = ({
     enabled: enabled,
   });
 };
-const getTravelExpensesDetailedYearMonthQuery = ({
+const getTravelExpensesDetailedYearMonthQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -168,12 +168,12 @@ const getTravelExpensesDetailedYearMonthQuery = ({
     .groupBy(ft.slNotes, timeTable.yearmonth)
     .orderBy(ft.slNotes, timeTable.yearmonth);
 };
-export const travelExpensesDetailedYearMonthOptions = ({
+export const travelExpensesDetailedYearMonthOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {
@@ -193,12 +193,12 @@ export const travelExpensesDetailedYearMonthOptions = ({
   });
 };
 
-const getTravelExpensesYearQuery = ({
+const getTravelExpensesYearQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -229,12 +229,12 @@ const getTravelExpensesYearQuery = ({
     .groupBy(timeTable.year)
     .orderBy(timeTable.year);
 };
-export const travelExpensesYearOptions = ({
+export const travelExpensesYearOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {
@@ -248,12 +248,12 @@ export const travelExpensesYearOptions = ({
     enabled: enabled,
   });
 };
-const getTravelExpensesYearMonthQuery = ({
+const getTravelExpensesYearMonthQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -284,12 +284,12 @@ const getTravelExpensesYearMonthQuery = ({
     .groupBy(timeTable.yearmonth)
     .orderBy(timeTable.yearmonth);
 };
-export const travelExpensesYearMonthOptions = ({
+export const travelExpensesYearMonthOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {
@@ -305,13 +305,13 @@ export const travelExpensesYearMonthOptions = ({
   });
 };
 
-const getTravelExpenseKPIsQuery = ({
+const getTravelExpenseKPIsQuery = <TDB extends AnyDB>({
   db,
   user,
   latestMonth,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
   latestMonth: DateTime;
@@ -376,13 +376,13 @@ const getTravelExpenseKPIsQuery = ({
     )
     .where(eq(transactionsTable.bookId, bookId));
 };
-export const useGetTravelExpensesKPIs = ({
+export const useGetTravelExpensesKPIs = <TDB extends AnyDB>({
   db,
   user,
   bookId,
   latestMonth,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
   latestMonth: DateTime | undefined;
@@ -406,12 +406,12 @@ export const useGetTravelExpensesKPIs = ({
   });
 };
 
-const getUniqueTravelsQuery = ({
+const getUniqueTravelsQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -439,12 +439,12 @@ const getUniqueTravelsQuery = ({
       )
     );
 };
-export const uniqueTravelsOptions = ({
+export const uniqueTravelsOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {

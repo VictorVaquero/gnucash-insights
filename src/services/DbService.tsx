@@ -1,4 +1,6 @@
+import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/sql-js";
+import { drizzle as drizzleLibsql } from "drizzle-orm/libsql";
 import initSqlJs from "sql.js";
 import wasm from "sql.js/dist/sql-wasm.wasm?url";
 
@@ -37,6 +39,13 @@ export const setupDB = async () => {
   const drizzleDb = drizzle(db, { casing: "snake_case" });
   console.debug("Db setup ok");
   return drizzleDb;
+};
+
+// Not replacing setupDB (sql-js/OPFS) yet — the data-source toggle in useDB.tsx
+// picks between the two while both paths stay live during the migration.
+export const setupTursoDB = ({ url, token }: { url: string; token: string }) => {
+  const client = createClient({ url, authToken: token });
+  return drizzleLibsql(client, { casing: "snake_case" });
 };
 
 export const fetchDBOptions = ({

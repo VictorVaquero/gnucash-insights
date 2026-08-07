@@ -1,6 +1,6 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { eq, sql, sum } from "drizzle-orm";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { AnyDB } from "../dbType";
 import {
   summaryMonthlyTable,
   summaryQuarterlyTable,
@@ -10,8 +10,8 @@ import {
 import { getConfig, subqueryColumnName } from "../utils";
 import { fullTransactionsQuery, getAccountsClosureQuery } from "./global";
 
-const getNetCostsYearMonthQuery = (
-  db: SQLJsDatabase,
+const getNetCostsYearMonthQuery = <TDB extends AnyDB>(
+  db: TDB,
   user: string,
   bookId: string,
   isYearly = false
@@ -40,13 +40,13 @@ const getNetCostsYearMonthQuery = (
     .where(eq(ft.bookId, bookId))
     .groupBy(accounts.id, timeTable.yearmonth);
 };
-export const netCostsYearMonthOptions = ({
+export const netCostsYearMonthOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
   isYearly = false,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
   isYearly?: boolean;
@@ -62,12 +62,12 @@ export const netCostsYearMonthOptions = ({
   });
 };
 
-const getAssetsDebtsYearMonthQuery = ({
+const getAssetsDebtsYearMonthQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -93,12 +93,12 @@ const getAssetsDebtsYearMonthQuery = ({
     .orderBy(timeTable.yearmonth);
 };
 
-export const assetsDebtsYearMonthOptions = ({
+export const assetsDebtsYearMonthOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {
@@ -113,13 +113,13 @@ export const assetsDebtsYearMonthOptions = ({
   });
 };
 
-const getTransactSumQuery = ({
+const getTransactSumQuery = <TDB extends AnyDB>({
   db,
   accountIds,
   periodicity,
   hideAccounts = [],
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   bookId: string;
   accountIds: string[];
   periodicity: "monthly" | "quarterly" | "yearly";
@@ -149,14 +149,14 @@ const getTransactSumQuery = ({
     .orderBy(ft.date);
 };
 
-export const transactsSumOptions = ({
+export const transactsSumOptions = <TDB extends AnyDB>({
   db,
   bookId,
   accountIds,
   periodicity,
   hideAccounts = [],
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   bookId: string | undefined;
   accountIds: string[];
   periodicity: "monthly" | "quarterly" | "yearly";
@@ -185,12 +185,12 @@ export const transactsSumOptions = ({
   });
 };
 
-const getTaxesYearMonthQuery = ({
+const getTaxesYearMonthQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
 }) => {
@@ -211,12 +211,12 @@ const getTaxesYearMonthQuery = ({
     .groupBy(timeTable.yearmonth)
     .orderBy(timeTable.yearmonth);
 };
-export const taxesYearMonthOptions = ({
+export const taxesYearMonthOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
 }) => {
@@ -230,13 +230,13 @@ export const taxesYearMonthOptions = ({
   });
 };
 
-const getProfitLossYearMonthQuery = ({
+const getProfitLossYearMonthQuery = <TDB extends AnyDB>({
   db,
   user,
   bookId,
   hideAccounts,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   user: string;
   bookId: string;
   hideAccounts: string[];
@@ -265,13 +265,13 @@ const getProfitLossYearMonthQuery = ({
     .orderBy(timeTable.yearmonth);
 };
 
-export const profitLossYearMonthOptions = ({
+export const profitLossYearMonthOptions = <TDB extends AnyDB>({
   db,
   user,
   bookId,
   hideAccounts = [],
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   user: string | undefined;
   bookId: string | undefined;
   hideAccounts?: string[];
@@ -293,14 +293,14 @@ export const profitLossYearMonthOptions = ({
   });
 };
 
-const getTransactByAccountQuery = ({
+const getTransactByAccountQuery = <TDB extends AnyDB>({
   db,
   accountIds,
   periodicity,
   accumulate = true, // New Argument
   hideAccounts = [],
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   bookId: string;
   accountIds: string[];
   periodicity: "monthly" | "quarterly" | "yearly";
@@ -351,8 +351,8 @@ export type TransactData = Awaited<
   ReturnType<ReturnType<typeof getTransactByAccountQuery>["execute"]>
 >;
 
-export const transactByAccountOptions = <TData = TransactData>(args: {
-  db: SQLJsDatabase | undefined;
+export const transactByAccountOptions = <TDB extends AnyDB, TData = TransactData>(args: {
+  db: TDB | undefined;
   bookId: string | undefined;
   accountIds: string[];
   periodicity: "monthly" | "quarterly" | "yearly";

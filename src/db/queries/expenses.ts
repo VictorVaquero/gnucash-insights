@@ -1,6 +1,6 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { and, eq, sql } from "drizzle-orm";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { AnyDB } from "../dbType";
 import { DateTime } from "luxon";
 import { accountsTable, timeTable } from "../schema";
 import { subqueryColumnName } from "../utils";
@@ -10,16 +10,16 @@ import {
   getDomain,
 } from "./global";
 
-const getExpensesYearlyQuery = ({
+const getExpensesYearlyQuery = async <TDB extends AnyDB>({
   db,
   bookId,
 }: {
-  db: SQLJsDatabase;
+  db: TDB;
   bookId: string;
 }) => {
   const ft = fullTransactionsQuery(db);
   const accounts = getAccountsClosureQuery(db);
-  const { min, max } = getDomain(db) as {
+  const { min, max } = (await getDomain(db)) as {
     min: DateTime<boolean>;
     max: DateTime<boolean>;
   };
@@ -51,11 +51,15 @@ const getExpensesYearlyQuery = ({
     .groupBy(subqueryColumnName<string>(accounts, accounts.base))
     .orderBy(subqueryColumnName<string>(accounts, accounts.base));
 };
-export const yearlyExpensesOptions = ({
+export type ExpensesYearlyRow = Awaited<
+  ReturnType<typeof getExpensesYearlyQuery>
+>[number];
+
+export const yearlyExpensesOptions = <TDB extends AnyDB>({
   db,
   bookId,
 }: {
-  db: SQLJsDatabase | undefined;
+  db: TDB | undefined;
   bookId: string | undefined;
 }) => {
   const enabled = !!db && !!bookId;
@@ -63,7 +67,7 @@ export const yearlyExpensesOptions = ({
     queryKey: ["expensesYearly", bookId],
     queryFn: !enabled
       ? skipToken
-      : async () => getExpensesYearlyQuery({ db, bookId }).execute(),
+      : async () => await getExpensesYearlyQuery({ db, bookId }),
     enabled: enabled,
   });
 };

@@ -1,5 +1,5 @@
 import { DateRange } from "@/types/domain";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { AppDatabase } from "@/db/dbType";
 import { createContext } from "react";
 
 export const FileContext = createContext<{
@@ -13,7 +13,7 @@ export const BookContext = createContext<{
 }>({ bookId: undefined, setBookId: () => undefined });
 
 export const DBContext = createContext<{
-  db: SQLJsDatabase | undefined;
+  db: AppDatabase | undefined;
 }>({ db: undefined });
 
 export const DomainContext = createContext<{
