@@ -28,17 +28,27 @@ All paths below are relative to one of these two roots, stated explicitly per ta
 
 **Purpose**: Provision Turso and wire up credentials, before any code changes land.
 
-- [ ] T001 Create the production Turso database (`turso db create`) and a separate guest
-      database (per `plan.md`'s "Guest/demo dataset" decision), both on the free tier
-- [ ] T002 [P] Mint a long-lived full-access `TURSO_WRITE_TOKEN` for the production
-      database only, and document it in `cashpy-processor`'s local `.env.example` (no
-      real value committed)
-- [ ] T003 [P] Mint a Turso Platform API admin token and add it as a Vercel environment
-      variable (e.g. `TURSO_PLATFORM_TOKEN`), scoped to this project's environments only
-- [ ] T004 [P] Add `TURSO_DATABASE_URL` (production) and `TURSO_GUEST_DATABASE_URL` to
-      Vercel environment variables, and to `cashpy-processor`'s local `.env.example`
-- [ ] T005 Confirm `@libsql/client` (already in `cashpy_v2/package.json`) resolves at the
-      pinned version against the created databases with a throwaway connection script
+- [X] T001 Create the production Turso database (`cashpy`) and a separate guest database
+      (`cashpy-guest`, per `plan.md`'s "Guest/demo dataset" decision) via `turso db
+      create`, both on the free tier, both in the `default` group (`aws-eu-west-1`).
+      URLs: `libsql://cashpy-victor26.aws-eu-west-1.turso.io` (production) and
+      `libsql://cashpy-guest-victor26.aws-eu-west-1.turso.io` (guest). (Considered the
+      Vercel Marketplace Turso integration as a lower-friction alternative, but went
+      CLI-only since it needs two separate databases with different purposes anyway.)
+- [X] T002 [P] Minted a long-lived full-access write token for the production database
+      via `turso db tokens create cashpy`, and stored it (with `TURSO_DATABASE_URL`) in
+      `cashpy-processor/.env` (gitignored, real values) — `.env.example` keeps its
+      existing empty placeholders, no real value committed.
+- [X] T003 [P] Minted a Turso Platform API admin token via `turso auth api-tokens mint`
+      and added it as the Vercel environment variable `TURSO_PLATFORM_TOKEN` (Production
+      + Preview only — Vercel disallows sensitive vars on Development), scoped to the
+      `cashpy-v2` project.
+- [X] T004 [P] Added `TURSO_DATABASE_URL` (production) and `TURSO_GUEST_DATABASE_URL` to
+      Vercel env vars (Production, Preview, Development; non-sensitive) via `vercel env
+      add`; `cashpy-processor/.env` (from T002) already has the production URL.
+- [X] T005 Confirmed `@libsql/client@^0.14.0` (pinned in `cashpy_v2/package.json`)
+      resolves and connects: a throwaway script (`createClient` + `select 1`) against
+      the production DB returned `[{"ok":1}]`.
 
 **Checkpoint**: Turso infrastructure exists; no application code changed yet.
 
