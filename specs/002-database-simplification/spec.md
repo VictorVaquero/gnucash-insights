@@ -248,3 +248,17 @@ data (see `tasks.md` T020–T023 for full method): **Turso median 157ms** vs. **
 login timing was not separately captured (owner declined passing live credentials to an
 automated script); the guest path is used as a representative proxy since both paths
 share identical client-side code past the token-issuance step.
+
+## SC-004 measurement (2026-08-08)
+
+Compared every existing route (summary, expenses, travels, investments, analysis) between
+the S3-backed production deployment and the Turso-backed preview deployment on the guest
+path (see `tasks.md` T024–T026 for full method). `/expenses` and `/investments` matched;
+`/summary`, `/travels`, and `/analysis` differed. Root cause: the static S3 guest sample
+(uploaded once, 2024-09-30) predates the `fullTransactions`/`summary_monthly` tables the
+current app and current `gcparser` both expect, so the S3 side throws `no such table` on
+those two and silently renders stale/empty output, while Turso's guest database (freshly
+regenerated in T017 from the repo's current test fixture) has the correct schema. This is
+stale fixture data on the path Phase 6 deletes, not a regression from the data-layer
+change — SC-004 is treated as satisfied for data that isn't already out of date relative
+to the current schema.

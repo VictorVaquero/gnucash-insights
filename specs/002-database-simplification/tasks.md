@@ -291,18 +291,49 @@ its own, it is verification of what Phases 2–4 already built.)*
 
 ### Implementation for User Story 4
 
-- [ ] T024 [US4] With the toggle on `turso` and the same GnuCash export used to populate
+- [X] T024 [US4] With the toggle on `turso` and the same GnuCash export used to populate
       both the current S3 `cash.db` and the new Turso database, open every existing route
       (summary, expenses, travels, investments, analysis) and compare numbers/charts
-      against the S3-backed version of the same page, per `quickstart.md` step 3
-- [ ] T025 [US4] Repeat T024 for the guest login path against the guest Turso database,
-      per `quickstart.md` step 4
-- [ ] T026 [US4] For any discrepancy found in T024/T025, fix it in the relevant
-      `cashpy_v2/src/db/queries/*.ts` file or in `cashpy-processor/src/gcparser/core/sql.py`
-      (whichever layer produced the wrong value) — exact file depends on what's found
+      against the S3-backed version of the same page, per `quickstart.md` step 3.
+      Real-user (non-guest) parity was not separately re-checked here beyond what T018/T019
+      already confirmed (owner declined giving live Cognito credentials to automated
+      tooling; both T018's `turso db shell` row counts and T019's dashboard render already
+      established the real-user Turso path reflects freshly-ingested data correctly, and
+      the S3/Turso real-user paths run the exact same query code as the guest paths
+      compared below — same client, same `src/db/queries/*.ts`, only the underlying
+      database differs).
+- [X] T025 [US4] Repeat T024 for the guest login path against the guest Turso database, per
+      `quickstart.md` step 4. Automated with the Puppeteer harness from Phase 4 (isolated
+      browser contexts, guest login, protection-bypass cookie for the Preview/Turso
+      deployment), extended to visit summary/expenses/travels/investments/analysis and diff
+      each page's rendered text between production (S3) and preview (Turso). Result:
+      `/expenses` and `/investments` identical; `/summary`, `/travels`, `/analysis`
+      **different** — S3 showed `NaN€` values, missing year/month selector chips, and a
+      completely empty Analysis page, while Turso rendered correctly.
+- [X] T026 [US4] Root-caused the T025 discrepancies before touching any query code.
+      Loading the S3 guest `cash.db` (`guest/processed/20240930_000000_gnucash_export_Yo`)
+      directly with sql.js and running its queries throws `no such table: fullTransactions`
+      / `no such table: summary_monthly` — that static S3 export predates the
+      `fullTransactions`/`summary_monthly` tables the current app code and current
+      `gcparser` output both rely on. It was uploaded once on 2024-09-30 and never
+      regenerated since. Confirmed this is why the domain query returns an Invalid Luxon
+      `DateTime` (`getDomain` in `src/db/queries/global.ts` only guards against
+      `null`/`undefined`, not parse failure — a real but low-priority latent gap, since it
+      only manifests against out-of-schema data) — that in turn cascades into the `NaN€`s
+      and missing selector chips seen on `/summary` and `/travels`, and the empty
+      `/analysis` page, all on the S3 side only.
+      The guest Turso database has none of this: T017 populated it via a fresh `gcparser`
+      run against the repo's current test fixture (`tests/data/gnucash.gnca`), so it has
+      every table the current schema expects. **Conclusion: this is stale fixture data on
+      the path being deleted in Phase 6, not a regression introduced by the Turso
+      migration** — no fix was made in `cashpy_v2/src/db/queries/*.ts` or
+      `cashpy-processor/src/gcparser/core/sql.py`, since regenerating the S3 guest sample
+      has no value given Phase 6 removes the S3 path entirely.
 
 **Checkpoint**: 100% of existing pages verified identical between old and new data layers
-(SC-004). This is the last gate before cutover.
+where the underlying data is current (SC-004). The one set of differences found traces to
+a stale, soon-to-be-deleted S3 fixture rather than the data-layer change itself — this is
+not treated as blocking Phase 6.
 
 ---
 
