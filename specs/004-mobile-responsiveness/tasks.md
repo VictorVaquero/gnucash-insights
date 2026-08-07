@@ -119,10 +119,10 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 **Purpose**: Close remaining FR-003/FR-010 gaps not covered by a specific user story, and finish the `isMobile()` removal
 
-- [ ] T020 [P] Convert `src/routes/travels/index.tsx`'s route-level grid to the same `flex-col`/`md:grid` pattern used in T008 (FR-003 coverage for the Travels page's own layout, distinct from its chart-resize fixes in US3).
-- [ ] T021 [P] Fix `src/routes/login/index.tsx`'s card positioning — replace `absolute -translate-y-32` with flow-based centering that doesn't clip on short-height viewports (FR-010).
-- [ ] T022 [P] Spot-check `src/routes/metadata.tsx` at 320-428px and fix any wrapping/spacing issues found (FR-003 coverage).
-- [ ] T023 Remove the now-unused `isMobile()` function and its import from `src/common/utils.ts`, once T003, T004, and T014 have all migrated off it.
+- [X] T020 [P] Convert `src/routes/travels/index.tsx`'s route-level grid to the same `flex-col`/`md:grid` pattern used in T008 (FR-003 coverage for the Travels page's own layout, distinct from its chart-resize fixes in US3).
+- [X] T021 [P] Fix `src/routes/login/index.tsx`'s card positioning — replace `absolute -translate-y-32` with flow-based centering that doesn't clip on short-height viewports (FR-010).
+- [X] T022 [P] Spot-check `src/routes/metadata.tsx` at 320-428px and fix any wrapping/spacing issues found (FR-003 coverage). Fixed `p-10` (40px fixed padding, eating a large fraction of a 320px viewport) to `p-4 md:p-10`; `DropDownForm`/`KpiCard` were already flexible (`max-w-80`/`w-full`, `flex-wrap`) and needed no change.
+- [X] T023 Remove the now-unused `isMobile()` function and its import from `src/common/utils.ts`, once T003, T004, and T014 have all migrated off it. Confirmed via `grep -rn "isMobile" src` that only the definition/doc-comments remained; removed both. This also eliminates the pre-existing `no-useless-escape` ESLint baseline noise from its UA-sniffing regex.
 - [ ] T024 Run the full `quickstart.md` validation matrix end-to-end (all 4 user stories + edge cases + the desktop regression re-check against the T001 baseline) across 320/375/428px and landscape, plus at least one real phone, before marking this feature done per constitution Principle III.
 
 ---

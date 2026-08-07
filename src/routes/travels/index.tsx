@@ -11,22 +11,22 @@ const Expenses = () => {
   return (
     <div
       className="
-        w-full h-full 
-        grid grid-cols-[max-content_1fr] grid-rows-[1fr_1fr_2fr]
+        w-full md:h-full p-4 md:p-0
+        flex flex-col md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_1fr_2fr]
         gap-x-6 gap-y-6
         "
     >
-      <div className="row-start-1 row-end-4 flex flex-col gap-y-6">
+      <div className="md:row-start-1 md:row-end-4 flex flex-col gap-y-6">
         <KpiBlock />
         <TravelExpensesPiePlot />
       </div>
-      <div className="col-start-2 row-start-1">
+      <div className="md:col-start-2 md:row-start-1">
         <TravelExpensesMonthlyPlot />
       </div>
-      <div className="col-start-2 row-start-2">
+      <div className="md:col-start-2 md:row-start-2">
         <TravelExpensesDetailedPlot />
       </div>
-      <div className="col-start-2 row-start-3">
+      <div className="md:col-start-2 md:row-start-3">
         <TravelExpensesPlot />
       </div>
     </div>

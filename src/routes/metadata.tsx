@@ -54,7 +54,7 @@ const Metadata = () => {
   }
 
   return (
-    <div className="p-10 flex flex-col gap-y-4">
+    <div className="p-4 md:p-10 flex flex-col gap-y-4">
       <DropDownForm
         id="files"
         label="File"

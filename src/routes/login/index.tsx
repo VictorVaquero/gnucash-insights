@@ -40,8 +40,8 @@ export const LoginPage = () => {
   }, [isAuthenticated])
 
   return (
-    <div className="relative h-full flex justify-center items-center">
-      <div className="absolute -translate-y-32 text-white p-10 py-6 bg-shark-800 rounded">
+    <div className="h-full min-h-fit flex justify-center items-center overflow-y-auto py-6">
+      <div className="text-white p-10 py-6 bg-shark-800 rounded">
         <form className="pt-4" onSubmit={handleSignIn}>
           <div>
             <input
