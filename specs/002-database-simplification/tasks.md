@@ -82,9 +82,17 @@ S3/Cognito read path is left fully intact through this phase — nothing is remo
 - [X] T011 Wire the toggle: when `turso`, `useSetupDB` uses T008/T009's token hook +
       libSQL connection instead of `fetchDBOptions`/`saveFile`/`setupDB`'s S3+sql.js path,
       in `cashpy_v2/src/hooks/useDB.tsx`
-- [ ] T012 Manually verify: with the toggle set to `turso` and an **empty** Turso
+- [X] T012 Manually verify: with the toggle set to `turso` and an **empty** Turso
       database, the app connects without error (schema present, zero rows) — confirms the
-      plumbing before any real data exists
+      plumbing before any real data exists.
+      **Superseded rather than run standalone**: by the time this was reached, both
+      Turso databases already had real/guest data loaded (T017, T018), so a true
+      "empty schema, zero rows" browser check was no longer reproducible. The
+      connection plumbing itself was verified independently via T005 (direct
+      `@libsql/client` round-trip) and confirmed again end-to-end by T017/T018's
+      successful `libsql_client` writes and `turso db shell` reads. The
+      dashboard-UI-level check (does the toggle actually render Turso data in the
+      browser) happens as part of T019 instead.
 
 **Checkpoint**: Dashboard can connect to Turso end-to-end (empty data). S3 path still
 fully functional when the toggle is flipped back. Ready for user stories.
@@ -128,14 +136,62 @@ steps against the current S3 pipeline (per spec.md's Independent Test for this s
       (`400 Invalid response status`) — switched `save_to_sql` in
       `cashpy-processor/src/gcparser/core/sql.py` to rewrite `libsql://` URLs to
       `https://` before connecting, which uses the HTTP transport instead and works.
-- [ ] T018 [US1] Manually run
+- [X] T018 [US1] Manually run
       `python -m gcparser -f <export.gnca> -o <dir>` end-to-end against the production
       Turso database and confirm via `turso db shell` that all tables are rebuilt
-      correctly (quickstart.md step 1)
-- [ ] T019 [US1] With the dashboard toggle set to `turso`, confirm the dashboard reflects
+      correctly (quickstart.md step 1).
+      Along the way, found and fixed two path bugs in `cashmatcher/scripts/backupGnucash.fish`
+      (the script the owner already uses to produce `.gnca` exports, run via `just backup`):
+      (1) the source `cp` path was missing a `Documentos Personales/` segment and pointed
+      at a nonexistent file (root cause of a 0-byte export from a prior run); (2) the
+      `zf`/`of` destination paths were built with a literal backslash-space (`\ `) inside a
+      single-quoted `string join`, which fish does **not** treat as an escape inside single
+      quotes — it stayed as a literal `\` character, so the path didn't match the real
+      directory either. Fixed both, ran `just backup`, got a fresh 5.8 MB `.gnca` export
+      (also uploaded to S3 as the script always does — unrelated legacy side effect, left
+      as-is). Ran `python -m gcparser -f <export> -o tests/data/cash` against the
+      production Turso database (`cashpy`). **Caught a near-miss**: the output dir
+      (`tests/data/cash`) is a git-tracked fixture path shared with the guest dataset —
+      running against it overwrote the tracked CSVs with real financial data locally;
+      discarded via `git checkout -- tests/data/cash/` before anything was staged/committed,
+      so no real data ever touched git. Confirmed via `turso db shell cashpy`: 4011
+      transactions, 8686 splits, 112 accounts, max transaction date 2026-08-07.
+- [X] T019 [US1] With the dashboard toggle set to `turso`, confirm the dashboard reflects
       the freshly ingested data, and document the new step count (GnuCash export → run
       script → refresh browser) against today's baseline (S3 upload → Lambda trigger →
-      client refetch), per spec.md's Acceptance Scenario 2 for this story
+      client refetch), per spec.md's Acceptance Scenario 2 for this story.
+      Verified in two stages. **Guest path**: confirmed fully programmatically —
+      `/api/turso-token` with `x-guest-request: true` returns a scoped read-only token,
+      and querying with it against `cashpy-guest` returns 2505 transactions (matches
+      T017). **Real-user path**: local `vercel dev` couldn't be used (its dev proxy
+      mis-routes this app's `base: "/dashboard/"` Vite config, an unrelated pre-existing
+      tooling issue — logged as noise, not fixed). Instead deployed a Vercel Preview
+      (`VITE_DATA_SOURCE=turso` scoped to Preview only; Production untouched, still
+      `s3`) and had the owner log in and check directly in the browser.
+      **Found and fixed two real bugs this surfaced, both now committed**:
+      (1) `api/turso-token.ts` imported `./_lib/verifyCognitoToken` with no extension;
+      under this project's `"type": "module"`, Node's ESM loader requires the literal
+      `.js` extension on relative imports, and the deployed function wasn't bundled
+      down to a single file, so every authenticated request crashed at import time
+      (`ERR_MODULE_NOT_FOUND`) before ever reaching the handler — fixed by importing
+      `./_lib/verifyCognitoToken.js` instead. (2) `vercel.json`'s CSP `connect-src` was
+      missing `*.turso.io`/`wss://*.turso.io` entirely (only had the S3/Cognito
+      domains from the old path), so even once the function worked, the browser would
+      have blocked every libSQL query — added the missing entries.
+      **Also closed a Phase 2 gap found along the way**: `api/turso-token.ts` needs
+      `TURSO_ORG_SLUG`, `TURSO_DATABASE_NAME`, and `TURSO_GUEST_DATABASE_NAME` in
+      addition to the vars T003/T004 already set, and `verifyCognitoToken.ts` needs
+      `COGNITO_REGION`/`COGNITO_USER_POOL_ID`/`COGNITO_CLIENT_ID` (public client
+      config, not secret — values taken from `src/config.json`) — none of these had
+      been added to Vercel, so the endpoint was non-functional in every environment
+      until now. Added all six to Production/Preview/Development.
+      After both fixes, redeployed to Preview and the owner confirmed: real data
+      loads correctly (4011 transactions, latest 2026-08-07).
+      Step-count comparison: new path is GnuCash export (`just backup`, now fixed) →
+      `python -m gcparser -f <export> -o <dir>` → refresh browser (toggle already on
+      `turso`) — 2 manual steps, vs. today's S3 upload → wait for Lambda trigger →
+      client refetch — the new path removes the Lambda hop and its associated wait/
+      trigger-reliability risk entirely.
 
 **Checkpoint**: Ingestion pipeline fully runs against Turso; dashboard (toggled) reflects
 real data. S3/Lambda path still exists as a fallback (not yet removed).

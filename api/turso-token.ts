@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { verifyCognitoIdToken } from "./_lib/verifyCognitoToken";
+import { verifyCognitoIdToken } from "./_lib/verifyCognitoToken.js";
 
 const TOKEN_EXPIRATION = "1h";
 
