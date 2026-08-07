@@ -8,7 +8,7 @@ import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
 import { Suspense, useEffect, useState } from "react";
 
-import { isMobile } from "@/common/utils";
+import { useIsNarrowViewport } from "@/common/utils";
 import { Header } from "@/components/Header.tsx";
 import { SideBar } from "@/components/SideBar.tsx";
 import { useAuthSetup } from "@/hooks/useAuth";
@@ -47,6 +47,7 @@ const RootComponent = () => {
   const matches = useRouterState({ select: (s) => s.matches });
   const selected = useRouterState({ select: (state) => state.location.href });
   const [isCollapsed, setCollapse] = useState(true);
+  const isNarrowViewport = useIsNarrowViewport();
 
   const matchWithTitle = [...matches].reverse().find((d) => d.context.title);
   const title = matchWithTitle?.context.title || "My App";
@@ -55,10 +56,10 @@ const RootComponent = () => {
     document.title = title;
   }, [title]);
 
-  // Hide menu when moving between options, only on mobile
+  // Hide menu when moving between options, only on narrow viewports
   useEffect(() => {
-    if (isMobile()) setCollapse(true);
-  }, [selected]);
+    if (isNarrowViewport) setCollapse(true);
+  }, [selected, isNarrowViewport]);
 
   return (
     <>

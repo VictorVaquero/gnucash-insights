@@ -1,13 +1,17 @@
-import { isMobile } from "@/common/utils"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/useAuthContext"
 import { faBars, faMoneyBillWave } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { AnimatePresence, motion } from "motion/react"
-import { Dispatch, SetStateAction, useState } from "react"
+import { Dispatch, SetStateAction } from "react"
 
 export const Header = ({ isCollapsed, setCollapse }: { isCollapsed: boolean, setCollapse: Dispatch<SetStateAction<boolean>> }) => {
-    const [isVisible, setVisible] = useState<boolean>(false);
     const selected = useRouterState({ select: (state) => state.location.pathname, })
     const redirect = useRouterState({ select: (state) => state.location.search.redirect, })
     const { user, isAuthenticated, signOut } = useAuth()
@@ -42,33 +46,20 @@ export const Header = ({ isCollapsed, setCollapse }: { isCollapsed: boolean, set
                     <FontAwesomeIcon icon={faBars} className="ml-6 h-8 w-8 text-shark-200 hover:text-gray-400" />
                 </button>
             </div>
-            <div className="group relative cursor-pointer">
+            <div className="cursor-pointer">
                 {isAuthenticated() ?
-                    <>
-                        <button
-                            className="h-8 w-8 rounded-full flex flex-col justify-center items-center bg-sky-300 text-black"
-                            onClick={() => { if (isMobile()) setVisible((past)=>!past) }}
-                        >
-                            {firstLetter}
-                        </button>
-                        <div
-                            className='absolute right-0 -translate-x-2 
-                                      border-l-8 border-l-transparent
-                                      border-b-8 border-b-shark-600
-                                      border-r-8 border-r-transparent
-                                      opacity-0 group-hover:opacity-100'
-                            style={isVisible ? { opacity: 100 } : {}}
-                        />
-                        <button
-                            className="absolute right-0 translate-y-2 z-10 opacity-0 group-active:opacity-100 group-focus:opacity-100 group-hover:opacity-100 
-                                        shadow-sm
-                                       transition-opacity p-6 rounded-sm bg-shark-600 text-white text-nowrap"
-                            style={isVisible ? { opacity: 100 } : {}}
-                            onClick={() => { signOut(); setVisible(false) }}
-                        >
-                            Log Out
-                        </button>
-                    </>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="h-8 w-8 rounded-full flex flex-col justify-center items-center bg-sky-300 text-black">
+                                {firstLetter}
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-shark-600 border-shark-600 text-white">
+                            <DropdownMenuItem onSelect={() => signOut()}>
+                                Log Out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     :
                     <Link className="text-white" to='/login' search={{ redirect: redirect ?? selected }}>Log In</Link>
                 }

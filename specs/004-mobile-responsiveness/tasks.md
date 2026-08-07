@@ -30,7 +30,7 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 **Purpose**: Establish a pre-change baseline so regressions are attributable to this feature
 
-- [ ] T001 Manually verify the existing golden path (login → Summary loads → charts render, plus the guest login path) at a standard desktop width (~1440px), per constitution Principle III, before making any change — this is the regression baseline for the Polish-phase re-check.
+- [X] T001 Manually verify the existing golden path (login → Summary loads → charts render, plus the guest login path) at a standard desktop width (~1440px), per constitution Principle III, before making any change — this is the regression baseline for the Polish-phase re-check.
 
 ---
 
@@ -40,7 +40,7 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 **⚠️ CRITICAL**: T003 (US1) and T014 (US3) require T002 to exist first
 
-- [ ] T002 Add `useIsTouchDevice()` (backed by `window.matchMedia('(pointer: coarse)')`) and `useIsNarrowViewport()` (backed by `window.matchMedia` at the same width used by Tailwind's `md:` breakpoint) reactive hooks to `src/common/utils.ts`, alongside — not yet replacing — the existing `isMobile()` function.
+- [X] T002 Add `useIsTouchDevice()` (backed by `window.matchMedia('(pointer: coarse)')`) and `useIsNarrowViewport()` (backed by `window.matchMedia` at the same width used by Tailwind's `md:` breakpoint) reactive hooks to `src/common/utils.ts`, alongside — not yet replacing — the existing `isMobile()` function.
 
 **Checkpoint**: New detection hooks exist; user story implementation can begin.
 
@@ -54,8 +54,8 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Update `src/routes/__root.tsx`'s auto-collapse-sidebar-on-navigation effect to use `useIsNarrowViewport()` instead of `isMobile()`.
-- [ ] T004 [US1] Migrate `src/components/Header.tsx`'s account menu from custom `:hover`/`group-hover` CSS plus `isMobile()`-gated click handling to `@radix-ui/react-dropdown-menu` (via the existing `src/components/ui/dropdown-menu.tsx` wrapper), removing its `isMobile()` call site.
+- [X] T003 [US1] Update `src/routes/__root.tsx`'s auto-collapse-sidebar-on-navigation effect to use `useIsNarrowViewport()` instead of `isMobile()`.
+- [X] T004 [US1] Migrate `src/components/Header.tsx`'s account menu from custom `:hover`/`group-hover` CSS plus `isMobile()`-gated click handling to `@radix-ui/react-dropdown-menu` (via the existing `src/components/ui/dropdown-menu.tsx` wrapper), removing its `isMobile()` call site.
 - [ ] T005 [US1] Manually validate the US1 section of `quickstart.md` at 320/375/428px: Summary renders single-column and fully legible; nav menu opens, reaches every page, and closes via tap only; account menu opens/closes via tap only.
 
 **Checkpoint**: User Story 1 (MVP) is complete and independently testable/demoable.

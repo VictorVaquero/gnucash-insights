@@ -1,4 +1,4 @@
-import { MutableRefObject, useLayoutEffect, useState } from "react";
+import { MutableRefObject, useEffect, useLayoutEffect, useState } from "react";
 
 export const twStyles = getComputedStyle(document.documentElement);
 
@@ -60,6 +60,36 @@ export function getObjByKey<T extends object>(obj: T, key: string): T[keyof T] {
   }
   throw Error(`Unknown ${key} in object ${obj}`);
 }
+
+// Matches Tailwind's default `md` breakpoint (768px) so JS-side layout decisions
+// stay in sync with the CSS breakpoint used throughout the app.
+const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
+const TOUCH_POINTER_QUERY = "(pointer: coarse)";
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(
+    () => window.matchMedia(query).matches
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [query]);
+
+  return matches;
+}
+
+// Reactive replacement for isMobile()'s one-time user-agent sniff: reflects the
+// device's actual current input capability, and updates live (e.g. a touchscreen
+// laptop with a mouse also attached still reports correctly for each input type).
+export const useIsTouchDevice = () => useMediaQuery(TOUCH_POINTER_QUERY);
+
+// Reactive replacement for isMobile()'s viewport-size role: updates on resize and
+// orientation change, unlike a static user-agent check.
+export const useIsNarrowViewport = () => useMediaQuery(NARROW_VIEWPORT_QUERY);
 
 export function isMobile() {
   return (function (a) {
