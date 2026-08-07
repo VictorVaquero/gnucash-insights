@@ -96,16 +96,27 @@ in spec 003 (modernization) if there's a concrete reason.
 **Decision**: Port resumeweb's `vercel.json` header block (CSP, X-Frame-Options,
 X-Content-Type-Options, Referrer-Policy) to this project's own `vercel.json`, adjusting
 the CSP's `connect-src` to allow the AWS endpoints this app actually calls (Cognito IDP,
-Cognito Identity, S3) since this app — unlike resumeweb — makes outbound API calls.
+Cognito Identity, S3) since this app — unlike resumeweb — makes outbound API calls. Also
+add `'wasm-unsafe-eval'` to `script-src`, required for the browser to compile the sql.js
+WebAssembly binary this app currently depends on for its client-side SQLite database.
 
 **Rationale**: Satisfies spec FR-006 (security headers baseline). resumeweb's CSP is
 `connect-src 'self'` only, appropriate for a fully static site with no API calls; this
 app needs Cognito/S3 origins allowed or authentication and data fetching will be silently
 blocked by CSP in production despite working in local dev (dev has no CSP applied).
+`'wasm-unsafe-eval'` was discovered missing during live verification (US2): sql.js's WASM
+module failed `WebAssembly.instantiateStreaming`/`instantiate` under the initial CSP,
+breaking all data loading post-login. Deferred to spec 001 rather than spec 002 (database
+simplification) because spec 001's scope is "the existing app works identically on the
+new host" — spec 002 may remove the sql.js/wasm dependency entirely, at which point this
+CSP allowance should be removed as a one-line follow-up, not carried forward speculatively.
 
 **Alternatives considered**: Reuse resumeweb's CSP verbatim — rejected, would break
 login/data-fetching in production (a real risk, not hypothetical, since local `vite dev`
-doesn't enforce any CSP and this would only surface after deploy).
+doesn't enforce any CSP and this would only surface after deploy). Wait for spec 002 to
+land before fixing the wasm CSP block — rejected, would leave spec 001 in a state where
+the migrated app is reachable but non-functional for real use, contradicting spec 001's
+own success criteria.
 
 ---
 
