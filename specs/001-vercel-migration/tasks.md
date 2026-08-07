@@ -68,17 +68,26 @@ user story can be verified until this exists.
       minimal pre-existing-bug fix (unrelated to this migration's scope, user-approved):
       `TreeList.stories.tsx` was calling `toHierarchy` with 6/8 args, and `global.ts` had
       an unused `maxPricesQuery` function; both fixed, build now passes clean
-- [ ] T007 Create a new Vercel project for `cashpy_v2`, connected to this repo's GitHub
+- [X] T007 Create a new Vercel project for `cashpy_v2`, connected to this repo's GitHub
       remote (via Vercel dashboard "Add New Project", or `vercel link` from the CLI) —
-      one-time setup, no code change
-- [ ] T008 Trigger a deployment (push to the connected branch, or `vercel --prod`) and
-      record the assigned stable production URL (`https://<project>.vercel.app`)
-- [ ] T009 Visit `https://<project>.vercel.app/dashboard` and confirm the app loads (raw
+      one-time setup, no code change — production URL: `https://cashpy-v2.vercel.app`
+- [X] T008 Trigger a deployment (push to the connected branch, or `vercel --prod`) and
+      record the assigned stable production URL (`https://<project>.vercel.app`) — three
+      follow-up fixes were needed before this went green: (1) pin `packageManager` +
+      remove a stale tracked `yarn.lock` so Vercel actually used pnpm instead of Yarn
+      (Yarn's resolution pulled in a Node-only AWS SDK submodule Vite couldn't bundle);
+      (2) reorder `build` script to `vite build && tsc` since `routeTree.gen.ts` is only
+      generated as a Vite plugin side effect and doesn't exist on a fresh checkout; (3) set
+      `build.outDir` to `dist/dashboard` since `base: "/dashboard/"` only affects how Vite
+      *references* assets in HTML, not where files physically land — Vercel is a static
+      host and needs the physical layout to match the referenced paths
+- [X] T009 Visit `https://<project>.vercel.app/dashboard` and confirm the app loads (raw
       Vercel URL, not yet the final domain — validates Phase 1's config actually works
-      before wiring up resumeweb)
-- [ ] T010 Visit `https://<project>.vercel.app/dashboard/summary` directly (hard
+      before wiring up resumeweb) — confirmed 200, correct asset paths, all 4 security
+      headers present (also satisfies T015 for this URL; will re-check on the final domain)
+- [X] T010 Visit `https://<project>.vercel.app/dashboard/summary` directly (hard
       navigation, not in-app) and confirm it loads without a 404 (validates T004's SPA
-      fallback rewrite)
+      fallback rewrite) — confirmed 200
 
 **Checkpoint**: `cashpy_v2` is live on Vercel at its own URL, SPA routing works. Ready to
 wire up the real domain and verify functional behavior.
