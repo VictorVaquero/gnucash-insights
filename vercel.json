@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/dashboard/api/(.*)", "destination": "/api/$1" },
     { "source": "/dashboard/((?!assets/).*)", "destination": "/dashboard/index.html" }
   ],
   "headers": [

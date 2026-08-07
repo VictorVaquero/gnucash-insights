@@ -14,7 +14,7 @@ export const fetchTursoToken = async ({
     ? { "X-Guest-Request": "true" }
     : { Authorization: `Bearer ${idToken}` };
 
-  const response = await fetch("/api/turso-token", {
+  const response = await fetch(`${import.meta.env.BASE_URL}api/turso-token`, {
     method: "POST",
     headers,
   });
