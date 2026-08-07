@@ -92,17 +92,17 @@ steps against the current S3 pipeline (per spec.md's Independent Test for this s
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Add a libSQL/Turso Python client dependency to
+- [X] T013 [US1] Add a libSQL/Turso Python client dependency to
       `cashpy-processor/pyproject.toml` (e.g. `libsql-client`), pinned
-- [ ] T014 [US1] Rewrite `cashpy-processor/src/gcparser/core/sql.py`'s output step:
+- [X] T014 [US1] Rewrite `cashpy-processor/src/gcparser/core/sql.py`'s output step:
       replace the stdlib-`sqlite3`-to-local-file write with a libSQL/Turso write using
       `TURSO_DATABASE_URL`/`TURSO_WRITE_TOKEN`, keeping the same
       drop/create/bulk-insert-per-table logic (including the in-database `timetable`,
       `accountsClosure` recursive CTE, and `summary_*` builds) unchanged in substance
-- [ ] T015 [US1] Update `cashpy-processor/src/gcparser/__main__.py` to call the new Turso
+- [X] T015 [US1] Update `cashpy-processor/src/gcparser/__main__.py` to call the new Turso
       write path (per `contracts/ingestion-write-contract.md`) instead of writing
       `cash.db` to `output_dir`
-- [ ] T016 [US1] Remove the S3 get/put calls and `boto3` usage from
+- [X] T016 [US1] Remove the S3 get/put calls and `boto3` usage from
       `cashpy-processor/src/gcparser/app.py`, or delete the file outright if no
       Lambda-specific logic remains needed for this phase (full removal of the Lambda
       deployment itself is deferred to Phase 6's cutover step, per constitution
