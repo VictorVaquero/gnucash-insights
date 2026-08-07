@@ -208,3 +208,31 @@ confirm output matches the old data layer for the same underlying dataset.
   chosen option is expected to follow within this same spec's task list, but the
   comparison MUST be reviewed/confirmed before implementation tasks are generated, per
   the constitution's migration workflow.
+
+## Decisions (post-research, owner-approved 2026-08-07)
+
+Per `research.md`'s comparison and the owner's explicit sign-off, the following are now
+settled, not open:
+
+- **Database**: Turso (hosted libSQL/SQLite-compatible), not Neon/Postgres or the status
+  quo. Rationale in `research.md`'s Recommendation section — smallest migration effort
+  given the existing SQLite-dialect Drizzle schema, $0/month at this scale with large
+  headroom, and it reduces rather than adds architectural surface area.
+- **Book/snapshot history**: dropped in favor of **latest-only** — a single Turso
+  database updated in place on each ingestion run, not a versioned/branched history of
+  every dated export. This is an accepted scope reduction per FR-008, not a silent loss;
+  no evidence the multi-snapshot browsing UI is exercised in practice.
+- **cashpy-processor's new home**: moves **off AWS Lambda entirely**, becoming a local
+  script run manually right after each GnuCash export (its parsing core already has a
+  working AWS-free local CLI — see research.md's Portability finding). It pushes directly
+  to Turso instead of uploading CSVs/`cash.db` to S3. This retires the S3 bucket, Lambda
+  function, and the S3-trigger mechanism for this pipeline (the `victor-mycash` bucket
+  itself may still exist for other purposes — decommissioning it, if warranted, is a
+  manual follow-up outside this spec, same pattern as spec 001's AWS S3/CloudFront
+  decommission note).
+- **Query layer / ORM**: still open — the owner has asked to also research whether
+  Drizzle ORM (the current query layer) has real stability issues with complex queries
+  (recursive CTEs, aggregations) that would justify switching to an alternative
+  (e.g. Kysely, raw `@libsql/client`) as a second phase of this same spec. This research
+  is in progress; see `research.md`'s ORM section once added, and this Decisions section
+  will be updated once that's resolved too.
