@@ -140,15 +140,20 @@ confirm data renders on multiple pages, per spec.md User Story 2's acceptance sc
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Run quickstart.md step 4: log in with real owner credentials on
-      `https://victorvaquero.com/dashboard`
-- [ ] T018 [US2] Confirm summary, expenses, travels, and investments pages all render
-      data and charts, matching the pre-migration app for the same account
-- [ ] T019 [US2] Check browser devtools console for CSP violation errors during login and
+- [X] T017 [US2] Run quickstart.md step 4: log in with real owner credentials on
+      `https://victorvaquero.com/dashboard` — confirmed working
+- [X] T018 [US2] Confirm summary, expenses, travels, and investments pages all render
+      data and charts, matching the pre-migration app for the same account — confirmed by
+      user after the CSP fix below landed
+- [X] T019 [US2] Check browser devtools console for CSP violation errors during login and
       data fetch; if any Cognito/S3 request is blocked, fix the specific `connect-src`
-      origin missing from `cashpy_v2/vercel.json` (added in T003) and redeploy
-- [ ] T020 [US2] If T019 required a CSP fix, re-run T017–T018 to confirm the fix resolved
-      it and nothing else regressed
+      origin missing from `cashpy_v2/vercel.json` (added in T003) and redeploy — found a
+      real issue, though not `connect-src`: sql.js's WASM module failed to compile
+      (`script-src` was missing `'wasm-unsafe-eval'`), blocking all data loading after a
+      successful login. Fixed in both `cashpy_v2/vercel.json` (acb81f6) and the
+      `/dashboard`-scoped rule in `resumeweb/vercel.json` (6999f23)
+- [X] T020 [US2] If T019 required a CSP fix, re-run T017–T018 to confirm the fix resolved
+      it and nothing else regressed — confirmed by user, data now loads correctly
 
 **Checkpoint**: Both P1 stories are done — the app is reachable at its real address AND
 fully functional for the real user. This is the actual production-ready milestone.
