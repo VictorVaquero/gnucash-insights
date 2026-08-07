@@ -68,12 +68,13 @@ const Analysis = () => {
   return (
     <div
       className="
-        w-full h-full pr-10
-        grid grid-cols-[1fr_max-content] grid-rows-2
+        w-full md:h-full p-4 md:pr-10
+        flex flex-col
+        md:grid md:grid-cols-[1fr_max-content] md:grid-rows-2
         gap-x-6 gap-y-6
         "
     >
-      <div className="row-start-1 row-end-1">
+      <div className="md:row-start-1 md:row-end-1">
         {filteredTransactions.length !== 0 ? (
           <TransactsPlot
             data={filteredTransactions}
@@ -83,16 +84,16 @@ const Analysis = () => {
           <div className="h-1/2"></div>
         )}
       </div>
-      <div className="row-start-1 col-start-2">
+      <div className="md:row-start-1 md:col-start-2">
         <KpiBlock data={filteredTransactions} />
       </div>
-      <div className="row-start-2 col-start-1">
+      <div className="md:row-start-2 md:col-start-1">
         <TransactTable
           data={transactions}
           setFilteredData={setFilteredTransactions}
         />
       </div>
-      <div className="row-start-2 col-start-2">
+      <div className="md:row-start-2 md:col-start-2">
         <PeriodicityTabs
           activeMode={chartPeriodicity}
           onChange={setChartPeriodicity}

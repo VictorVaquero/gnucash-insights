@@ -125,6 +125,7 @@ export const TransactTable = (props: {
 
   return (
     <div>
+      <div className="overflow-x-auto">
       <table className="border-collapse border-spacing-y-4 border-shark-600 text-white">
         <thead>
           {table.getHeaderGroups().map((hg) => (
@@ -174,35 +175,38 @@ export const TransactTable = (props: {
           </tr>
         </tfoot>
       </table>
-      <div className="mt-2 flex items-center gap-2 text-white">
-        <button
-          className="rounded p-1 bg-shark-800"
-          onClick={() => table.firstPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          {"<<"}
-        </button>
-        <button
-          className="rounded p-1 bg-shark-800"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          {"<"}
-        </button>
-        <button
-          className="rounded p-1 bg-shark-800"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          {">"}
-        </button>
-        <button
-          className="rounded p-1 bg-shark-800"
-          onClick={() => table.lastPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          {">>"}
-        </button>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-white">
+        <span className="flex items-center gap-1">
+          <button
+            className="rounded p-1 bg-shark-800"
+            onClick={() => table.firstPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            {"<<"}
+          </button>
+          <button
+            className="rounded p-1 bg-shark-800"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            {"<"}
+          </button>
+          <button
+            className="rounded p-1 bg-shark-800"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            {">"}
+          </button>
+          <button
+            className="rounded p-1 bg-shark-800"
+            onClick={() => table.lastPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            {">>"}
+          </button>
+        </span>
         <span className="flex items-center gap-1">
           <div className="text-gray-400">Page</div>
           <span>{table.getState().pagination.pageIndex + 1}</span>

@@ -70,9 +70,9 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 ### Implementation for User Story 2
 
-- [ ] T006 [P] [US2] Wrap `src/routes/analysis/-components/TransactsTable.tsx`'s `<table>` in an `overflow-x-auto` scroll container so every column stays reachable without being hidden.
-- [ ] T007 [US2] Reflow `TransactsTable.tsx`'s pagination footer into wrapped, grouped control clusters (prev/next as one group; page-size select and page-jump input as another) using `flex-wrap`, so no control overlaps at narrow widths.
-- [ ] T008 [P] [US2] Convert `src/routes/analysis/index.tsx`'s route-level grid from its fixed `grid-cols-[1fr_max-content]` layout to `flex flex-col` by default, applying the existing grid only at `md:` and above — matching the pattern already used in `src/routes/summary/index.tsx`.
+- [X] T006 [P] [US2] Wrap `src/routes/analysis/-components/TransactsTable.tsx`'s `<table>` in an `overflow-x-auto` scroll container so every column stays reachable without being hidden.
+- [X] T007 [US2] Reflow `TransactsTable.tsx`'s pagination footer into wrapped, grouped control clusters (prev/next as one group; page-size select and page-jump input as another) using `flex-wrap`, so no control overlaps at narrow widths.
+- [X] T008 [P] [US2] Convert `src/routes/analysis/index.tsx`'s route-level grid from its fixed `grid-cols-[1fr_max-content]` layout to `flex flex-col` by default, applying the existing grid only at `md:` and above — matching the pattern already used in `src/routes/summary/index.tsx`.
 - [ ] T009 [US2] Manually validate the US2 section of `quickstart.md` at 320/375/428px: table scrolls to reveal every column, pagination controls remain individually tappable without overlap, and selecting a saved filter (e.g. "Trips") keeps both chart and table within the viewport.
 
 **Checkpoint**: User Stories 1 and 2 are both complete and independently testable.
