@@ -117,8 +117,17 @@ steps against the current S3 pipeline (per spec.md's Independent Test for this s
       Lambda-specific logic remains needed for this phase (full removal of the Lambda
       deployment itself is deferred to Phase 6's cutover step, per constitution
       Principle I — this task only stops it from being the ingestion entry point)
-- [ ] T017 [US1] One-time load of the existing guest sample dataset into the guest Turso
-      database created in T001 (static data, not part of the regular ingestion run)
+- [X] T017 [US1] One-time load of the existing guest sample dataset into the guest Turso
+      database created in T001 (static data, not part of the regular ingestion run).
+      Ran `python -m gcparser -f tests/data/gnucash.gnca -o tests/data/cash` (the repo's
+      existing test fixture — its `Account*`-style IDs match `config.json`'s `guest`
+      block) against `cashpy-guest`'s write token. Confirmed via `turso db shell
+      cashpy-guest`: all 14 tables present, `transactions` has 2505 rows.
+      **Found and fixed a real bug while doing this**: `libsql-client==0.3.1`'s
+      websocket (Hrana) transport fails its handshake against Turso's current server
+      (`400 Invalid response status`) — switched `save_to_sql` in
+      `cashpy-processor/src/gcparser/core/sql.py` to rewrite `libsql://` URLs to
+      `https://` before connecting, which uses the HTTP transport instead and works.
 - [ ] T018 [US1] Manually run
       `python -m gcparser -f <export.gnca> -o <dir>` end-to-end against the production
       Turso database and confirm via `turso db shell` that all tables are rebuilt
