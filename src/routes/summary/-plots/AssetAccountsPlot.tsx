@@ -4,7 +4,11 @@ import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
 
 import { getRandomColor } from "@/common/getColors";
-import { parseNum, useWindowSize } from "@/common/utils.ts";
+import {
+  parseNum,
+  useIsNarrowViewport,
+  useWindowSize,
+} from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -29,7 +33,8 @@ interface Account {
   name: string;
 }
 
-const margin = { t: 20, r: 20, b: 20, l: 50 };
+const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
+const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const yf = (d: Data) => Math.abs(d.value);
 
@@ -44,6 +49,8 @@ const DrawMonthlyAccountsPlot = ({
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, height] = useWindowSize(svgRef);
+  const isNarrowViewport = useIsNarrowViewport();
+  const margin = isNarrowViewport ? marginMobile : marginDesktop;
   const range = {
     x: [margin.l, width - margin.r],
     y: [height - margin.b, margin.t],

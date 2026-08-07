@@ -4,7 +4,12 @@ import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { MutableRefObject, useMemo, useRef } from "react";
 
-import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
+import {
+  parseNum,
+  twStyles,
+  useIsNarrowViewport,
+  useWindowSize,
+} from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -23,7 +28,8 @@ export interface Data {
 
 const redColor = twStyles.getPropertyValue("--color-red-500");
 
-const margin = { t: 20, r: 20, b: 20, l: 50 };
+const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
+const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
 const getColor = () => redColor;
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const yf = (d: Data) => d.value;
@@ -37,12 +43,14 @@ const DrawTravelExpensesMonthlyPlot = (props: {
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, height] = useWindowSize(svgRef);
+  const isNarrowViewport = useIsNarrowViewport();
+  const margin = isNarrowViewport ? marginMobile : marginDesktop;
   const range = useMemo(() => {
     return {
       x: [margin.l, width - margin.r],
       y: [height - margin.b, margin.t],
     };
-  }, [width, height]);
+  }, [width, height, margin]);
 
   const sortedData = [...props.data].sort(orderyf).sort(orderxf);
   const sortedDataYearly = [...props.dataYearly].sort(orderyf).sort(orderxf);

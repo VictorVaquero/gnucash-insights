@@ -1,4 +1,4 @@
-import { isMobile } from "@/common/utils";
+import { useIsTouchDevice } from "@/common/utils";
 import * as d3 from "d3";
 import { PointerEvent, PropsWithChildren, RefObject, useRef } from "react";
 
@@ -10,6 +10,7 @@ interface TooltipProps<D> {
 }
 export const Tooltip = <D,>(props: PropsWithChildren<TooltipProps<D>>) => {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const isTouchDevice = useIsTouchDevice();
   const pointermove = function (event: PointerEvent) {
     const [x, y, d] = props.choosePoint(event);
     if (tooltipRef.current !== null && d !== null && d !== undefined) {
@@ -30,7 +31,7 @@ export const Tooltip = <D,>(props: PropsWithChildren<TooltipProps<D>>) => {
   };
   const pointerleave = () => {
     if (tooltipRef.current !== null) {
-      if (!isMobile())
+      if (!isTouchDevice)
         d3.select(tooltipRef.current).style("visibility", "hidden");
       else
         setTimeout(() => {

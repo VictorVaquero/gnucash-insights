@@ -652,7 +652,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
     return (
       <div
         ref={forwardedRef}
-        className={cn("h-80 w-full", className)}
+        className={cn("h-64 md:h-80 w-full", className)}
         tremor-id="tremor-raw"
         {...other}
       >

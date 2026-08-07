@@ -3,7 +3,11 @@ import { DateTime } from "luxon";
 import { MutableRefObject, useMemo, useRef } from "react";
 import { BarLoader } from '@/components/ui/BarLoader'
 
-import { parseNum, useWindowSize } from "@/common/utils.ts";
+import {
+    parseNum,
+    useIsNarrowViewport,
+    useWindowSize,
+} from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from '@/components/charts/YAxis';
 import { useAuth } from '@/contexts/useAuthContext';
@@ -21,7 +25,8 @@ export interface Data {
 }
 
 
-const margin = { 't': 20, 'r': 20, 'b': 20, 'l': 50 }
+const marginDesktop = { 't': 20, 'r': 20, 'b': 20, 'l': 50 }
+const marginMobile = { 't': 10, 'r': 10, 'b': 20, 'l': 36 }
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const yf = (d: Data) => d.value;
 const gf = (d: Data) => d.name;
@@ -31,9 +36,11 @@ const orderyf = (a: Data, b: Data) => yf(a) > yf(b) ? 1 : -1;
 const DrawTravelExpensesPlot = (props: { data: Data[], domain: { startDate: DateTime, endDate: DateTime } }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
     const [width, height] = useWindowSize(svgRef)
+    const isNarrowViewport = useIsNarrowViewport();
+    const margin = isNarrowViewport ? marginMobile : marginDesktop;
     const range = useMemo(() => {
         return { 'x': [margin.l, width - margin.r], 'y': [height - margin.b, margin.t] }
-    }, [width, height])
+    }, [width, height, margin])
 
     const sortedData = [...props.data].sort(orderyf).sort(orderxf);
     const stack = d3.stack<[DateTime, d3.InternMap<string, Data>], string>()

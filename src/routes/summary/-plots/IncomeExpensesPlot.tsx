@@ -3,7 +3,12 @@ import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
 
-import { parseNum, twStyles, useWindowSize } from "@/common/utils.ts";
+import {
+  parseNum,
+  twStyles,
+  useIsNarrowViewport,
+  useWindowSize,
+} from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -34,7 +39,8 @@ const colorCodes: Record<colorType, string> = {
   r: twStyles.getPropertyValue("--color-red-500"),
 };
 
-const margin = { t: 20, r: 20, b: 20, l: 50 };
+const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
+const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
 const getColor = (d: colorType) => colorCodes[d];
 const xf = (d: PlotData) => DateTime.fromISO(d.date);
 const yf = (d: PlotData) => Math.max(d.income, d.expenses, d.net);
@@ -48,12 +54,14 @@ const DrawMonthlyIncomeExpensesPlot = ({
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, height] = useWindowSize(svgRef);
+  const isNarrowViewport = useIsNarrowViewport();
+  const margin = isNarrowViewport ? marginMobile : marginDesktop;
   const range = useMemo(() => {
     return {
       x: [margin.l, width - margin.r],
       y: [height - margin.b, margin.t],
     };
-  }, [width, height]);
+  }, [width, height, margin]);
 
   const xDomain = [domain.startDate.minus({ month: 1 }), domain.endDate];
   const yDomain = [0, Math.max(...data.map(yf))];

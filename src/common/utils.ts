@@ -5,16 +5,22 @@ export const twStyles = getComputedStyle(document.documentElement);
 export const useWindowSize = (ref: MutableRefObject<Element | null>) => {
   const [size, setSize] = useState([0, 0]);
   useLayoutEffect(() => {
+    const node = ref.current;
+    if (node === null) return;
+
     function updateSize() {
-      if (ref.current !== null) {
-        const { width, height } = ref.current.getBoundingClientRect();
-        //console.debug('Current Window Range: ', [width, height])
+      if (node !== null) {
+        const { width, height } = node.getBoundingClientRect();
         setSize([width, height]);
       }
     }
-    window.addEventListener("resize", updateSize);
     updateSize();
-    return () => window.removeEventListener("resize", updateSize);
+
+    // Observes the container itself so charts resize on sidebar
+    // open/close and other layout changes, not just window resize.
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(node);
+    return () => observer.disconnect();
   }, [ref]);
   return size;
 };
