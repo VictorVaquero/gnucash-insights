@@ -3,11 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "clean": "aws s3 rm --recursive s3://victorvaquero.dashboard.net/dashboard/",
-    "deploy": "aws s3 sync dist/ s3://victorvaquero.dashboard.net/dashboard/ && aws cloudfront create-invalidation --distribution-id=E5ZMBYGUCPRWJ  --paths '/*'",
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",

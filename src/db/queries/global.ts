@@ -21,7 +21,6 @@ import {
   booksTable,
   fullTransactionsTable,
   metaTable,
-  pricesTable,
   timeTable,
   transactionsTable,
 } from "../schema";
@@ -114,38 +113,6 @@ export const getAccountsClosureQuery = (
     .innerJoin(parent, eq(accountsClosureTable.parent, parent.id))
     .where(check)
     .as("accountsFiltered");
-};
-
-const maxPricesQuery = (db: SQLJsDatabase) => {
-  return db
-    .select({
-      bookId: pricesTable.bookId,
-      currency: pricesTable.currency,
-      commodity: pricesTable.commodity,
-      year: timeTable.year,
-      month: timeTable.month,
-      price: sql`COALESCE(MAX(${pricesTable.value}), 1)`.as("price"),
-    })
-    .from(timeTable)
-    .leftJoin(
-      pricesTable,
-      eq(timeTable.ymd, sql`substr(${pricesTable.time}, 0, 11)`)
-    )
-    .groupBy(
-      pricesTable.bookId,
-      pricesTable.currency,
-      pricesTable.commodity,
-      timeTable.year,
-      timeTable.month
-    )
-    .orderBy(
-      pricesTable.bookId,
-      pricesTable.currency,
-      pricesTable.commodity,
-      timeTable.year,
-      timeTable.month
-    )
-    .as("maxPrices");
 };
 
 export const fullTransactionsQuery = (db: SQLJsDatabase) => {
