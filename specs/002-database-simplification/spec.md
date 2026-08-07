@@ -238,3 +238,13 @@ settled, not open:
   costing Drizzle's schema-as-code and built-in migrations. The Turso migration proceeds
   as a driver swap (`drizzle-orm/sql-js` → `drizzle-orm/libsql`) against the existing
   schema and query code. Revisit only if a specific, recurring bug actually surfaces.
+
+## SC-003 measurement (2026-08-07)
+
+Automated with a headless-browser (Puppeteer) guest-login flow, 5 isolated runs each,
+timing from clicking into the summary page to the first KPI value rendering with real
+data (see `tasks.md` T020–T023 for full method): **Turso median 157ms** vs. **S3 median
+185ms** — new path is equal-or-faster, satisfying SC-003. Full real-user (non-guest)
+login timing was not separately captured (owner declined passing live credentials to an
+automated script); the guest path is used as a representative proxy since both paths
+share identical client-side code past the token-issuance step.
