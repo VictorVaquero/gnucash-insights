@@ -12,6 +12,7 @@ export default defineConfig({
     alias: [{ find: "@", replacement: path.resolve(__dirname, "src") }],
   },
   build: {
+    outDir: "dist/dashboard",
     assetsDir: "assets/",
   },
   base: "/dashboard/",
