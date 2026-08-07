@@ -343,28 +343,63 @@ not treated as blocking Phase 6.
 verified, per constitution Principle I. Confirm spec.md's Success Criteria are fully met
 and record final numbers.
 
-- [ ] T027 Remove the data-source toggle from T010, defaulting permanently to `turso`, in
+- [X] T027 Remove the data-source toggle from T010, defaulting permanently to `turso`, in
       `cashpy_v2/src/hooks/useDB.tsx`
-- [ ] T028 [P] Delete `cashpy_v2/src/services/s3Service.tsx` and the S3-fetch branch of
+      **Done**: `useDB.tsx` rewritten — `useSetupDB` now unconditionally builds the Turso
+      client via `fetchTursoToken`/`setupTursoDB`; no `DATA_SOURCE`/`VITE_DATA_SOURCE`
+      branch remains anywhere in the file.
+- [X] T028 [P] Delete `cashpy_v2/src/services/s3Service.tsx` and the S3-fetch branch of
       `cashpy_v2/src/services/DbService.tsx` (the `sql-js`/OPFS `setupDB`/`saveFile`/
       `fetchDBOptions` path), now unused
-- [ ] T029 [P] Remove `@aws-sdk/client-s3`, `sql.js`, and related WASM/vite plugins
+      **Done**: `s3Service.tsx` deleted outright. `DbService.tsx` stripped to just
+      `setupTursoDB`. Also fixed a real coupling this surfaced: `main.tsx` previously called
+      `awsFolderOptions` unconditionally (to pick a default `fileName`) even on the Turso
+      path — that whole file-listing/`FileContext`/`fileName` machinery is now removed from
+      `main.tsx`, `metadata.tsx`, and `GlobalContext.tsx` (the "File" dropdown on
+      `/metadata` is gone; "Book Id" dropdown and KPI cards unchanged).
+- [X] T029 [P] Remove `@aws-sdk/client-s3`, `sql.js`, and related WASM/vite plugins
       (`vite-plugin-wasm`, `vite-plugin-top-level-await` if unused elsewhere) from
       `cashpy_v2/package.json`, and the `sql.js` WASM handling from `vite.config.ts` if
       nothing else needs it
-- [ ] T030 [P] Update `cashpy_v2/src/config.json`: remove `bucketName`/`folderPath`/
+      **Done**: removed `@aws-sdk/client-s3`, `@aws-sdk/credential-providers`, `sql.js`,
+      `@types/sql.js`, `vite-plugin-wasm`, `vite-plugin-top-level-await` from
+      `package.json`; ran `pnpm install` to update the lockfile. `vite.config.ts`'s
+      `wasm()`/`topLevelAwait()` plugins and imports removed.
+- [X] T030 [P] Update `cashpy_v2/src/config.json`: remove `bucketName`/`folderPath`/
       `guestFolderPath`, keep only what's still needed (Cognito fields stay; Turso URLs
       come from env vars per T004, not this file)
-- [ ] T031 [P] Update `cashpy_v2/vercel.json`'s CSP `connect-src` to remove the
+      **Done**: also removed `identityPoolId` (only consumer, `getCredentialsAws`, was
+      deleted from `authService.tsx`/`useAuth.ts` as part of T028's cleanup).
+- [X] T031 [P] Update `cashpy_v2/vercel.json`'s CSP `connect-src` to remove the
       `*.s3.eu-west-3.amazonaws.com` entry and add the Turso database host(s)
-- [ ] T032 [P] Delete `cashpy-processor/src/gcparser/app.py` (Lambda handler) and
+      **Done**: removed `https://*.s3.eu-west-3.amazonaws.com` and
+      `https://cognito-identity.eu-west-3.amazonaws.com` (Identity Pool endpoint, now
+      unused since S3 credential vending was deleted) from `connect-src`; removed
+      `'wasm-unsafe-eval'` from `script-src` (no WASM left in the bundle). Turso hosts
+      (`https://*.turso.io wss://*.turso.io`) were already present from Phase 2.
+- [X] T032 [P] Delete `cashpy-processor/src/gcparser/app.py` (Lambda handler) and
       `cashpy-processor/template.yml` (SAM config), and remove `boto3` from
       `cashpy-processor/pyproject.toml` if no longer used anywhere
-- [ ] T033 Update `specs/002-database-simplification/spec.md` (or a completion note) with
+      **Done**: both files deleted (`git rm`, staged but not yet committed in the separate
+      `cashpy-processor` repo — pending owner confirmation to commit/push there). `boto3`
+      removed from `pyproject.toml`; confirmed via grep no other `.py` file used it. Note:
+      this only removes repo files — the live AWS Lambda function and its S3 event trigger
+      are not undeployed by this task; that remains a manual follow-up, same pattern as
+      spec 001's decommission note.
+- [X] T033 Update `specs/002-database-simplification/spec.md` (or a completion note) with
       the final SC-001 (service count), SC-002 (monthly cost), and SC-003 (timing)
       measurements gathered in Phases 3–4
+      **Done**: see spec.md's "SC-001/SC-002 measurement" section.
 - [ ] T034 Run the full `quickstart.md` one final time end-to-end post-cutover (no S3
       fallback remaining) to confirm nothing silently depended on the removed path
+      **Blocked on deploy**: `npm run build`, `tsc`, and `npm run lint` all pass locally
+      with zero errors introduced by this cutover, confirming nothing in the client bundle
+      still references the removed S3/WASM path. However `/api/turso-token` is a Vercel
+      serverless function and cannot be exercised against `vite dev` locally — actually
+      running quickstart's guest-path smoke test requires a deployment (Preview or
+      Production). Deferred pending the owner's go-ahead to push/deploy, since landing this
+      on Production makes Turso the sole backend for real (non-guest) user data for the
+      first time — see the note below.
 
 **Checkpoint**: Spec complete — old path fully removed, all Success Criteria (SC-001
 through SC-005) met and recorded.

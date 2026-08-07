@@ -1,4 +1,4 @@
-import { getCredentialsAws, refreshTokenAws, signInAws } from "@/services/authService";
+import { refreshTokenAws, signInAws } from "@/services/authService";
 import { usePersistentState } from "./usePersistentState";
 
 export const useAuthSetup = () => {
@@ -52,11 +52,5 @@ export const useAuthSetup = () => {
         return !!user || !!idToken;
     }
 
-    const getCredentials = () => {
-        if (!isAuthenticated()) return
-        return getCredentialsAws(user as string, idToken as string)
-    }
-
-
-    return { user, getIdToken, getCredentials, signIn, signInGuest, signOut, isAuthenticated }
+    return { user, getIdToken, signIn, signInGuest, signOut, isAuthenticated }
 }

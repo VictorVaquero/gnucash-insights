@@ -7,7 +7,6 @@ import {
   SignUpCommand,
   type InitiateAuthCommandInput
 } from "@aws-sdk/client-cognito-identity-provider";
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 
 import config from "../config.json";
 
@@ -152,18 +151,3 @@ export const refreshTokenAws = async (refreshToken: string | undefined) => {
     throw error;
   }
 }
-
-export const getCredentialsAws = (username: string, idToken: string) => {
-  if (username === 'guest')
-    return fromCognitoIdentityPool({
-      clientConfig: { region: config.region },
-      identityPoolId: config.identityPoolId,
-    })
-  return fromCognitoIdentityPool({
-    clientConfig: { region: config.region },
-    identityPoolId: config.identityPoolId,
-    logins: {
-      [config.cognitoUrl]: idToken
-    },
-  })
-} 

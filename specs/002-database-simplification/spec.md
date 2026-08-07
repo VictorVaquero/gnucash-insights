@@ -239,6 +239,22 @@ settled, not open:
   as a driver swap (`drizzle-orm/sql-js` → `drizzle-orm/libsql`) against the existing
   schema and query code. Revisit only if a specific, recurring bug actually surfaces.
 
+## SC-001/SC-002 measurement (2026-08-08)
+
+**SC-001 (service count)** — Before: GnuCash export → AWS Lambda (`cashpy-processor`,
+triggered on S3 upload) → AWS S3 (storage) → client-side `sql.js`/OPFS fetch-and-parse
+(serve/query). Distinct services in the pipeline: **Lambda + S3 = 2** (Cognito is auth,
+not data-pipeline, and is unchanged either side). After: GnuCash export → local script run
+manually (no cloud service) → Turso (storage) → client-side Drizzle/libSQL query
+(serve/query), with a Vercel serverless function only minting short-lived read tokens (that
+function's host, Vercel, was already load-bearing for hosting the SPA itself, so it isn't a
+new pipeline service). Distinct services: **Turso = 1**. 2 → 1 satisfies SC-001.
+
+**SC-002 (monthly cost)** — Turso free tier (500 databases, 9GB total storage, 1 billion
+row reads/month) comfortably covers this app's ~4MB single-book dataset and single-real-user
+plus occasional-guest traffic assumed in this spec. Actual cost: **$0/month**, satisfying
+SC-002 without requiring owner sign-off on a non-zero amount.
+
 ## SC-003 measurement (2026-08-07)
 
 Automated with a headless-browser (Puppeteer) guest-login flow, 5 isolated runs each,

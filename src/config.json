@@ -1,12 +1,8 @@
 {
   "region": "eu-west-3",
   "userPoolId": "eu-west-3_VHPSFHPrK",
-  "identityPoolId":  "eu-west-3:cd89bd5f-76aa-4f60-a2ff-fb93a72f4b66",
   "clientId": "7q9umifk44cdfavtdolspaj991",
   "cognitoUrl": "cognito-idp.eu-west-3.amazonaws.com/eu-west-3_VHPSFHPrK",
-  "bucketName": "victor-mycash",
-  "folderPath": "gnucash/processed/",
-  "guestFolderPath": "guest/processed/",
   "database": {
     "victor": {
       "expenses": "REDACTED-ACCOUNT-GUID",

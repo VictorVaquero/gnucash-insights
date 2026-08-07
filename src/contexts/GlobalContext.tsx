@@ -2,11 +2,6 @@ import { DateRange } from "@/types/domain";
 import { AppDatabase } from "@/db/dbType";
 import { createContext } from "react";
 
-export const FileContext = createContext<{
-  fileName: string | undefined;
-  setFileName: (v: string | undefined) => void;
-}>({ fileName: undefined, setFileName: () => undefined });
-
 export const BookContext = createContext<{
   bookId: string | undefined;
   setBookId: (v: string | undefined) => void;
