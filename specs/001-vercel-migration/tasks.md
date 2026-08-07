@@ -104,20 +104,26 @@ resolve correctly, per spec.md User Story 1's acceptance scenarios.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] In `resumeweb/vercel.json`, add two `rewrites` entries per research.md:
+- [X] T011 [US1] In `resumeweb/vercel.json`, add two `rewrites` entries per research.md:
       `/dashboard` and `/dashboard/:path*`, both pointing at the production URL recorded
-      in T008
-- [ ] T012 [US1] Deploy `resumeweb` with the updated `vercel.json` (push to its connected
-      branch, or `vercel --prod` in that repo)
-- [ ] T013 [US1] Run quickstart.md step 3: visit `https://victorvaquero.com/dashboard`
-      and confirm the app loads under the real domain
-- [ ] T014 [US1] Run quickstart.md step 3 (deep link): visit
+      in T008 — also required scoping resumeweb's site-wide CSP header rule to exclude
+      `/dashboard` and adding a matching rule with cashpy_v2's extended `connect-src`,
+      since Vercel applies the rewriting project's headers, not the origin's (would have
+      silently blocked Cognito/S3 calls on login)
+- [X] T012 [US1] Deploy `resumeweb` with the updated `vercel.json` (push to its connected
+      branch, or `vercel --prod` in that repo) — pushed as 8c1c0cb then 10dfb07 (CSP fix)
+- [X] T013 [US1] Run quickstart.md step 3: visit `https://victorvaquero.com/dashboard`
+      and confirm the app loads under the real domain — confirmed 200, correct CashPy HTML
+- [X] T014 [US1] Run quickstart.md step 3 (deep link): visit
       `https://victorvaquero.com/dashboard/summary` directly and confirm it loads without
-      a 404
-- [ ] T015 [US1] Run quickstart.md step 7: `curl -I https://victorvaquero.com/dashboard`
-      and confirm all four security headers from T003 are present
-- [ ] T016 [US1] Run quickstart.md step 8: grep git history of `vercel.json`/`.nvmrc` for
-      accidental secrets; confirm no matches
+      a 404 — confirmed 200
+- [X] T015 [US1] Run quickstart.md step 7: `curl -I https://victorvaquero.com/dashboard`
+      and confirm all four security headers from T003 are present — confirmed, including
+      the extended `connect-src` (verified with a cache-busting query string since the
+      edge cache briefly served the pre-fix CSP after the first deploy)
+- [X] T016 [US1] Run quickstart.md step 8: grep git history of `vercel.json`/`.nvmrc` for
+      accidental secrets; confirm no matches — confirmed clean in both cashpy_v2 and
+      resumeweb
 
 **Checkpoint**: The dashboard is reachable at its real, final URL with working deep links
 and security headers. This alone is a demonstrable, shippable increment (MVP).
