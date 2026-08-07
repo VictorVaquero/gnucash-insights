@@ -230,9 +230,11 @@ settled, not open:
   itself may still exist for other purposes — decommissioning it, if warranted, is a
   manual follow-up outside this spec, same pattern as spec 001's AWS S3/CloudFront
   decommission note).
-- **Query layer / ORM**: still open — the owner has asked to also research whether
-  Drizzle ORM (the current query layer) has real stability issues with complex queries
-  (recursive CTEs, aggregations) that would justify switching to an alternative
-  (e.g. Kysely, raw `@libsql/client`) as a second phase of this same spec. This research
-  is in progress; see `research.md`'s ORM section once added, and this Decisions section
-  will be updated once that's resolved too.
+- **Query layer / ORM**: **keep Drizzle** — no ORM-swap phase added to this spec. Research
+  (see `research.md`'s ORM section) found real but narrow papercuts (no native
+  recursive-CTE builder, weaker type inference on complex joins, one libSQL/Turso
+  transaction bug already fixed in beta) but nothing systemic, and the main alternative
+  (Kysely) has the same recursive-CTE limitation this app already works around, while
+  costing Drizzle's schema-as-code and built-in migrations. The Turso migration proceeds
+  as a driver swap (`drizzle-orm/sql-js` → `drizzle-orm/libsql`) against the existing
+  schema and query code. Revisit only if a specific, recurring bug actually surfaces.

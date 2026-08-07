@@ -148,6 +148,61 @@ spec.md's Assumptions: this comparison must be reviewed/confirmed first):
    client token vs. a small serverless API route proxying queries) before implementation,
    since this determines whether FR-006 (no weaker access control than today) is met.
 
+---
+
+## Decision: Query layer / ORM — keep Drizzle, or switch to Kysely?
+
+Raised by the owner mid-research: does Drizzle have real stability problems with complex
+queries (recursive CTEs, aggregations) that justify switching, as a phase 2 of this spec?
+
+**Findings**:
+
+- **No native recursive-CTE builder in Drizzle** — an open gap since early versions
+  ([drizzle-orm#209](https://github.com/drizzle-team/drizzle-orm/issues/209)), worked
+  around with a raw `sql\`...\`` template. This app's `accountsClosure` query already
+  does exactly that. Notably, **Kysely has the same gap** — its SQLite dialect also needs
+  a raw `sql` template for `WITH RECURSIVE`, so switching ORMs would not remove this
+  workaround.
+- **Type inference degrades on complex/joined queries** — multiple tracked issues
+  ([#3072](https://github.com/drizzle-team/drizzle-orm/issues/3072),
+  [#4199](https://github.com/drizzle-team/drizzle-orm/issues/4199),
+  [#676](https://github.com/drizzle-team/drizzle-orm/issues/676),
+  [#3799](https://github.com/drizzle-team/drizzle-orm/issues/3799)). The structural
+  critique: Drizzle type-checks *query results*, not *query construction* — an invalid
+  join/alias can compile and only fail at runtime. Kysely checks construction itself,
+  which is a real, credible advantage.
+- **groupBy/aggregation papercuts** — several narrow issues
+  ([#4761](https://github.com/drizzle-team/drizzle-orm/issues/4761),
+  [#3632](https://github.com/drizzle-team/drizzle-orm/issues/3632),
+  [#4700](https://github.com/drizzle-team/drizzle-orm/issues/4700)) on specific
+  aggregate/subquery-in-groupBy edge cases — real but narrow, not systemic.
+- **Turso/libSQL-specific**: `drizzle-kit push` can fail against libSQL when a schema
+  change needs table recreation, because libSQL's HTTP protocol is stateless per-request
+  and drizzle-kit's transaction wrapping doesn't survive that
+  ([#5489](https://github.com/drizzle-team/drizzle-orm/issues/5489)) — filed and already
+  fixed in beta as of 2026. Directly relevant since this spec's chosen target *is* Turso.
+- **Trajectory**: Drizzle's core team was hired by PlanetScale (March 2026) and shipped a
+  near-total drizzle-kit rewrite (test suite grew ~600 → ~9,000 tests) heading toward a
+  1.0 release — investment is increasing, not an abandoned project.
+- **Alternatives evaluated**: **Kysely** (better type-safety at construction time, but no
+  schema-as-code and no migration tooling of its own — would mean dropping
+  `src/db/schema.ts`'s declarative style and hand-managing migrations separately).
+  **Prisma** (its libSQL/Turso support only reached Early Access in v6.6, 2026, and
+  migrations aren't supported over libSQL's HTTP protocol yet — objectively *less* mature
+  on this exact stack than Drizzle today, not more). **Raw `@libsql/client` with
+  hand-written SQL** (maximum control, but discards type safety and query composition
+  entirely — a large cost against ~1,150 lines of existing query logic).
+
+**Recommendation: keep Drizzle.** The evidence shows real, documented papercuts, not
+systemic breakage — and the one Turso-specific bug found is already fixed in beta. A
+switch to Kysely would trade Drizzle's schema-as-code and built-in migrations for better
+construction-time type safety, while *not* actually removing the recursive-CTE
+workaround this app already relies on (Kysely needs the same raw-SQL escape hatch).
+Given this is a personal, single-user dashboard — not a team codebase where
+construction-time type safety prevents costly collaborative mistakes — the cost of a full
+query-layer rewrite is not justified by the risk being closed. Revisit only if a specific,
+recurring bug (not a hypothetical one) actually surfaces during the Turso migration.
+
 ## Sources
 
 - Vercel Postgres → Neon transition: https://neon.com/docs/guides/vercel-postgres-transition-guide
@@ -157,3 +212,19 @@ spec.md's Assumptions: this comparison must be reviewed/confirmed first):
 - Neon free tier: https://agentdeals.dev/vendor/neon
 - Turso pricing: https://turso.tech/pricing
 - Turso pricing breakdown (2026): https://saaspricehub.io/tools/turso
+- drizzle-orm#209 (no recursive CTE builder): https://github.com/drizzle-team/drizzle-orm/issues/209
+- drizzle-orm#3072, #4199, #676, #3799 (type inference on complex/joined queries):
+  https://github.com/drizzle-team/drizzle-orm/issues/3072 ,
+  https://github.com/drizzle-team/drizzle-orm/issues/4199 ,
+  https://github.com/drizzle-team/drizzle-orm/issues/676 ,
+  https://github.com/drizzle-team/drizzle-orm/issues/3799
+- drizzle-orm#4761, #3632, #4700 (groupBy/aggregation edge cases):
+  https://github.com/drizzle-team/drizzle-orm/issues/4761 ,
+  https://github.com/drizzle-team/drizzle-orm/issues/3632 ,
+  https://github.com/drizzle-team/drizzle-orm/issues/4700
+- drizzle-orm#5489 (libSQL transaction/push bug, fixed in beta):
+  https://github.com/drizzle-team/drizzle-orm/issues/5489
+- Drizzle sustainability / PlanetScale: https://orm.drizzle.team/docs/sustainability
+- Drizzle v1 roadmap: https://orm.drizzle.team/roadmap
+- Why we ditched Drizzle & Knex for Kysely: https://dev.to/rayenmabrouk/why-we-ditched-drizzle-knex-in-favor-of-kyselys-querybuilder-2lgo
+- Prisma + Turso docs (Early Access): https://www.prisma.io/docs/orm/overview/databases/turso
