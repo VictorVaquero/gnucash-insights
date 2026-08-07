@@ -45,7 +45,7 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
         className="grid grid-cols-subgrid col-span-full hover:bg-shark-700 rounded-sm"
         key={item.key}
       >
-        <span className={cn("col-start-"+(item.depth+1), "flex items-center text-left font-medium")}>{item.header}</span>
+        <span className={cn("col-start-"+(item.depth+1), "flex items-center text-left font-medium sticky left-0 bg-shark-900")}>{item.header}</span>
         {item.node}
       </li>
     );
@@ -58,7 +58,7 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
         <div
           className={cn(
             "col-start-" + (item.depth + 1),
-            "col-span-2 flex items-center "
+            "col-span-2 flex items-center sticky left-0 bg-shark-900"
           )}
         >
           <motion.span

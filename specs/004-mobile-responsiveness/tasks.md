@@ -107,8 +107,8 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 ### Implementation for User Story 4
 
-- [ ] T017 [P] [US4] Wrap `src/routes/expenses/index.tsx`'s pivot grid in an `overflow-x-auto` container.
-- [ ] T018 [US4] Make the category-name column `sticky left-0` (with matching background color, to avoid visual bleed-through while scrolling) in `src/components/TreeList.tsx` / `expenses/index.tsx`'s subgrid, so it stays visible while the yearly figures scroll horizontally underneath.
+- [X] T017 [P] [US4] Wrap `src/routes/expenses/index.tsx`'s pivot grid in an `overflow-x-auto` container.
+- [X] T018 [US4] Make the category-name column `sticky left-0` (with matching background color, to avoid visual bleed-through while scrolling) in `src/components/TreeList.tsx` / `expenses/index.tsx`'s subgrid, so it stays visible while the yearly figures scroll horizontally underneath.
 - [ ] T019 [US4] Manually validate the US4 section of `quickstart.md` at 320/375px: category labels and expand/collapse controls reachable without horizontal scroll; expand/collapse works via tap without needing to zoom.
 
 **Checkpoint**: All four user stories are complete and independently functional.

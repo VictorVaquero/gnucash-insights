@@ -128,30 +128,34 @@ export const Expenses = () => {
   );
 
   return (
-    <div className="w-full  p-4 pt-10 lg:p-10 grid grid-cols-[repeat(4,1fr)_100px_repeat(6,1fr)_20px_repeat(6,1fr)] gap-y-2 lg:gap-y-6">
-      {/* Table Header */}
-      <div className="grid grid-cols-subgrid col-span-full py-4 text-white text-left border-b border-shark-500 font-bold">
-        <span className="col-start-1">Category</span>
-        <h4 className="col-start-6">Total</h4>
+    <div className="w-full p-4 pt-10 lg:p-10 overflow-x-auto">
+      <div className="min-w-[900px] grid grid-cols-[repeat(4,1fr)_100px_repeat(6,1fr)_20px_repeat(6,1fr)] gap-y-2 lg:gap-y-6">
+        {/* Table Header */}
+        <div className="grid grid-cols-subgrid col-span-full py-4 text-white text-left border-b border-shark-500 font-bold">
+          <span className="col-start-1 sticky left-0 bg-shark-900">
+            Category
+          </span>
+          <h4 className="col-start-6">Total</h4>
 
-        {yearRange.map((year, index) => (
-          <h4 key={year} className={"col-start-" + (index + 7)}>
-            {year}
-          </h4>
-        ))}
+          {yearRange.map((year, index) => (
+            <h4 key={year} className={"col-start-" + (index + 7)}>
+              {year}
+            </h4>
+          ))}
 
-        <h4 className="col-start-13">Mean</h4>
+          <h4 className="col-start-13">Mean</h4>
 
-        {yearRange.map((year, index) => (
-          <h4 key={`${year}-m`} className={"col-start-" + (index + 14)}>
-            {year}
-          </h4>
-        ))}
+          {yearRange.map((year, index) => (
+            <h4 key={`${year}-m`} className={"col-start-" + (index + 14)}>
+              {year}
+            </h4>
+          ))}
+        </div>
+        <TreeList
+          data={[hierarchy]}
+          className="text-white w-full grid grid-cols-subgrid col-span-full"
+        />
       </div>
-      <TreeList
-        data={[hierarchy]}
-        className="text-white w-full grid grid-cols-subgrid col-span-full"
-      />
     </div>
   );
 };
