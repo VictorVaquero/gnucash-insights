@@ -424,8 +424,8 @@ through SC-005) met and recorded.
       into `bro_cv_web/vercel.json` (commit `434b6cf`) and redeploying. Full incident
       writeup in `spec.md`'s "Post-cutover incident" section. Verified via `curl`
       (matching CSP/etag between `victorvaquero.com/dashboard/*` and
-      `cashpy-v2.vercel.app/dashboard/*`); real-login verification on-device still
-      pending from the owner.
+      `cashpy-v2.vercel.app/dashboard/*`); owner confirmed real (non-guest) login on
+      mobile now loads data correctly on `victorvaquero.com/dashboard`.
 
 ---
 
