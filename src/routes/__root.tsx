@@ -8,8 +8,8 @@ import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
 import { Suspense, useEffect, useState } from "react";
 
-import { useIsNarrowViewport } from "@/common/utils";
-import { Header } from "@/components/Header.tsx";
+import { AccountMenu } from "@/components/AccountMenu.tsx";
+import { Footer } from "@/components/Footer.tsx";
 import { SideBar } from "@/components/SideBar.tsx";
 import { useAuthSetup } from "@/hooks/useAuth";
 import ErrorPage from "@/layout/ErrorPage";
@@ -47,7 +47,6 @@ const RootComponent = () => {
   const matches = useRouterState({ select: (s) => s.matches });
   const selected = useRouterState({ select: (state) => state.location.href });
   const [isCollapsed, setCollapse] = useState(true);
-  const isNarrowViewport = useIsNarrowViewport();
 
   const matchWithTitle = [...matches].reverse().find((d) => d.context.title);
   const title = matchWithTitle?.context.title || "My App";
@@ -56,26 +55,25 @@ const RootComponent = () => {
     document.title = title;
   }, [title]);
 
-  // Hide menu when moving between options, only on narrow viewports
+  // The drawer now overlays content on every viewport, so close it whenever navigation happens
   useEffect(() => {
-    if (isNarrowViewport) setCollapse(true);
-  }, [selected, isNarrowViewport]);
+    setCollapse(true);
+  }, [selected]);
 
   return (
     <>
-      <Header isCollapsed={isCollapsed} setCollapse={setCollapse} />
-      <div className="bg-background flex h-full lg:h-[calc(100vh-6rem)] ">
-        <SideBar
-          isCollapsed={isCollapsed}
-          toggleSidebar={() => setCollapse((val) => !val)}
-        />
-        <main className="h-full w-full">
-          <Outlet />
-          <Suspense>
-            <TanStackRouterDevtools />
-          </Suspense>
-        </main>
-      </div>
+      <SideBar
+        isCollapsed={isCollapsed}
+        toggleSidebar={() => setCollapse((val) => !val)}
+      />
+      <AccountMenu />
+      <main className="min-h-full w-full pl-14 lg:min-h-[calc(100vh-2rem)]">
+        <Outlet />
+        <Suspense>
+          <TanStackRouterDevtools />
+        </Suspense>
+      </main>
+      <Footer />
     </>
   );
 };

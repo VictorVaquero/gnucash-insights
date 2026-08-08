@@ -87,7 +87,7 @@ export const LoginPage = () => {
 export const Route = createFileRoute('/login/')({
   component: LoginPage,
   validateSearch: (search: Record<string, unknown>): LoginSearch => {
-    return { redirect: (search.redirect as string) || '/', }
+    return { redirect: (search.redirect as string) || '/summary', }
   },
   beforeLoad: async () => {
     return { title: 'Login' }

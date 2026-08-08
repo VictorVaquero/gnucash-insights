@@ -10,7 +10,8 @@ import {
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { createLink, useRouterState } from "@tanstack/react-router";
+import { Link, createLink, useRouterState } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 
 interface NavItem {
@@ -84,51 +85,103 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
 
 const CreatedLink = createLink(ItemLinkComponent);
 
+const NavList = ({ isCollapsed }: { isCollapsed: boolean }) => {
+  const currentHref = useRouterState({ select: (s) => s.location.href });
+
+  return (
+    <nav className="flex-1 px-2 py-4">
+      <ul className="space-y-1">
+        {NAV_ITEMS.map((item) => (
+          <li key={item.to}>
+            <CreatedLink
+              to={item.to}
+              search={item.search}
+              icon={item.icon}
+              text={item.text}
+              isCollapsed={isCollapsed}
+              isActive={currentHref.startsWith(item.to)}
+              preload="render"
+            />
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
+
+const MenuIcon = ({ isOpen }: { isOpen: boolean }) => {
+  const bar =
+    "absolute left-0 h-0.5 w-6 rounded-full bg-current transition-all duration-300 ease-in-out";
+  return (
+    <span className="relative block h-5 w-6">
+      <span className={cn(bar, isOpen ? "top-1/2 -translate-y-1/2 rotate-45" : "top-0")} />
+      <span className={cn(bar, "top-1/2 -translate-y-1/2", isOpen ? "opacity-0" : "opacity-100")} />
+      <span className={cn(bar, isOpen ? "top-1/2 -translate-y-1/2 -rotate-45" : "top-[18px]")} />
+    </span>
+  );
+};
+
 export const SideBar = ({
   isCollapsed,
   toggleSidebar,
 }: {
   isCollapsed: boolean;
-  toggleSidebar?: () => void;
+  toggleSidebar: () => void;
 }) => {
-  const currentHref = useRouterState({ select: (s) => s.location.href });
-
   return (
     <>
-      {/* 1. MOBILE OVERLAY: Only visible on mobile when sidebar is NOT collapsed */}
+      {/* Backdrop: dims the rest of the page while the nav is expanded, on every viewport */}
       {!isCollapsed && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300"
           onClick={toggleSidebar}
           aria-hidden="true"
         />
       )}
 
-      {/* 2. SIDEBAR CONTAINER */}
+      {/* Single nav panel: always fixed, only its width animates, so it never affects document flow */}
       <aside
         className={cn(
-          "fixed md:static inset-y-0 left-0 z-50 flex flex-col bg-shark-900  transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-14" : "w-64",
-          isCollapsed ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+          "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden bg-shark-900 transition-[width] duration-300 ease-in-out",
+          isCollapsed ? "w-14" : "w-64"
         )}
       >
-        <nav className="flex-1 px-2 py-4">
-          <ul className="space-y-1">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.to}>
-                <CreatedLink
-                  to={item.to}
-                  search={item.search}
-                  icon={item.icon}
-                  text={item.text}
-                  isCollapsed={isCollapsed}
-                  isActive={currentHref.startsWith(item.to)}
-                  preload="render"
-                />
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="flex items-center gap-2.5 p-3">
+          <Link to="/home" className="flex shrink-0 items-center gap-2.5 rounded" aria-label="Home">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-400/10">
+              <FontAwesomeIcon icon={faWallet} className="h-4 w-4 text-sky-400" />
+            </span>
+            <AnimatePresence mode="sync">
+              {isCollapsed ? (
+                <></>
+              ) : (
+                <motion.span
+                  className="overflow-hidden whitespace-nowrap text-lg font-semibold text-white"
+                  key="cashpy-wordmark"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "auto", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.15, delay: 0, ease: "easeInOut" }}
+                >
+                  CashPy
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </div>
+
+        <div className="px-2">
+          <button
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? "Open menu" : "Close menu"}
+            aria-expanded={!isCollapsed}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-shark-200 transition-colors hover:bg-shark-800 hover:text-white"
+          >
+            <MenuIcon isOpen={!isCollapsed} />
+          </button>
+        </div>
+
+        <NavList isCollapsed={isCollapsed} />
       </aside>
     </>
   );
