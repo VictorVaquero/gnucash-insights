@@ -412,6 +412,23 @@ through SC-005) met and recorded.
 
 ---
 
+## Post-Completion Incident
+
+- [X] T035 Resolve stale CSP on `victorvaquero.com/dashboard` blocking real (non-guest)
+      logins from loading any Turso data
+      **Done**: root-caused to an undocumented `vercel.json` rewrite-proxy + path-scoped
+      CSP override living only in `bro_cv_web`'s (the `victor-cv-web` Vercel project's)
+      *live deployment*, never committed to that repo's git history, predating this
+      spec's T031 CSP update and still allowing the old S3/Cognito-identity origins
+      while blocking `*.turso.io`. Fixed by restoring the rewrite and a corrected CSP
+      into `bro_cv_web/vercel.json` (commit `434b6cf`) and redeploying. Full incident
+      writeup in `spec.md`'s "Post-cutover incident" section. Verified via `curl`
+      (matching CSP/etag between `victorvaquero.com/dashboard/*` and
+      `cashpy-v2.vercel.app/dashboard/*`); real-login verification on-device still
+      pending from the owner.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

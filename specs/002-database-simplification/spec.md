@@ -278,3 +278,41 @@ regenerated in T017 from the repo's current test fixture) has the correct schema
 stale fixture data on the path Phase 6 deletes, not a regression from the data-layer
 change — SC-004 is treated as satisfied for data that isn't already out of date relative
 to the current schema.
+
+## Post-cutover incident: stale CSP on victorvaquero.com/dashboard (2026-08-08)
+
+After the spec's checkpoint (T034) confirmed the Turso-only path working end-to-end
+against `cashpy-v2.vercel.app` directly, the owner reported real (non-guest) logins on
+the custom domain `victorvaquero.com/dashboard` rendering a blank page with no data.
+
+**Root cause**: `victorvaquero.com/dashboard/*` is served by a separate Vercel project
+(`victor-cv-web`, the `bro_cv_web` repo — the marketing site that owns the apex domain)
+via a `vercel.json` rewrite proxy to `cashpy-v2.vercel.app`, plus its own path-scoped
+`headers` block re-declaring a Content-Security-Policy for that path. This proxy config
+existed only in that project's *live production deployment* — it was never committed to
+`bro_cv_web`'s git history on any branch — so it silently predated this spec's Phase 6
+CSP update (T031) and kept serving the old S3/Cognito-identity/`wasm-unsafe-eval` CSP
+indefinitely, with no `connect-src` allowance for `*.turso.io`. Browsers silently block
+`connect-src` violations (no catchable JS error), so every Turso request from a real
+login on the custom domain failed invisibly — blank page, no console-actionable error.
+`cashpy-v2.vercel.app` itself was unaffected since it serves its own `vercel.json`
+headers directly, which is why this wasn't caught by Phase 3–6 verification (all done
+against `cashpy-v2.vercel.app` or local `vercel dev`, never the custom domain).
+
+Ruled out before finding the real cause: Cloudflare CDN-layer caching (domain's
+nameservers point to Cloudflare, but DNS-only/grey-cloud — no `cf-ray` in responses),
+ordinary Vercel edge-cache staleness (`vercel cache purge` on both projects had zero
+effect; the `Age` header kept climbing through purges, proving it wasn't a purgeable
+cache layer), and an explicit override in `bro_cv_web`'s checked-in `vercel.json` (empty
+of any such config). Confirmed via `vercel inspect victorvaquero.com --json`, which
+surfaces the deployment's actual live `vercelConfig` (rewrites + headers) — a view the
+CLI's higher-level `domains inspect`/`project inspect` commands don't expose.
+
+**Fix**: restored the rewrite and a corrected, Turso-compatible CSP into `bro_cv_web`'s
+`vercel.json` (now tracked in git, `bro_cv_web@434b6cf`) and redeployed to production.
+Verified `victorvaquero.com/dashboard/*` (HTML document and JS assets) now serves the
+same CSP as `cashpy-v2.vercel.app`, with the marketing site's own non-dashboard headers
+unaffected. This is out of this spec's original scope (it's `bro_cv_web`, not
+`cashpy_v2`) but is recorded here since it was a direct, real-impact consequence of this
+spec's CSP change (T031) landing before the sibling project's copy was ever brought
+in sync.
