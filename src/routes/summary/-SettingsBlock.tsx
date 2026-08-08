@@ -29,7 +29,7 @@ export const SettingsBlock = () => {
 
   return (
     <>
-      <div className="flex flex-row items-center">
+      <div className="flex flex-row flex-wrap items-center gap-2">
         <MultiSelectTree options={options} />
         <PeriodicityTabs activeMode={chartMode} onChange={setChartMode} />
       </div>

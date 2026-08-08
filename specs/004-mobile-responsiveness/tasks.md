@@ -56,7 +56,15 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 - [X] T003 [US1] Update `src/routes/__root.tsx`'s auto-collapse-sidebar-on-navigation effect to use `useIsNarrowViewport()` instead of `isMobile()`.
 - [X] T004 [US1] Migrate `src/components/Header.tsx`'s account menu from custom `:hover`/`group-hover` CSS plus `isMobile()`-gated click handling to `@radix-ui/react-dropdown-menu` (via the existing `src/components/ui/dropdown-menu.tsx` wrapper), removing its `isMobile()` call site.
-- [ ] T005 [US1] Manually validate the US1 section of `quickstart.md` at 320/375/428px: Summary renders single-column and fully legible; nav menu opens, reaches every page, and closes via tap only; account menu opens/closes via tap only.
+- [X] T005 [US1] Manually validate the US1 section of `quickstart.md` at 320/375/428px: Summary renders single-column and fully legible; nav menu opens, reaches every page, and closes via tap only; account menu opens/closes via tap only.
+      **Done**: automated via a Puppeteer script (touch-emulated viewports, guest login) since no real device was
+      available in this environment; found and fixed a genuine overflow at 320/375px — `SettingsBlock.tsx`'s
+      `MultiSelectTree` (fixed `w-56`) + `PeriodicityTabs` sat in a non-wrapping flex row that didn't fit narrow
+      viewports, and the Summary page's outer container used a flat `p-10` with no narrow-viewport reduction.
+      Fixed by adding `flex-wrap gap-2` to the settings row (`-SettingsBlock.tsx`) and `p-4 sm:p-10` to the page
+      container (`summary/index.tsx`). Re-verified: 0px overflow at 320/375/428px, nav menu opens/reaches all 7
+      links/closes via tap, account menu opens/closes via tap, all at each width; 1440px desktop regression check
+      unaffected. Still recommend a real-device pass per the constitution before final sign-off (T024).
 
 **Checkpoint**: User Story 1 (MVP) is complete and independently testable/demoable.
 
