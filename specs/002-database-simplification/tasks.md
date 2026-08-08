@@ -390,16 +390,22 @@ and record final numbers.
       the final SC-001 (service count), SC-002 (monthly cost), and SC-003 (timing)
       measurements gathered in Phases 3–4
       **Done**: see spec.md's "SC-001/SC-002 measurement" section.
-- [ ] T034 Run the full `quickstart.md` one final time end-to-end post-cutover (no S3
+- [X] T034 Run the full `quickstart.md` one final time end-to-end post-cutover (no S3
       fallback remaining) to confirm nothing silently depended on the removed path
-      **Blocked on deploy**: `npm run build`, `tsc`, and `npm run lint` all pass locally
-      with zero errors introduced by this cutover, confirming nothing in the client bundle
-      still references the removed S3/WASM path. However `/api/turso-token` is a Vercel
-      serverless function and cannot be exercised against `vite dev` locally — actually
-      running quickstart's guest-path smoke test requires a deployment (Preview or
-      Production). Deferred pending the owner's go-ahead to push/deploy, since landing this
-      on Production makes Turso the sole backend for real (non-guest) user data for the
-      first time — see the note below.
+      **Done**: `vercel dev` was previously unusable locally because it never loads
+      `.env.local` into `/api` functions (only pulls the linked project's remote
+      "Development" env target) — fixed by exporting `.env.local` into the shell before
+      spawning `vercel dev` (`scripts/dev-with-api.sh`, `npm run dev:api`), and by
+      automating platform-token minting (`scripts/mint-turso-token.sh`, `npm run
+      mint-turso-token`) since the token is intentionally Production/Preview-only in
+      Vercel. Also fixed a `vercel.json` SPA-fallback rewrite that was swallowing Vite's
+      dev-mode source/`@`-prefixed requests (`/dashboard/src/main.tsx`,
+      `/dashboard/@vite/client`) and serving `index.html` instead. With both fixed, a
+      Puppeteer run through the guest login path against local `vercel dev` confirmed:
+      guest button works, `/api/turso-token` mints a real guest-scoped Turso token, and
+      real transaction data renders (analysis page shows actual account rows from the
+      guest DB) with no console/page errors and no stray S3/cognito-identity requests.
+      Production's guest/login path was already confirmed working in Phase 4.
 
 **Checkpoint**: Spec complete — old path fully removed, all Success Criteria (SC-001
 through SC-005) met and recorded.
