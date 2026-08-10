@@ -1,6 +1,6 @@
 # Charts & mobile/touch interaction
 
-**Priority**: P1 · **Status**: Planning only
+**Priority**: P1 · **Status**: Planning done — see specs/007-design-system-theming-and-charts
 
 ## Why this matters
 

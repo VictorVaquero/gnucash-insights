@@ -1,6 +1,6 @@
 # Observability & monitoring
 
-**Priority**: P2 · **Status**: Planning only
+**Priority**: P2 · **Status**: Planning done — see specs/009-observability-docs-and-ai-tooling
 
 ## Why this matters
 

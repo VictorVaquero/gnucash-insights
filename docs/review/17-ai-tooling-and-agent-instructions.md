@@ -1,6 +1,6 @@
 # AI tooling: PR review & agent instructions
 
-**Priority**: P1 · **Status**: Planning only
+**Priority**: P1 · **Status**: Planning done — see specs/009-observability-docs-and-ai-tooling
 
 ## Why this matters
 

@@ -1,6 +1,6 @@
 # SEO & discoverability
 
-**Priority**: P1 · **Status**: Planning only
+**Priority**: P1 · **Status**: Planning done — see specs/008-internationalization-and-seo
 
 ## Why this matters, and why this is a bounded effort
 

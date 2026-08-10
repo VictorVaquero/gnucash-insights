@@ -1,6 +1,6 @@
 # Code structure & patterns
 
-**Priority**: P2 · **Status**: Planning only
+**Priority**: P2 · **Status**: Planning done — see specs/005-repo-hygiene-security-and-public-readiness
 
 ## Current state (confirmed findings)
 

@@ -1,6 +1,6 @@
 # Library choice review
 
-**Priority**: P2 · **Status**: Planning only — per `specs/003-codebase-modernization` FR-004
+**Priority**: P2 · **Status**: Planning done — see specs/007-design-system-theming-and-charts (also see specs/003-codebase-modernization FR-004)
 
 ## Current state
 
