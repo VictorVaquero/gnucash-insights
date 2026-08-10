@@ -3,7 +3,7 @@ interface Nested<T> {
   header: string;
   node: T;
   children: Nested<T>[];
-  depth: number
+  depth: number;
 }
 
 export const toHierarchy = <T, U = T>(
@@ -14,7 +14,7 @@ export const toHierarchy = <T, U = T>(
   parent: (d: T) => string,
   sort: (a: T, b: T) => number,
   func: (d: T) => U,
-  depth: number
+  depth: number,
 ): Nested<U> => {
   const children = data.filter((d) => key(head) == parent(d));
   if (children.length == 0)
@@ -25,7 +25,7 @@ export const toHierarchy = <T, U = T>(
     node: func(head),
     children: children
       .sort(sort)
-      .map((p) => toHierarchy(p, data, key, header, parent, sort, func, depth+1)),
-    depth: depth
+      .map((p) => toHierarchy(p, data, key, header, parent, sort, func, depth + 1)),
+    depth: depth,
   };
 };

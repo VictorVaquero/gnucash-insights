@@ -61,6 +61,7 @@ This directly exercises SC-005 (zero unauthenticated access to real financial da
 ## 5. Timing comparison (SC-003)
 
 On comparable network conditions, measure time-to-data-visible on the summary page:
+
 - Before: current S3-download-and-parse path.
 - After: direct Turso query path.
 

@@ -21,7 +21,7 @@ const ReactQueryDevtools = import.meta.env.PROD
       // Lazy load in development
       import("@tanstack/react-query-devtools").then((res) => ({
         default: res.ReactQueryDevtools,
-      }))
+      })),
     );
 
 const queryClient = new QueryClient({
@@ -104,14 +104,9 @@ const GlobalCOntextProvider = () => {
         console.info(`DEFAULT BOOK ID ${defaultBookId}`);
         // Set domain
         const domain = await getDomain(queryDb);
-        if (!domain.min || !domain.max)
-          throw Error("Problematic domain defined");
+        if (!domain.min || !domain.max) throw Error("Problematic domain defined");
         setDomain({ from: domain.min, to: domain.max });
-        console.info(
-          "DEFAULT DOMAIN: ",
-          domain.min.toISODate(),
-          domain.max.toISODate()
-        );
+        console.info("DEFAULT DOMAIN: ", domain.min.toISODate(), domain.max.toISODate());
       };
       f().catch(() => console.error("Error setting default book/domain"));
     }

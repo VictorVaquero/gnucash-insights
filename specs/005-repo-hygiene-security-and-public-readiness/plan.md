@@ -85,15 +85,15 @@ outcome). No new top-level directories.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-| Principle | Check | Result |
-|---|---|---|
-| I. Incremental, Reversible Migration | Every change here is independently revertible via a normal deploy/config revert; nothing requires 006-009 as a precondition, and per the spec's own Sequencing note this spec is a precondition-remover for them, not the reverse. The `config.json` → `accountConfig` move changes a read path but keeps the old display behavior identical (US1 Acceptance Scenario 2). | PASS |
-| II. Cost-Consciousness | No new paid service. `zod`/`knip` are free, dev-time/bundle-light dependencies. Rate limiting deliberately stays in-memory (no Redis/Upstash/BotID), matching the spec's own Assumptions. | PASS |
-| III. Continuity of the Working App | The `config.json`→`accountConfig` move and the auth-boundary/rate-limit changes touch the golden path directly — `quickstart.md` requires a full golden-path + guest-path manual re-verification (desktop + mobile) before this spec is done, and Assumption confirms the server-side move is "confirmed during implementation, not assumed proven." | PASS (verification required at implementation, not a design-time blocker) |
-| IV. Boring, Well-Supported Technology | `zod` and `knip` are both widely-adopted, actively-maintained, narrow-purpose tools with no lock-in (schema validation and unused-code detection respectively) — not novel bets. Rate limiting uses a plain in-memory `Map`, no new library. CSP-drift guardrail is a small script, not a new framework. | PASS |
-| V. Data Privacy on a Public Surface | This spec's entire US1/US3/US6 scope directly implements this principle: real financial-structure data leaves the repo/bundle, secrets are scanned for across history, and the repo's public-readiness is gated on an explicit checklist rather than assumed. | PASS |
+| Principle                             | Check                                                                                                                                                                                                                                                                                                                                                                     | Result                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| I. Incremental, Reversible Migration  | Every change here is independently revertible via a normal deploy/config revert; nothing requires 006-009 as a precondition, and per the spec's own Sequencing note this spec is a precondition-remover for them, not the reverse. The `config.json` → `accountConfig` move changes a read path but keeps the old display behavior identical (US1 Acceptance Scenario 2). | PASS                                                                      |
+| II. Cost-Consciousness                | No new paid service. `zod`/`knip` are free, dev-time/bundle-light dependencies. Rate limiting deliberately stays in-memory (no Redis/Upstash/BotID), matching the spec's own Assumptions.                                                                                                                                                                                 | PASS                                                                      |
+| III. Continuity of the Working App    | The `config.json`→`accountConfig` move and the auth-boundary/rate-limit changes touch the golden path directly — `quickstart.md` requires a full golden-path + guest-path manual re-verification (desktop + mobile) before this spec is done, and Assumption confirms the server-side move is "confirmed during implementation, not assumed proven."                      | PASS (verification required at implementation, not a design-time blocker) |
+| IV. Boring, Well-Supported Technology | `zod` and `knip` are both widely-adopted, actively-maintained, narrow-purpose tools with no lock-in (schema validation and unused-code detection respectively) — not novel bets. Rate limiting uses a plain in-memory `Map`, no new library. CSP-drift guardrail is a small script, not a new framework.                                                                  | PASS                                                                      |
+| V. Data Privacy on a Public Surface   | This spec's entire US1/US3/US6 scope directly implements this principle: real financial-structure data leaves the repo/bundle, secrets are scanned for across history, and the repo's public-readiness is gated on an explicit checklist rather than assumed.                                                                                                             | PASS                                                                      |
 
 No violations; Complexity Tracking section is not needed.
 
@@ -164,4 +164,4 @@ existing root-level `eslint.config.mjs`/`vite.config.ts`).
 
 ## Complexity Tracking
 
-*No Constitution Check violations — this section intentionally left empty.*
+_No Constitution Check violations — this section intentionally left empty._

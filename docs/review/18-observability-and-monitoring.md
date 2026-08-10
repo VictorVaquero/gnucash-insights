@@ -33,10 +33,12 @@ Given the single-real-user scale, don't default to a full stack. Split into a "d
 free" tier and a "consider only if it becomes a real problem" tier:
 
 **Do now (cheap, no new dependency)**:
+
 - Confirm Vercel's built-in deployment-failure notifications are actually enabled for
   this project (a settings check, not a code change).
 
 **Consider only if warranted**:
+
 - Client-side error tracking (Sentry or similar) — worth it only if silent errors have
   actually caused a missed problem; adding it preemptively for a single-user app is a
   new dependency and a new place to audit for PII leakage for a benefit that's currently

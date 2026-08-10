@@ -8,23 +8,23 @@ change be explicit, not silently dropped.
 
 ## Entities carried over unchanged (source: `src/db/schema.ts`)
 
-| Table | Purpose | Key relationships |
-|---|---|---|
-| `meta` | One row of book-level metadata (parse date/version, min/max transaction date) | — |
-| `books` | One row per GnuCash "book" (id, version, entity counts) | referenced by `accounts`, `commodities`, `prices`, `transactions`, `accountsClosure`, `fullTransactions` via `bookId` |
-| `accounts` | Chart of accounts (id, name, type, parent, commodity) | self-referencing `parent`; references `books`, `commodities` |
-| `commodities` | Currencies/securities | referenced by `accounts`, `prices` |
-| `prices` | Commodity price history | references `commodities` (both `commodity` and `currency`) |
-| `transactions` | GnuCash transactions | references `commodities` (currency) |
-| `splits` | Transaction line items | references `transactions` |
-| `timetable` | Pre-generated 20-year daily calendar (built in-database at ingestion) | — |
-| `accountsClosure` | Recursive parent/child account closure (built via `WITH RECURSIVE`, the Drizzle raw-SQL escape hatch noted in research.md) | references `accounts` (child, parent), `books` |
-| `summary_monthly` / `summary_quarterly` / `summary_yearly` | Pre-aggregated totals per account per period | references `accounts` |
-| `fullTransactions` | Denormalized transaction+split+account view | references `books`, `transactions`, `accounts`, `commodities` |
+| Table                                                      | Purpose                                                                                                                    | Key relationships                                                                                                     |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `meta`                                                     | One row of book-level metadata (parse date/version, min/max transaction date)                                              | —                                                                                                                     |
+| `books`                                                    | One row per GnuCash "book" (id, version, entity counts)                                                                    | referenced by `accounts`, `commodities`, `prices`, `transactions`, `accountsClosure`, `fullTransactions` via `bookId` |
+| `accounts`                                                 | Chart of accounts (id, name, type, parent, commodity)                                                                      | self-referencing `parent`; references `books`, `commodities`                                                          |
+| `commodities`                                              | Currencies/securities                                                                                                      | referenced by `accounts`, `prices`                                                                                    |
+| `prices`                                                   | Commodity price history                                                                                                    | references `commodities` (both `commodity` and `currency`)                                                            |
+| `transactions`                                             | GnuCash transactions                                                                                                       | references `commodities` (currency)                                                                                   |
+| `splits`                                                   | Transaction line items                                                                                                     | references `transactions`                                                                                             |
+| `timetable`                                                | Pre-generated 20-year daily calendar (built in-database at ingestion)                                                      | —                                                                                                                     |
+| `accountsClosure`                                          | Recursive parent/child account closure (built via `WITH RECURSIVE`, the Drizzle raw-SQL escape hatch noted in research.md) | references `accounts` (child, parent), `books`                                                                        |
+| `summary_monthly` / `summary_quarterly` / `summary_yearly` | Pre-aggregated totals per account per period                                                                               | references `accounts`                                                                                                 |
+| `fullTransactions`                                         | Denormalized transaction+split+account view                                                                                | references `books`, `transactions`, `accounts`, `commodities`                                                         |
 
 All of the above are rebuilt from scratch on every ingestion run today (`DROP
 TABLE`/`CREATE TABLE`/bulk `INSERT` in `cashpy-processor`'s `core/sql.py`) — this
-full-rebuild behavior is unchanged; only the *destination* of the write changes (a local
+full-rebuild behavior is unchanged; only the _destination_ of the write changes (a local
 SQLite file → a Turso database, over the libSQL client instead of stdlib `sqlite3`).
 
 ## Structural change: book/snapshot representation (FR-008)
@@ -43,7 +43,7 @@ alongside the new one.
 **Why this is safe to drop**: no evidence the multi-snapshot browsing UI is exercised in
 practice (research.md's Recommendation section, item 2); `booksTable` itself is
 unaffected structurally — it already models "one book," not "one export folder," so no
-schema change is needed to represent latest-only, only a change in *how many* generations
+schema change is needed to represent latest-only, only a change in _how many_ generations
 are retained (one, not N).
 
 ## New concept: access-scoped tokens (not a data table)

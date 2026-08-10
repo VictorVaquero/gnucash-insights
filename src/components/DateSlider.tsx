@@ -9,11 +9,7 @@ interface DateRangeSliderProps {
   onChange?: (range: DateRange) => void;
 }
 
-export function DateRangeSlider({
-  start,
-  end,
-  onChange,
-}: DateRangeSliderProps) {
+export function DateRangeSlider({ start, end, onChange }: DateRangeSliderProps) {
   const startDt = DateTime.fromISO(start).startOf("day");
   const endDt = DateTime.fromISO(end).startOf("day");
 

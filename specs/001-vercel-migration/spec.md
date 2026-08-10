@@ -10,7 +10,7 @@ final end-to-end pass) — see `tasks.md` and `docs/review/19-manual-verificatio
 
 **Input**: User description: "Move the cashpy dashboard from AWS S3/CloudFront to Vercel, following the same pattern already used successfully in the sibling resumeweb project, while keeping the app reachable at victorvaquero.com/dashboard. Keep the existing data layer (SQLite file on S3, fetched and queried client-side) and Cognito auth unchanged in this phase — this is a hosting-only move."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Dashboard keeps working at its existing address (Priority: P1)
 
@@ -110,7 +110,7 @@ app independently of the production deployment.
   Some flicker/downtime is acceptable for a single-user personal app; a hard zero-downtime
   cutover is not required.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -144,7 +144,7 @@ app independently of the production deployment.
   decommissioned (or scheduled for decommission) once the new host is verified working, so
   the app is not left running/paying for two hosting paths indefinitely.
 - **FR-010**: The `package.json` deploy scripts (`clean`, `deploy` — currently `aws s3
-  sync`/`cloudfront create-invalidation`) MUST be removed or replaced once the platform
+sync`/`cloudfront create-invalidation`) MUST be removed or replaced once the platform
   migration is verified, consistent with how resumeweb removed its legacy AWS scripts.
 
 ### Key Entities
@@ -156,7 +156,7 @@ app independently of the production deployment.
   (resumeweb, already on Vercel) and this dashboard app need to coexist under one domain,
   which requires a routing decision (see Assumptions).
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
@@ -169,7 +169,7 @@ app independently of the production deployment.
 - **SC-004**: Pushing a new branch produces a working preview deployment reachable at a
   unique URL within Vercel's normal build time, with no manual steps.
 - **SC-005**: After cutover, no manual AWS CLI command (`aws s3 sync`, `cloudfront
-  create-invalidation`) is required to ship a change — pushing to the main branch is
+create-invalidation`) is required to ship a change — pushing to the main branch is
   sufficient.
 - **SC-006**: Zero secrets or credentials appear in the git history as a result of this
   migration.

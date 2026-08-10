@@ -4,7 +4,7 @@
 
 ## Why this matters
 
-The owner's own framing: *"our component library is quite adhoc."* Concretely, that's
+The owner's own framing: _"our component library is quite adhoc."_ Concretely, that's
 not a vague feeling — there's a specific, confirmed symptom: a real design-system
 component is present in the codebase but silently bypassed.
 

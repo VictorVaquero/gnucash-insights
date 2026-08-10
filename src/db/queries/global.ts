@@ -1,15 +1,4 @@
-import {
-  SQL,
-  and,
-  eq,
-  getTableColumns,
-  gte,
-  lt,
-  not,
-  or,
-  sql,
-  sum,
-} from "drizzle-orm";
+import { SQL, and, eq, getTableColumns, gte, lt, not, or, sql, sum } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { DateTime } from "luxon";
 
@@ -56,13 +45,7 @@ export const domainOptions = (db: AppDatabase | undefined) => {
   });
 };
 
-const getAccounts = <TDB extends AnyDB>({
-  db,
-  accountIds,
-}: {
-  db: TDB;
-  accountIds: string[];
-}) => {
+const getAccounts = <TDB extends AnyDB>({ db, accountIds }: { db: TDB; accountIds: string[] }) => {
   const accountsFiltered = getAccountsClosureQuery(db, accountIds);
   return db
     .selectDistinct({
@@ -72,9 +55,7 @@ const getAccounts = <TDB extends AnyDB>({
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, accountsTable.id));
 };
 
-export type AccountsData = Awaited<
-  ReturnType<ReturnType<typeof getAccounts>["execute"]>
->;
+export type AccountsData = Awaited<ReturnType<ReturnType<typeof getAccounts>["execute"]>>;
 export const accountsOptions = <TDB extends AnyDB, TData = AccountsData>(args: {
   db: TDB | undefined;
   bookId: string | undefined;
@@ -106,14 +87,13 @@ export const accountsOptions = <TDB extends AnyDB, TData = AccountsData>(args: {
 export const getAccountsClosureQuery = <TDB extends AnyDB>(
   db: TDB,
   accountNames?: string[],
-  ignoreAccounts?: string[]
+  ignoreAccounts?: string[],
 ) => {
   const parent = alias(accountsTable, "parent");
   const child = alias(accountsTable, "child");
 
   let check;
-  if (accountNames)
-    check = and(check, or(...accountNames.map((name) => eq(parent.id, name))));
+  if (accountNames) check = and(check, or(...accountNames.map((name) => eq(parent.id, name))));
   if (ignoreAccounts && ignoreAccounts.length > 0) {
     const ignore = or(...ignoreAccounts.map((name) => eq(child.id, name)));
     check = and(check, not(ignore as SQL<string>));
@@ -142,20 +122,11 @@ export const fullTransactionsQuery = <TDB extends AnyDB>(db: TDB) => {
       slNotes: transactionsTable.slNotes,
     })
     .from(fullTransactionsTable)
-    .innerJoin(
-      accountsTable,
-      eq(accountsTable.id, fullTransactionsTable.accountId)
-    )
-    .innerJoin(
-      transactionsTable,
-      eq(transactionsTable.id, fullTransactionsTable.transactionId)
-    )
+    .innerJoin(accountsTable, eq(accountsTable.id, fullTransactionsTable.accountId))
+    .innerJoin(transactionsTable, eq(transactionsTable.id, fullTransactionsTable.transactionId))
     .as("ft");
 };
-export const fullTransactionsOptions = <TDB extends AnyDB>(
-  db?: TDB,
-  bookId?: string
-) => {
+export const fullTransactionsOptions = <TDB extends AnyDB>(db?: TDB, bookId?: string) => {
   const enabled = !!db && !!bookId;
   return queryOptions({
     queryKey: ["fullTransactions", bookId],
@@ -172,7 +143,7 @@ const getSplitSumQuery = <TDB extends AnyDB>(
   accountNames: string[],
   startDate?: DateTime,
   endDate?: DateTime,
-  notes?: string
+  notes?: string,
 ) => {
   const ft = fullTransactionsQuery(db);
   const accounts = getAccountsClosureQuery(db, accountNames);
@@ -182,12 +153,7 @@ const getSplitSumQuery = <TDB extends AnyDB>(
   if (notes)
     filterQuery = and(
       filterQuery,
-      eq(
-        sql<string>`substr(${transactionsTable.slNotes}, 0, ${
-          notes.length + 1
-        })`,
-        notes
-      )
+      eq(sql<string>`substr(${transactionsTable.slNotes}, 0, ${notes.length + 1})`, notes),
     );
 
   return db
@@ -204,18 +170,11 @@ export const splitSumOptions = <TDB extends AnyDB>(
   accountNames: string[],
   startDate?: DateTime,
   endDate?: DateTime,
-  notes?: string
+  notes?: string,
 ) => {
   const enabled = !!db && !!bookId;
   return queryOptions({
-    queryKey: [
-      "splitSum",
-      bookId,
-      ...accountNames,
-      startDate?.toISO(),
-      endDate?.toISO(),
-      notes,
-    ],
+    queryKey: ["splitSum", bookId, ...accountNames, startDate?.toISO(), endDate?.toISO(), notes],
     queryFn: !enabled
       ? skipToken
       : async () => {
@@ -225,7 +184,7 @@ export const splitSumOptions = <TDB extends AnyDB>(
             accountNames,
             startDate,
             endDate,
-            notes
+            notes,
           ).execute();
           return data[0].value;
         },

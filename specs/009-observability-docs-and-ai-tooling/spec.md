@@ -11,11 +11,11 @@
 **Input**: User description: "Wrap-up spec: confirm Vercel's built-in deployment-failure notifications are actually configured and working — owner-confirmed (2026-08-10) that the lack of Sentry/uptime monitoring hasn't caused a real problem yet, so both stay explicitly deferred, not added speculatively. Write a CLAUDE.md with a tech-stack summary, the guest-login-only rule for AI agents (never sign in as the real user), a never-commit-without-asking rule, a spec-kit pointer, and a cross-repo warning about resumeweb/bro_cv_web boundaries (matching the standing 'don't touch bro_cv_web' rule this whole project has followed). Custom subagents stay deferred until CI/tests exist (i.e. until spec 006 lands). Rewrite the README covering What/Architecture/Getting started/How to use/Testing/Deployment/spec-kit pointer sections; CONTRIBUTING.md stays explicitly deferred unless the repo going public (spec 005) actually invites outside contributions. This is the fifth and final spec in the sequence derived from docs/review/, documenting the end state of everything specs 005-008 changed."
 
 **Sequencing note**: run this spec **fifth and last**. Its README rewrite and `CLAUDE.md`
-should describe the *end state* of the app after specs 005-008 have landed (correct tech
+should describe the _end state_ of the app after specs 005-008 have landed (correct tech
 stack, correct testing story, correct theming/i18n/design-system/security state), so
 writing it first would mean rewriting it again once those land.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Deployment failures are actually surfaced, without adding speculative monitoring (Priority: P1)
 
@@ -94,7 +94,7 @@ alone and successfully runs the app locally with guest login, with no steps miss
 - `docs/architecture.md` and `docs/decisions.md` get cross-referenced from the README,
   not duplicated.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -114,7 +114,7 @@ alone and successfully runs the app locally with guest login, with no steps miss
 - **FR-007**: `CONTRIBUTING.md` MUST NOT be added unless the repo has actually gone
   public and outside contribution is anticipated.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

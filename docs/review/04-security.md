@@ -7,11 +7,12 @@
 Deeper than a general audit — oriented specifically toward "make sure the app is not
 vulnerable to hacks or bots," per the explicit ask. Complements
 [03-secrets-and-public-repo-readiness.md](03-secrets-and-public-repo-readiness.md), which
-covers what's *in the repo*; this doc covers what's *reachable at runtime*.
+covers what's _in the repo_; this doc covers what's _reachable at runtime_.
 
 ## Current state (confirmed findings)
 
 **Injection & XSS**
+
 - Drizzle's query builder is parameterized by construction — no raw string-concatenated
   SQL found in a first pass, not yet exhaustively audited.
 - Not yet confirmed: whether `dangerouslySetInnerHTML` appears anywhere in `src/`.
@@ -20,9 +21,10 @@ covers what's *in the repo*; this doc covers what's *reachable at runtime*.
   sql.js WASM path).
 
 **Auth & session**
+
 - Guest login's synthetic `idToken: 'guest'` marker: the server-side check in
   `api/_lib/verifyCognitoToken.ts` has not been traced end-to-end for whether a client
-  sending `idToken: 'guest'` could reach the *production* database rather than guest's.
+  sending `idToken: 'guest'` could reach the _production_ database rather than guest's.
 - Turso token scope/lifetime (1h, intended read-only, database-scoped): intent confirmed
   in code, not yet verified against Turso's actual issued-token claims.
 - Session storage is `usePersistentState` (localStorage), not httpOnly cookies — a known,
@@ -31,6 +33,7 @@ covers what's *in the repo*; this doc covers what's *reachable at runtime*.
 - Cognito MFA/password-policy/lockout settings: not yet checked against the AWS console.
 
 **Headers & transport**
+
 - **[confirmed]** `vercel.json` sets CSP, `X-Frame-Options`, `X-Content-Type-Options`,
   `Referrer-Policy`. `Strict-Transport-Security` and `Permissions-Policy` presence not yet
   checked.
@@ -56,6 +59,7 @@ covers what's *in the repo*; this doc covers what's *reachable at runtime*.
 ## Recommended approach
 
 **Bot & abuse resistance** (new emphasis, not in the original checklist):
+
 - `api/turso-token.ts` is a public serverless endpoint. Even gated by a valid Cognito
   token, a scripted client that automates Cognito sign-in — or repeatedly hits the guest
   path, which bypasses Cognito entirely — could generate unbounded Turso read traffic.

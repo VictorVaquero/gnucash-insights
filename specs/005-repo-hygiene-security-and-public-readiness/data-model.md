@@ -31,6 +31,7 @@ traditional entity-relationship model.
 ```
 
 **Validation rules** (`zod`, checked at import time in `src/services/authService.tsx`):
+
 - All four fields: required, non-empty `string`.
 - On failure: throw a single `Error` whose message lists every failing field (via
   `ZodError.issues`), not just the first — a config typo should name itself completely.
@@ -60,6 +61,7 @@ type AccountConfig = {
 ```
 
 **Sources**:
+
 - Real user (`victor`): parsed from the `ACCOUNT_CONFIG_VICTOR` Vercel environment
   variable (JSON-encoded string matching this shape) inside `api/turso-token.ts`. Never
   committed to git, never present in the built JS bundle.

@@ -21,8 +21,7 @@ interface MultiSelectTreeProps {
 }
 
 export function MultiSelectTree({ options }: MultiSelectTreeProps) {
-  const { hideAccounts: selected, toggleHideAccount: onToggle } =
-    useSummaryPageContext();
+  const { hideAccounts: selected, toggleHideAccount: onToggle } = useSummaryPageContext();
   const [search, setSearch] = useState("");
 
   // Build a tree structure using parentId
@@ -31,21 +30,13 @@ export function MultiSelectTree({ options }: MultiSelectTreeProps) {
     const roots: OptionExtended[] = [];
 
     options
-      .filter(
-        (node) =>
-          search === "" ||
-          node.name.toLowerCase().includes(search.toLowerCase())
-      )
+      .filter((node) => search === "" || node.name.toLowerCase().includes(search.toLowerCase()))
       .forEach((opt) => {
         lookup[opt.id] = { ...opt, children: [] };
       });
 
     options
-      .filter(
-        (node) =>
-          search === "" ||
-          node.name.toLowerCase().includes(search.toLowerCase())
-      )
+      .filter((node) => search === "" || node.name.toLowerCase().includes(search.toLowerCase()))
 
       .forEach((opt) => {
         if (opt.parent && lookup[opt.parent]) {
@@ -84,9 +75,7 @@ export function MultiSelectTree({ options }: MultiSelectTreeProps) {
           variant="outline"
           className="w-56 justify-between dark:bg-shark-800 dark:text-gray-400"
         >
-          {selected.length > 0
-            ? `${selected.length} selected`
-            : "Select accounts to hide"}
+          {selected.length > 0 ? `${selected.length} selected` : "Select accounts to hide"}
         </Button>
       </DropdownMenuTrigger>
 

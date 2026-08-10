@@ -25,10 +25,8 @@ const margin = { t: 20, r: 20, b: 20, l: 50 };
 const getColor = (d: string) => (d === "Ingresos" ? green : red);
 const xf = (d: GroupedTransaction) => d.posted;
 const yf = (d: GroupedTransaction) => d.value;
-const orderxf = (a: GroupedTransaction, b: GroupedTransaction) =>
-  xf(a) > xf(b) ? 1 : -1;
-const orderyf = (a: GroupedTransaction, b: GroupedTransaction) =>
-  yf(a) > yf(b) ? 1 : -1;
+const orderxf = (a: GroupedTransaction, b: GroupedTransaction) => (xf(a) > xf(b) ? 1 : -1);
+const orderyf = (a: GroupedTransaction, b: GroupedTransaction) => (yf(a) > yf(b) ? 1 : -1);
 
 export const TransactsPlot = ({
   data,
@@ -47,11 +45,7 @@ export const TransactsPlot = ({
   }, [width, height]);
 
   const format =
-    periodicity == "yearly"
-      ? "yyyy"
-      : periodicity == "monthly"
-      ? "yyyy-LL"
-      : "yyyy-qq";
+    periodicity == "yearly" ? "yyyy" : periodicity == "monthly" ? "yyyy-LL" : "yyyy-qq";
 
   const groupedData = d3
     .groups(data, (d) => d.datePosted.toFormat(format))
@@ -67,10 +61,7 @@ export const TransactsPlot = ({
     (d3.min(sortedData, xf) as DateTime).minus({ month: 1 }),
     d3.max(sortedData, xf) as DateTime,
   ];
-  const yDomain = [
-    Math.min(...sortedData.map(yf)),
-    Math.max(...sortedData.map(yf)),
-  ];
+  const yDomain = [Math.min(...sortedData.map(yf)), Math.max(...sortedData.map(yf))];
   const xScale = d3.scaleUtc(xDomain, range.x);
   const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
   const line = d3
@@ -84,12 +75,9 @@ export const TransactsPlot = ({
     xf,
     yf,
     xScale,
-    yScale
+    yScale,
   );
-  const updateTooltip = (
-    ref: RefObject<HTMLDivElement | null>,
-    d: GroupedTransaction
-  ) => {
+  const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: GroupedTransaction) => {
     if (ref.current !== null) {
       const tooltip = d3.select(ref.current);
       tooltip.select("#title").text(d.posted.toFormat(format));
@@ -98,10 +86,7 @@ export const TransactsPlot = ({
     }
   };
 
-  const uniqueAccounts = useMemo(
-    () => [...new Set(sortedData.map((d) => d.name))],
-    [sortedData]
-  );
+  const uniqueAccounts = useMemo(() => [...new Set(sortedData.map((d) => d.name))], [sortedData]);
   //const paths = uniqueAccounts.map((s)=> line(sortedData.filter((d) => d.name === s)))
 
   return (
@@ -139,11 +124,7 @@ export const TransactsPlot = ({
           ))}
         </g>
       </svg>
-      <Tooltip
-        svgRef={svgRef}
-        choosePoint={choosePoint}
-        updateTooltip={updateTooltip}
-      >
+      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
         <div className="flex flex-col items-center px-6 py-2">
           <span className="text-shark-300" id="title">
             Title

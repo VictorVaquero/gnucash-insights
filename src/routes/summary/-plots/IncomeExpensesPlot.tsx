@@ -3,12 +3,7 @@ import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
 
-import {
-  parseNum,
-  twStyles,
-  useIsNarrowViewport,
-  useWindowSize,
-} from "@/common/utils.ts";
+import { parseNum, twStyles, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -75,10 +70,7 @@ const DrawMonthlyIncomeExpensesPlot = ({
   const rectWidth = (width / data.length) * 0.7;
 
   const choosePoint = chooseTooltipPointLine(data, xf, yf, xScale, yScale);
-  const updateTooltip = (
-    ref: RefObject<HTMLDivElement | null>,
-    d: PlotData
-  ) => {
+  const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: PlotData) => {
     if (ref.current !== null) {
       const tooltip = d3.select(ref.current);
       tooltip.select("#title").text(d.dateLabel);
@@ -135,11 +127,7 @@ const DrawMonthlyIncomeExpensesPlot = ({
           />
         </g>
       </svg>
-      <Tooltip
-        svgRef={svgRef}
-        choosePoint={choosePoint}
-        updateTooltip={updateTooltip}
-      >
+      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
         <div className="flex flex-col items-center px-6 py-2">
           <span className="text-shark-300" id="title">
             Title
@@ -169,11 +157,7 @@ export const IncomeExpensesPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
-  const {
-    dateRange,
-    hideAccounts,
-    chartPeriodicity: charMode,
-  } = useSummaryPageContext();
+  const { dateRange, hideAccounts, chartPeriodicity: charMode } = useSummaryPageContext();
   const dbconf = getConfig(user);
 
   const { data: expenses } = useQuery(
@@ -183,7 +167,7 @@ export const IncomeExpensesPlot = () => {
       accountIds: [dbconf.expenses],
       periodicity: charMode,
       hideAccounts,
-    })
+    }),
   );
   const { data: income } = useQuery(
     transactsSumOptions({
@@ -192,7 +176,7 @@ export const IncomeExpensesPlot = () => {
       accountIds: [dbconf.income, dbconf.taxes],
       periodicity: charMode,
       hideAccounts,
-    })
+    }),
   );
   const { data: net } = useQuery(
     transactsSumOptions({
@@ -201,7 +185,7 @@ export const IncomeExpensesPlot = () => {
       accountIds: [dbconf.expenses, dbconf.income, dbconf.taxes],
       periodicity: charMode,
       hideAccounts,
-    })
+    }),
   );
 
   const data = useMemo(() => {
@@ -223,12 +207,8 @@ export const IncomeExpensesPlot = () => {
 
       // Populate the Map
       net.forEach((d) => (getEntry(d.date, d.dateLabel).net = -d.value));
-      income.forEach(
-        (d) => (getEntry(d.date, d.dateLabel).income = Math.abs(d.value))
-      );
-      expenses.forEach(
-        (d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(d.value))
-      );
+      income.forEach((d) => (getEntry(d.date, d.dateLabel).income = Math.abs(d.value)));
+      expenses.forEach((d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(d.value)));
 
       // Convert to array and sort by date chronologically
       return Array.from(registry.values())

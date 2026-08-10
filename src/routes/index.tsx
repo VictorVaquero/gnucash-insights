@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({
   beforeLoad: () => {
     throw redirect({
       to: "/home",
-      replace: true, 
+      replace: true,
     });
   },
 });

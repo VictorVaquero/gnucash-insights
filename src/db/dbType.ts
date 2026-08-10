@@ -12,8 +12,4 @@ export type AppDatabase = LibSQLDatabase;
 // partway through a chain. A generic `<TDB extends AnyDB>` parameter keeps a
 // single concrete type per call, which Drizzle can infer through correctly,
 // while still accepting either driver's db instance at the call site.
-export type AnyDB = BaseSQLiteDatabase<
-  "sync" | "async",
-  unknown,
-  Record<string, never>
->;
+export type AnyDB = BaseSQLiteDatabase<"sync" | "async", unknown, Record<string, never>>;

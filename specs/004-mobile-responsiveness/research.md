@@ -2,7 +2,7 @@
 
 ## Context
 
-This feature adapts an existing, working React 19 + TanStack Router + Tailwind CSS v4 dashboard for phone-sized viewports. There is no new backend, data model, or external interface — every decision below is about *how* existing UI code renders and reacts, not *what* it renders. Findings are drawn from direct code reading of the current `src/` tree (see prior conversation research), not from external unknowns, so this phase resolves implementation approach rather than clarifying requirements.
+This feature adapts an existing, working React 19 + TanStack Router + Tailwind CSS v4 dashboard for phone-sized viewports. There is no new backend, data model, or external interface — every decision below is about _how_ existing UI code renders and reacts, not _what_ it renders. Findings are drawn from direct code reading of the current `src/` tree (see prior conversation research), not from external unknowns, so this phase resolves implementation approach rather than clarifying requirements.
 
 ## Decision 1: Replace UA-sniffed `isMobile()` with viewport/pointer-based detection
 
@@ -11,8 +11,9 @@ This feature adapts an existing, working React 19 + TanStack Router + Tailwind C
 **Rationale**: `matchMedia` reacts live to viewport/orientation changes and correctly classifies touchscreen laptops and tablets by actual input capability instead of a spoofable/stale browser-identity string — directly resolving FR-009 and the tablet/touchscreen-laptop edge cases. It requires no new dependency; `matchMedia` is a standard browser API already usable in this codebase's target browsers (Vite/ESM, no legacy IE support needed).
 
 **Alternatives considered**:
-- *Keep UA sniffing, just expand the regex*: rejected — still static/non-reactive, doesn't fix the rotation/resize edge case, and UA strings are trending toward reduction/freezing across browsers.
-- *CSS-only (`@media` in stylesheet, no JS hook)*: sufficient for pure layout (already used via Tailwind `md:` classes) but insufficient for the JS-side decisions this feature also needs (tooltip hide-delay, auto-collapsing the sidebar) — those need a JS-readable signal too, so a hook is required alongside the existing CSS breakpoints, not instead of them.
+
+- _Keep UA sniffing, just expand the regex_: rejected — still static/non-reactive, doesn't fix the rotation/resize edge case, and UA strings are trending toward reduction/freezing across browsers.
+- _CSS-only (`@media` in stylesheet, no JS hook)_: sufficient for pure layout (already used via Tailwind `md:` classes) but insufficient for the JS-side decisions this feature also needs (tooltip hide-delay, auto-collapsing the sidebar) — those need a JS-readable signal too, so a hook is required alongside the existing CSS breakpoints, not instead of them.
 
 ## Decision 2: Chart container sizing via `ResizeObserver`, not `window` resize
 
@@ -21,8 +22,9 @@ This feature adapts an existing, working React 19 + TanStack Router + Tailwind C
 **Rationale**: This directly fixes FR-006/SC-004 — chart size must track the container, which changes width when the sidebar drawer opens/closes without necessarily firing a `window` resize event. `ResizeObserver` is well-supported in all evergreen browsers this app already targets (no polyfill needed given the existing `engines.node >=24` / modern-only posture of the project).
 
 **Alternatives considered**:
-- *Recharts' `<ResponsiveContainer>` for the D3 charts too*: rejected — these charts are hand-built D3/SVG, not Recharts components; adopting Recharts for them would be a much larger rewrite out of scope for a layout-responsiveness feature (per constitution Principle IV, library swaps belong in the modernization spec unless required to unblock this one — it isn't required here).
-- *Debounced window-resize polling*: rejected — doesn't solve the "container resized without window resize" case at all.
+
+- _Recharts' `<ResponsiveContainer>` for the D3 charts too_: rejected — these charts are hand-built D3/SVG, not Recharts components; adopting Recharts for them would be a much larger rewrite out of scope for a layout-responsiveness feature (per constitution Principle IV, library swaps belong in the modernization spec unless required to unblock this one — it isn't required here).
+- _Debounced window-resize polling_: rejected — doesn't solve the "container resized without window resize" case at all.
 
 ## Decision 3: Fixed pixel chart margins become viewport-aware, not removed
 

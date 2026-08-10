@@ -15,7 +15,7 @@ export const SettingsBlock = () => {
   const { user } = useAuth();
   const dbconf = getConfig(user);
   const { data: accounts } = useQuery(
-    accountsOptions({ db, bookId, accountIds: [dbconf.expenses] })
+    accountsOptions({ db, bookId, accountIds: [dbconf.expenses] }),
   );
 
   const {
@@ -23,7 +23,7 @@ export const SettingsBlock = () => {
     chartPeriodicity: chartMode,
     setChartPeriodicity: setChartMode,
   } = useSummaryPageContext();
-  const {  from, to } = useDomain();
+  const { from, to } = useDomain();
 
   const options = accounts ?? [];
 

@@ -17,7 +17,7 @@ The `useLocale` hook here mirrors that spec's `useTheme` hook (same
 theme toggle; the `theme-color` meta pair added here needs the light/dark CSS values that
 spec establishes.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - A translation mechanism exists, defaults sensibly, and persists (Priority: P1)
 
@@ -120,7 +120,7 @@ matches; confirm no `robots.txt`/`sitemap.xml` exists under this repo's `public/
 - Authenticated-only routes stay non-indexed by nature; OG/canonical/theme-color work
   applies to the public landing/login surface only.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -143,7 +143,7 @@ matches; confirm no `robots.txt`/`sitemap.xml` exists under this repo's `public/
 - **FR-008**: No `robots.txt`/`sitemap.xml` MUST be added to this repo; a documented
   follow-up MUST record the needed `resumeweb` robots.txt allow-list change.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

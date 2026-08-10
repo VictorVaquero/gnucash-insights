@@ -1,28 +1,17 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router"
-import {
-  faBolt,
-  faChartPie,
-  faLock,
-  faWallet,
-} from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { motion } from "motion/react"
-import {
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-} from "recharts"
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { faBolt, faChartPie, faLock, faWallet } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { motion } from "motion/react";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
-import { useAuth } from "@/contexts/useAuthContext"
+import { useAuth } from "@/contexts/useAuthContext";
 
 const PREVIEW_STATS = [
   { name: "Net", value: "4,231 €", color: "text-white" },
   { name: "Income", value: "2,845 €", color: "text-green-500" },
   { name: "Expenses", value: "1,120 €", color: "text-red-500" },
   { name: "Assets", value: "18,940 €", color: "text-white" },
-]
+];
 
 const PREVIEW_TREND = [
   { month: "Feb", value: 12400 },
@@ -32,13 +21,13 @@ const PREVIEW_TREND = [
   { month: "Jun", value: 15900 },
   { month: "Jul", value: 15200 },
   { month: "Aug", value: 17400 },
-]
+];
 
 const FEATURES = [
   { icon: faBolt, text: "Live sync from your own AWS data" },
   { icon: faLock, text: "Ingestion stays local, nothing leaves your machine" },
   { icon: faChartPie, text: "Rich charts across accounts, trips & investments" },
-]
+];
 
 const PreviewPanel = () => (
   <motion.div
@@ -90,16 +79,16 @@ const PreviewPanel = () => (
       </ResponsiveContainer>
     </div>
   </motion.div>
-)
+);
 
 const Home = () => {
-  const { signInGuest } = useAuth()
-  const router = useRouter()
+  const { signInGuest } = useAuth();
+  const router = useRouter();
 
   const handleGuestSignIn = async () => {
-    await signInGuest()
-    router.history.push("/summary")
-  }
+    await signInGuest();
+    router.history.push("/summary");
+  };
 
   return (
     <div className="w-full min-h-full flex items-center justify-center px-6 sm:px-10 py-12">
@@ -121,8 +110,8 @@ const Home = () => {
           </h1>
 
           <p className="mt-5 text-lg text-shark-100 font-light max-w-md">
-            Track spending, savings and investments in one live dashboard,
-            synced straight from your own AWS data.
+            Track spending, savings and investments in one live dashboard, synced straight from your
+            own AWS data.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -156,12 +145,12 @@ const Home = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export const Route = createFileRoute('/home')({
+export const Route = createFileRoute("/home")({
   component: Home,
   beforeLoad: async () => {
-    return { title: 'Home' }
+    return { title: "Home" };
   },
-})
+});

@@ -42,8 +42,7 @@ const isValidAccountConfig = (value: unknown): value is AccountConfig => {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value as Record<string, unknown>;
   const stringFieldsValid = ACCOUNT_CONFIG_REQUIRED_STRING_FIELDS.every(
-    (field) =>
-      typeof candidate[field] === "string" && candidate[field] !== ""
+    (field) => typeof candidate[field] === "string" && candidate[field] !== "",
   );
   const taxesAllValid =
     Array.isArray(candidate.taxesAll) &&
@@ -62,14 +61,7 @@ const GUEST_ACCOUNT_CONFIG: AccountConfig = {
   liability: "Account46",
   investments: "Account19",
   taxes: "Account56",
-  taxesAll: [
-    "Account6",
-    "Account28",
-    "Account5",
-    "Account42",
-    "Account57",
-    "Account56",
-  ],
+  taxesAll: ["Account6", "Account28", "Account5", "Account42", "Account57", "Account56"],
   tripDesc: "Trip",
 };
 
@@ -104,9 +96,7 @@ const getClientIp = (req: VercelRequest): string => {
   return (Array.isArray(realIp) ? realIp[0] : realIp) ?? "unknown";
 };
 
-const checkRateLimit = (
-  ip: string
-): { limited: boolean; retryAfterSeconds: number } => {
+const checkRateLimit = (ip: string): { limited: boolean; retryAfterSeconds: number } => {
   const now = Date.now();
   const entry = requestCounts.get(ip);
   if (!entry || now >= entry.resetAt) {
@@ -129,21 +119,16 @@ const mintReadOnlyToken = async (databaseName: string) => {
     {
       method: "POST",
       headers: { Authorization: `Bearer ${platformToken}` },
-    }
+    },
   );
   if (!response.ok) {
-    throw new Error(
-      `Turso token mint failed for ${databaseName}: ${response.status}`
-    );
+    throw new Error(`Turso token mint failed for ${databaseName}: ${response.status}`);
   }
   const { jwt } = (await response.json()) as { jwt: string };
   return jwt;
 };
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     res.status(405).end();
     return;
@@ -179,9 +164,7 @@ export default async function handler(
       await verifyCognitoIdToken(authHeader.slice("Bearer ".length));
       const accountConfig = getRealAccountConfig();
       if (!accountConfig) {
-        console.error(
-          "turso-token: missing or malformed ACCOUNT_CONFIG_VICTOR env var"
-        );
+        console.error("turso-token: missing or malformed ACCOUNT_CONFIG_VICTOR env var");
         res.status(500).json({ error: "Server misconfigured" });
         return;
       }

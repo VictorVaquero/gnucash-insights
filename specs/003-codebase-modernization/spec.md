@@ -12,7 +12,7 @@ wanted instead.
 
 **Input**: User description: "Review the actual page: update libraries, move onto better ones if they exist, clean up everything, make sure we're using best practices. Suggest other improvements found during the review."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Dependencies are current and unused ones are gone (Priority: P1)
 
@@ -142,7 +142,7 @@ here."
   from `drizzle-kit` tooling)? Confirmed dead weight — remove unless a concrete tooling
   reason is found during review.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -180,7 +180,7 @@ here."
   cleanup item, a security/a11y/performance note), each with a category and a
   disposition.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

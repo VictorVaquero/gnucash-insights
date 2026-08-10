@@ -89,7 +89,7 @@ except where a data-layer change here required a corresponding change there.
 
 ## Deployment
 
-- **Host**: Vercel, project `cashpy-v2`, connected to this repo — push to `master` = 
+- **Host**: Vercel, project `cashpy-v2`, connected to this repo — push to `master` =
   production deploy, every other branch/PR = its own preview deployment. No manual
   build/upload step.
 - **Domain mounting (cross-repo)**: the app is not deployed under its own domain. It is
@@ -113,7 +113,7 @@ except where a data-layer change here required a corresponding change there.
     needs the same change mirrored in `resumeweb`.
   - **Cross-repo naming incident (2026-08-08 → discovered 2026-08-10)**: the fix for the
     above CSP drift (commits documenting/restoring the `/dashboard` proxy) was written
-    under the mistaken belief that the local `bro_cv_web` folder *was* `resumeweb`, and
+    under the mistaken belief that the local `bro_cv_web` folder _was_ `resumeweb`, and
     landed in the wrong repo (`PabloVaqueroCVWeb`, i.e. `drpablovaquero.com`'s codebase)
     instead. Separately, `resumeweb`'s Vercel project had its Production Branch
     misconfigured (`main` instead of its actual default branch), which caused

@@ -5,9 +5,7 @@ const userPoolId = process.env.COGNITO_USER_POOL_ID;
 const clientId = process.env.COGNITO_CLIENT_ID;
 
 if (!region || !userPoolId || !clientId) {
-  throw new Error(
-    "Missing COGNITO_REGION / COGNITO_USER_POOL_ID / COGNITO_CLIENT_ID env vars"
-  );
+  throw new Error("Missing COGNITO_REGION / COGNITO_USER_POOL_ID / COGNITO_CLIENT_ID env vars");
 }
 
 const issuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;

@@ -8,7 +8,7 @@ touches financial data itself.
 **Correction vs. earlier drafts of this contract**: guest login in today's app
 (`useAuth.ts`'s `signInGuest`) is **not a real Cognito authentication** — it sets
 `idToken` to the literal string `'guest'`, client-side only, and no Cognito call is ever
-made. The guest S3 path today is reached via an *unauthenticated* Cognito Identity Pool
+made. The guest S3 path today is reached via an _unauthenticated_ Cognito Identity Pool
 credential (no login required at all), scoped by IAM to only the guest S3 prefix — i.e.
 guest data is, and always has been, freely accessible with zero login friction; only the
 **real** user's data is Cognito-gated. The endpoint below is corrected to match this,
@@ -34,7 +34,7 @@ X-Guest-Request: true
 
 No Cognito credential presented or checked — matches today's zero-login guest access.
 `X-Guest-Request` is not a security boundary (anyone can send it); it only tells the
-endpoint which *harmless* database to scope the token to. The real production database
+endpoint which _harmless_ database to scope the token to. The real production database
 is never reachable via this branch, by construction (see step 3).
 
 ## Server-side behavior

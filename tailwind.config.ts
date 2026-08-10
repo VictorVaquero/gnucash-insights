@@ -1,7 +1,7 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss";
 
 const twConfig: Config = {
-  darkMode: 'class',
+  darkMode: "class",
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
@@ -25,4 +25,4 @@ const twConfig: Config = {
   },
 };
 
-export default twConfig
+export default twConfig;

@@ -32,21 +32,21 @@ rewrite — see research.md).
 **Purpose**: Prepare this repo's config so it's ready to become its own Vercel project,
 before any deployment or story-specific work happens.
 
-- [X] T001 Add `.nvmrc` pinned to Node 24 in `cashpy_v2/.nvmrc` (research.md: Node version
+- [x] T001 Add `.nvmrc` pinned to Node 24 in `cashpy_v2/.nvmrc` (research.md: Node version
       pin decision)
-- [X] T002 Add `"engines": { "node": ">=24" }` to `cashpy_v2/package.json`
-- [X] T003 [P] Create `cashpy_v2/vercel.json` with security headers (CSP, X-Frame-Options,
+- [x] T002 Add `"engines": { "node": ">=24" }` to `cashpy_v2/package.json`
+- [x] T003 [P] Create `cashpy_v2/vercel.json` with security headers (CSP, X-Frame-Options,
       X-Content-Type-Options, Referrer-Policy) ported from `resumeweb/vercel.json`, with
       CSP `connect-src` extended to allow the Cognito IDP endpoint
       (`cognito-idp.eu-west-3.amazonaws.com`), Cognito Identity endpoint
       (`cognito-identity.eu-west-3.amazonaws.com`), and S3 endpoint
       (`victor-mycash.s3.eu-west-3.amazonaws.com` or `s3.eu-west-3.amazonaws.com`) — see
       `cashpy_v2/src/config.json` for the exact region/bucket already in use
-- [X] T004 [P] In `cashpy_v2/vercel.json`, add a `rewrites` rule sending unmatched paths
+- [x] T004 [P] In `cashpy_v2/vercel.json`, add a `rewrites` rule sending unmatched paths
       under `/dashboard/*` to `/dashboard/index.html` (research.md: SPA fallback routing
       decision) — this MUST be a distinct rule from the headers block added in T003, both
       living in the same file
-- [X] T005 Verify `cashpy_v2/vite.config.ts` still has `base: "/dashboard/"` and
+- [x] T005 Verify `cashpy_v2/vite.config.ts` still has `base: "/dashboard/"` and
       `cashpy_v2/src/main.tsx`'s router still has `basepath: "dashboard"` unchanged (these
       are already correct per plan.md; this is a confirmation task, not a code change)
 
@@ -62,16 +62,16 @@ user story can be verified until this exists.
 
 **⚠️ CRITICAL**: No user story verification can begin until this phase is complete.
 
-- [X] T006 Run `pnpm run build` locally and confirm it succeeds with no changes in
+- [x] T006 Run `pnpm run build` locally and confirm it succeeds with no changes in
       behavior from the config added in Phase 1 (build output unchanged apart from the
       new `vercel.json`/`.nvmrc` files, which aren't part of the Vite build) — required a
       minimal pre-existing-bug fix (unrelated to this migration's scope, user-approved):
       `TreeList.stories.tsx` was calling `toHierarchy` with 6/8 args, and `global.ts` had
       an unused `maxPricesQuery` function; both fixed, build now passes clean
-- [X] T007 Create a new Vercel project for `cashpy_v2`, connected to this repo's GitHub
+- [x] T007 Create a new Vercel project for `cashpy_v2`, connected to this repo's GitHub
       remote (via Vercel dashboard "Add New Project", or `vercel link` from the CLI) —
       one-time setup, no code change — production URL: `https://cashpy-v2.vercel.app`
-- [X] T008 Trigger a deployment (push to the connected branch, or `vercel --prod`) and
+- [x] T008 Trigger a deployment (push to the connected branch, or `vercel --prod`) and
       record the assigned stable production URL (`https://<project>.vercel.app`) — three
       follow-up fixes were needed before this went green: (1) pin `packageManager` +
       remove a stale tracked `yarn.lock` so Vercel actually used pnpm instead of Yarn
@@ -79,13 +79,13 @@ user story can be verified until this exists.
       (2) reorder `build` script to `vite build && tsc` since `routeTree.gen.ts` is only
       generated as a Vite plugin side effect and doesn't exist on a fresh checkout; (3) set
       `build.outDir` to `dist/dashboard` since `base: "/dashboard/"` only affects how Vite
-      *references* assets in HTML, not where files physically land — Vercel is a static
+      _references_ assets in HTML, not where files physically land — Vercel is a static
       host and needs the physical layout to match the referenced paths
-- [X] T009 Visit `https://<project>.vercel.app/dashboard` and confirm the app loads (raw
+- [x] T009 Visit `https://<project>.vercel.app/dashboard` and confirm the app loads (raw
       Vercel URL, not yet the final domain — validates Phase 1's config actually works
       before wiring up resumeweb) — confirmed 200, correct asset paths, all 4 security
       headers present (also satisfies T015 for this URL; will re-check on the final domain)
-- [X] T010 Visit `https://<project>.vercel.app/dashboard/summary` directly (hard
+- [x] T010 Visit `https://<project>.vercel.app/dashboard/summary` directly (hard
       navigation, not in-app) and confirm it loads without a 404 (validates T004's SPA
       fallback rewrite) — confirmed 200
 
@@ -104,24 +104,24 @@ resolve correctly, per spec.md User Story 1's acceptance scenarios.
 
 ### Implementation for User Story 1
 
-- [X] T011 [US1] In `resumeweb/vercel.json`, add two `rewrites` entries per research.md:
+- [x] T011 [US1] In `resumeweb/vercel.json`, add two `rewrites` entries per research.md:
       `/dashboard` and `/dashboard/:path*`, both pointing at the production URL recorded
       in T008 — also required scoping resumeweb's site-wide CSP header rule to exclude
       `/dashboard` and adding a matching rule with cashpy_v2's extended `connect-src`,
       since Vercel applies the rewriting project's headers, not the origin's (would have
       silently blocked Cognito/S3 calls on login)
-- [X] T012 [US1] Deploy `resumeweb` with the updated `vercel.json` (push to its connected
+- [x] T012 [US1] Deploy `resumeweb` with the updated `vercel.json` (push to its connected
       branch, or `vercel --prod` in that repo) — pushed as 8c1c0cb then 10dfb07 (CSP fix)
-- [X] T013 [US1] Run quickstart.md step 3: visit `https://victorvaquero.com/dashboard`
+- [x] T013 [US1] Run quickstart.md step 3: visit `https://victorvaquero.com/dashboard`
       and confirm the app loads under the real domain — confirmed 200, correct CashPy HTML
-- [X] T014 [US1] Run quickstart.md step 3 (deep link): visit
+- [x] T014 [US1] Run quickstart.md step 3 (deep link): visit
       `https://victorvaquero.com/dashboard/summary` directly and confirm it loads without
       a 404 — confirmed 200
-- [X] T015 [US1] Run quickstart.md step 7: `curl -I https://victorvaquero.com/dashboard`
+- [x] T015 [US1] Run quickstart.md step 7: `curl -I https://victorvaquero.com/dashboard`
       and confirm all four security headers from T003 are present — confirmed, including
       the extended `connect-src` (verified with a cache-busting query string since the
       edge cache briefly served the pre-fix CSP after the first deploy)
-- [X] T016 [US1] Run quickstart.md step 8: grep git history of `vercel.json`/`.nvmrc` for
+- [x] T016 [US1] Run quickstart.md step 8: grep git history of `vercel.json`/`.nvmrc` for
       accidental secrets; confirm no matches — confirmed clean in both cashpy_v2 and
       resumeweb
 
@@ -140,19 +140,19 @@ confirm data renders on multiple pages, per spec.md User Story 2's acceptance sc
 
 ### Implementation for User Story 2
 
-- [X] T017 [US2] Run quickstart.md step 4: log in with real owner credentials on
+- [x] T017 [US2] Run quickstart.md step 4: log in with real owner credentials on
       `https://victorvaquero.com/dashboard` — confirmed working
-- [X] T018 [US2] Confirm summary, expenses, travels, and investments pages all render
+- [x] T018 [US2] Confirm summary, expenses, travels, and investments pages all render
       data and charts, matching the pre-migration app for the same account — confirmed by
       user after the CSP fix below landed
-- [X] T019 [US2] Check browser devtools console for CSP violation errors during login and
+- [x] T019 [US2] Check browser devtools console for CSP violation errors during login and
       data fetch; if any Cognito/S3 request is blocked, fix the specific `connect-src`
       origin missing from `cashpy_v2/vercel.json` (added in T003) and redeploy — found a
       real issue, though not `connect-src`: sql.js's WASM module failed to compile
       (`script-src` was missing `'wasm-unsafe-eval'`), blocking all data loading after a
       successful login. Fixed in both `cashpy_v2/vercel.json` (acb81f6) and the
       `/dashboard`-scoped rule in `resumeweb/vercel.json` (6999f23)
-- [X] T020 [US2] If T019 required a CSP fix, re-run T017–T018 to confirm the fix resolved
+- [x] T020 [US2] If T019 required a CSP fix, re-run T017–T018 to confirm the fix resolved
       it and nothing else regressed — confirmed by user, data now loads correctly
 
 **Checkpoint**: Both P1 stories are done — the app is reachable at its real address AND
@@ -205,12 +205,12 @@ independently of production, per spec.md User Story 4's acceptance scenarios.
 **Purpose**: Cleanup and decommissioning steps that apply across all stories, per FR-009
 and FR-010. Only start once Phases 3–6 (all stories) are verified passing.
 
-- [X] T026 Remove the `clean` and `deploy` scripts (`aws s3 rm`, `aws s3 sync` +
+- [x] T026 Remove the `clean` and `deploy` scripts (`aws s3 rm`, `aws s3 sync` +
       `cloudfront create-invalidation`) from `cashpy_v2/package.json` (FR-010)
-- [X] T027 [P] Update `cashpy_v2/README.md`'s "Deploy" section to describe the new
+- [x] T027 [P] Update `cashpy_v2/README.md`'s "Deploy" section to describe the new
       git-push-to-deploy flow via Vercel, replacing the old `pnpm build`/`pnpm
-      clean`/`pnpm run deploy` instructions
-- [X] T028 Document the old AWS S3 bucket (`victorvaquero.dashboard.net`) and CloudFront
+clean`/`pnpm run deploy` instructions
+- [x] T028 Document the old AWS S3 bucket (`victorvaquero.dashboard.net`) and CloudFront
       distribution (`E5ZMBYGUCPRWJ`) used for this app's hosting as scheduled for
       decommission (FR-009) — record this in `cashpy_v2/README.md` or wherever the
       project tracks infra notes; do not delete the AWS resources as part of this task,
@@ -238,7 +238,7 @@ decommission action).
   into).
 - **User Story 3 (Phase 5)**: Depends on Phase 3 (needs the real-domain deployment); does
   not depend on Phase 4, could run in parallel with it if desired.
-- **User Story 4 (Phase 6)**: Depends only on Phase 2 (needs *a* Vercel project to exist,
+- **User Story 4 (Phase 6)**: Depends only on Phase 2 (needs _a_ Vercel project to exist,
   not the domain wiring) — could technically run right after Phase 2, but is sequenced
   last since it's P3 and unrelated to functional correctness.
 - **Polish (Phase 7)**: Depends on Phases 3–6 all being verified passing.

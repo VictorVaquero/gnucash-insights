@@ -21,7 +21,7 @@ export const PeriodicityTabs = ({
             "px-4 py-2 rounded capitalize font-light transition-all duration-200",
             activeMode === option
               ? "bg-shark-600 text-white shadow-sm"
-              : "text-shark-300 hover:text-white hover:bg-shark-800"
+              : "text-shark-300 hover:text-white hover:bg-shark-800",
           )}
         >
           {option}

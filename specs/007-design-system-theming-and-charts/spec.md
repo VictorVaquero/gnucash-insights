@@ -18,7 +18,7 @@ theming work (User Stories 1-3) must land before the Recharts migration (User St
 `useLocale` hook mirrors, and its nav toggle is where that spec's language switcher gets
 co-located.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - shadcn's design-system layer is wired up and actually renders (Priority: P1)
 
@@ -158,7 +158,7 @@ tracks the drag and updates the pinned value, on every chart in the app.
 - A bottom-sheet tooltip on a very short-height viewport must leave the tapped point
   visible above it.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -184,7 +184,7 @@ tracks the drag and updates the pinned value, on every chart in the app.
 - **FR-010**: TanStack Router/Query keep decisions MUST each get a one-line rationale in
   `docs/decisions.md`.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

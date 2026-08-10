@@ -15,7 +15,7 @@ config drift that later specs would otherwise build on top of or collide with, c
 highest-stakes security gaps before the app gets any more surface area, and gates the
 repo's ability to go public — a standing precondition the owner has flagged as important.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Private data no longer ships in the repo or the bundle (Priority: P1)
 
@@ -164,7 +164,7 @@ repo's GitHub visibility changes.
 - If rate limiting risks throttling legitimate rapid navigation, set the threshold
   generously above observed normal usage.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -197,7 +197,7 @@ repo's GitHub visibility changes.
   hardening settings MUST be checked and recorded; `pnpm audit` MUST be run with every
   finding fixed or triaged.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

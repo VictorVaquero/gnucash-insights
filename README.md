@@ -1,6 +1,7 @@
 # Cashpy
 
 Vite not working? Delete node_modules, run
+
 > pnpm
 > pnpm add -D vite
 
@@ -11,9 +12,11 @@ A little tab down should be able to relaunch vite, open the server... Also to ru
 ## Stories
 
 For the initial setup
-> pnpm storybook init 
+
+> pnpm storybook init
 
 To run the server
+
 > pnpm storybook
 
 ## Deploy
@@ -43,4 +46,3 @@ CloudFront (distribution `E5ZMBYGUCPRWJ`), via manual `aws s3 sync` +
 is verified working; until then it remains live but unused — tearing it down needs to
 happen separately in the AWS console/CLI, outside this repo. (The `victor-mycash` S3
 bucket that stores the actual financial data files is unrelated and unaffected.)
-

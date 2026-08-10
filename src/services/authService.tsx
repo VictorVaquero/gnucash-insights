@@ -5,7 +5,7 @@ import {
   RespondToAuthChallengeCommand,
   RespondToAuthChallengeCommandInput,
   SignUpCommand,
-  type InitiateAuthCommandInput
+  type InitiateAuthCommandInput,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { z } from "zod";
 
@@ -32,7 +32,6 @@ export const cognitoClient = new CognitoIdentityProviderClient({
   region: config.region,
 });
 
-
 export const signInAws = async (username: string, password: string) => {
   const params = {
     AuthFlow: "USER_PASSWORD_AUTH",
@@ -43,21 +42,19 @@ export const signInAws = async (username: string, password: string) => {
     },
   };
   try {
-
     const command = new InitiateAuthCommand(params as InitiateAuthCommandInput);
     const result = await cognitoClient.send(command);
     let AuthenticationResult = result.AuthenticationResult;
 
     console.debug("AWS Try send auth command with result: ", result);
     if (result.ChallengeName) {
-      if (result.ChallengeName === 'NEW_PASSWORD_REQUIRED' && result.Session) {
+      if (result.ChallengeName === "NEW_PASSWORD_REQUIRED" && result.Session) {
         console.debug("Needs to confirm password, just send the same back.");
-        const challengeResult = await newPwdRequired(username, password, result.Session)
+        const challengeResult = await newPwdRequired(username, password, result.Session);
         AuthenticationResult = challengeResult.AuthenticationResult;
-      }
-      else {
-        console.debug(`Challenge ${result.ChallengeName} not yet supported.`)
-        throw Error('Challenge not yet supported')
+      } else {
+        console.debug(`Challenge ${result.ChallengeName} not yet supported.`);
+        throw Error("Challenge not yet supported");
       }
     }
     if (AuthenticationResult) {
@@ -65,7 +62,7 @@ export const signInAws = async (username: string, password: string) => {
       //setAuthResult(username, AuthenticationResult)
       return AuthenticationResult;
     }
-    throw Error('No authentication result');
+    throw Error("No authentication result");
   } catch (error) {
     console.error("Error signing in: ", error);
     throw error;
@@ -76,27 +73,24 @@ const newPwdRequired = async (username: string, password: string, session: strin
   console.debug("AWS Challenge: Update pwd");
   const params = {
     AuthFlow: "USER_PASSWORD_AUTH",
-    ChallengeName: 'NEW_PASSWORD_REQUIRED',
+    ChallengeName: "NEW_PASSWORD_REQUIRED",
     ClientId: config.clientId,
     ChallengeResponses: {
       USERNAME: username,
-      NEW_PASSWORD: password
+      NEW_PASSWORD: password,
     },
-    Session: session
+    Session: session,
   };
 
   try {
     const command = new RespondToAuthChallengeCommand(params as RespondToAuthChallengeCommandInput);
     const result = await cognitoClient.send(command);
     return result;
+  } catch (error) {
+    console.error("Failure to respond to challenge", error);
+    throw error;
   }
-  catch (error) {
-    console.error('Failure to respond to challenge', error)
-    throw error
-  }
-}
-
-
+};
 
 /** @public Self-signup flow, not currently wired to a route; kept pending the Cognito self-signup decision (spec 005 US6). */
 export const signUp = async (email: string, password: string) => {
@@ -144,11 +138,11 @@ export const refreshTokenAws = async (refreshToken: string | undefined) => {
   console.debug("AWS Refresh token");
   //const refreshToken = getRefreshToken();
   if (!refreshToken) {
-    throw new Error('No token to refresh.')
+    throw new Error("No token to refresh.");
   }
 
   const initiateAuthParams = {
-    AuthFlow: 'REFRESH_TOKEN_AUTH',
+    AuthFlow: "REFRESH_TOKEN_AUTH",
     ClientId: config.clientId,
     AuthParameters: {
       REFRESH_TOKEN: refreshToken,
@@ -156,17 +150,16 @@ export const refreshTokenAws = async (refreshToken: string | undefined) => {
   };
 
   try {
-    const command = new InitiateAuthCommand(initiateAuthParams as InitiateAuthCommandInput)
+    const command = new InitiateAuthCommand(initiateAuthParams as InitiateAuthCommandInput);
     const result = await cognitoClient.send(command);
     if (result.ChallengeName || !result.AuthenticationResult) {
-      console.debug(`Challenge ${result.ChallengeName} not yet supported.`)
-      throw Error('Challenge not yet supported')
+      console.debug(`Challenge ${result.ChallengeName} not yet supported.`);
+      throw Error("Challenge not yet supported");
     }
     return result.AuthenticationResult;
     //setAuthResult(getUser(), result.AuthenticationResult!)
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error refreshing token: ", error);
     throw error;
   }
-}
+};

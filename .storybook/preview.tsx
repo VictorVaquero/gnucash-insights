@@ -1,8 +1,13 @@
 import type { Preview } from "@storybook/react";
-import '../src/index.css';
+import "../src/index.css";
 import React from "react";
-import { initialize, mswLoader } from 'msw-storybook-addon';
-import { RouterProvider, createMemoryHistory, createRootRoute, createRouter } from '@tanstack/react-router';
+import { initialize, mswLoader } from "msw-storybook-addon";
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+} from "@tanstack/react-router";
 
 /*
  * Initializes MSW
@@ -10,29 +15,31 @@ import { RouterProvider, createMemoryHistory, createRootRoute, createRouter } fr
  * to learn how to customize it
  */
 initialize();
-    
+
 export const decorators = [
   (Story) => (
-    <RouterProvider router={createRouter({
-      history: createMemoryHistory(),
-      routeTree: createRootRoute({
-        component: Story
-      })
-    })} />
+    <RouterProvider
+      router={createRouter({
+        history: createMemoryHistory(),
+        routeTree: createRootRoute({
+          component: Story,
+        }),
+      })}
+    />
   ),
 ];
 
 const preview: Preview = {
   parameters: {
-    layout: 'centered',
+    layout: "centered",
     backgrounds: {
       values: [
         // 👇 Default values
-        { name: 'Dark', value: '#111' },
-        { name: 'Light', value: '#F7F9F2' },
+        { name: "Dark", value: "#111" },
+        { name: "Light", value: "#F7F9F2" },
       ],
       // 👇 Specify which background is shown by default
-      default: 'Dark',
+      default: "Dark",
     },
     controls: {
       matchers: {
@@ -41,7 +48,7 @@ const preview: Preview = {
       },
     },
   },
-  loaders: [mswLoader]
+  loaders: [mswLoader],
 };
 
 export default preview;

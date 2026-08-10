@@ -10,13 +10,7 @@ interface TreeListItem {
   depth: number;
 }
 
-export const TreeList = ({
-  data,
-  className,
-}: {
-  data: TreeListItem[];
-  className?: string;
-}) => {
+export const TreeList = ({ data, className }: { data: TreeListItem[]; className?: string }) => {
   return (
     <motion.ul
       className={className}
@@ -45,7 +39,14 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
         className="grid grid-cols-subgrid col-span-full hover:bg-shark-700 rounded-sm"
         key={item.key}
       >
-        <span className={cn("col-start-"+(item.depth+1), "flex items-center text-left font-medium sticky left-0 bg-shark-900")}>{item.header}</span>
+        <span
+          className={cn(
+            "col-start-" + (item.depth + 1),
+            "flex items-center text-left font-medium sticky left-0 bg-shark-900",
+          )}
+        >
+          {item.header}
+        </span>
         {item.node}
       </li>
     );
@@ -58,7 +59,7 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
         <div
           className={cn(
             "col-start-" + (item.depth + 1),
-            "col-span-2 flex items-center sticky left-0 bg-shark-900"
+            "col-span-2 flex items-center sticky left-0 bg-shark-900",
           )}
         >
           <motion.span
@@ -68,18 +69,13 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
           >
             &gt;
           </motion.span>
-            <span className={cn("pl-2 text-left font-medium")}>{item.header}</span>
+          <span className={cn("pl-2 text-left font-medium")}>{item.header}</span>
         </div>
         {item.node}
       </button>
       <AnimatePresence mode="sync">
         {collapse && (
-          <TreeList
-            data={item.children}
-            className={cn(
-              "grid grid-cols-subgrid col-span-full"
-            )}
-          />
+          <TreeList data={item.children} className={cn("grid grid-cols-subgrid col-span-full")} />
         )}
       </AnimatePresence>
     </li>

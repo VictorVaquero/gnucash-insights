@@ -4,11 +4,7 @@ import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
 
 import { getRandomColor } from "@/common/getColors";
-import {
-  parseNum,
-  useIsNarrowViewport,
-  useWindowSize,
-} from "@/common/utils.ts";
+import { parseNum, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -115,11 +111,7 @@ const DrawMonthlyAccountsPlot = ({
           ))}
         </g>
       </svg>
-      <Tooltip
-        svgRef={svgRef}
-        choosePoint={choosePoint}
-        updateTooltip={updateTooltip}
-      >
+      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
         <div className="flex flex-col items-center px-6 py-2">
           <span className="text-shark-300" id="title">
             Title
@@ -148,11 +140,11 @@ export const AssetAccountsPlot = () => {
       accountIds: [dbconfig.assets],
       periodicity: chartPeriodicity,
       accumulate: true,
-    })
+    }),
   );
 
   const { data: accounts } = useQuery(
-    accountsOptions({ db, bookId, accountIds: [dbconfig.assets] })
+    accountsOptions({ db, bookId, accountIds: [dbconfig.assets] }),
   );
 
   const data = useMemo(() => {

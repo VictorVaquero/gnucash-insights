@@ -12,11 +12,11 @@ Manual validation guide for this feature, per constitution Principle III (no aut
 
 Run each scenario at these widths, portrait unless noted:
 
-| Width | Represents |
-|---|---|
-| 320px | Smallest supported phone (edge case) |
-| 375px | Common phone (iPhone SE/12/13 class) |
-| 428px | Large phone (iPhone Pro Max class) |
+| Width                      | Represents                                      |
+| -------------------------- | ----------------------------------------------- |
+| 320px                      | Smallest supported phone (edge case)            |
+| 375px                      | Common phone (iPhone SE/12/13 class)            |
+| 428px                      | Large phone (iPhone Pro Max class)              |
 | 375×667 rotated to 667×375 | Landscape phone (short-height case, login page) |
 
 ## US1 — Summary page + navigation (P1)

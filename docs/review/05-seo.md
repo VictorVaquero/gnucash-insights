@@ -27,7 +27,7 @@ project belonging to a third-party client site (`drpablovaquero.com`), not the
 `docs/architecture.md`'s "Cross-repo naming incident" note. Everything below has been
 corrected to reference `resumeweb`; the underlying SEO conclusions (no root-level
 `robots.txt`/`sitemap.xml` in this repo, etc.) are unchanged since they never depended on
-which project owns the domain — only on the fact that *some other* project does.
+which project owns the domain — only on the fact that _some other_ project does.
 
 This has direct SEO consequences that a generic SEO checklist would miss:
 
@@ -42,10 +42,10 @@ This has direct SEO consequences that a generic SEO checklist would miss:
 - **Conclusion**: `cashpy_v2` should **not** add its own `robots.txt`/`sitemap.xml`.
   **Decided 2026-08-10: the landing page should stay crawlable/indexed** (reverses this
   doc's earlier default of "not indexed"). That means `resumeweb`'s existing root
-  `robots.txt` should explicitly *allow* `/dashboard` and `/dashboard/login` (the
+  `robots.txt` should explicitly _allow_ `/dashboard` and `/dashboard/login` (the
   portfolio-facing entry points) while still disallowing the authenticated inner routes
   (`/dashboard/summary`, `/dashboard/analysis`, etc., which have nothing indexable
-  behind a login anyway) — a small, deliberate allow-list change in *that* repo, not
+  behind a login anyway) — a small, deliberate allow-list change in _that_ repo, not
   this one.
 
 ## Current state (confirmed findings)
@@ -93,6 +93,7 @@ This has direct SEO consequences that a generic SEO checklist would miss:
 
 **Icons / favicons** (asset generation: `bro_cv_web`'s existing pipeline/sizes are a
 usable external template, not something owned by or shared with `resumeweb`):
+
 - `cash3.svg` is the decided canonical icon (already referenced in `index.html`) —
   `favicon.svg` should be deleted rather than kept alongside it.
 - `favicon.ico` (multi-size, legacy browser fallback) — does not currently exist, needs
@@ -107,6 +108,7 @@ usable external template, not something owned by or shared with `resumeweb`):
   a `color` attribute.
 
 **Web app manifest** (`public/site.webmanifest` or `manifest.json`):
+
 - `name`, `short_name`, `icons` (referencing the Android PNGs above), `theme_color`,
   `background_color`, `display: "standalone"`, and a `start_url` that correctly accounts
   for the `/dashboard` mount path (this is the one place this app's setup genuinely
@@ -119,6 +121,7 @@ usable external template, not something owned by or shared with `resumeweb`):
 **Open Graph / social link previews** (Facebook, WhatsApp, iMessage, LinkedIn all read
 these; WhatsApp specifically caches aggressively and requires an **absolute** image URL,
 not root-relative):
+
 - `og:title`, `og:description`, `og:type` (`website`), `og:url` (absolute, canonical),
   `og:site_name`.
 - `og:image` — needs a real image asset (1200×630 recommended) — doesn't exist yet.
@@ -127,15 +130,18 @@ not root-relative):
   lay out the preview card.
 
 **Twitter/X Card**:
+
 - `twitter:card` (`summary_large_image`), `twitter:title`, `twitter:description`,
   `twitter:image` — can reuse the same `og:image` asset.
 
 **Apple-specific meta**:
+
 - `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`,
   `apple-mobile-web-app-title` — relevant given the manifest already targets
   "Add to Home Screen," these are the older-but-still-checked iOS-specific equivalents.
 
 **Misc**:
+
 - `theme-color` meta tag (also affects Android Chrome's toolbar color and, relevant to
   [15-theming-light-dark-mode.md](15-theming-light-dark-mode.md), should ideally have a
   light/dark-aware pair via two `<meta name="theme-color" media="(prefers-color-scheme: ...)">`

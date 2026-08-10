@@ -27,7 +27,7 @@ export const useWindowSize = (ref: MutableRefObject<Element | null>) => {
 
 export const parseNum = (
   number: number,
-  options: { digits?: number; symbol?: string; fixed?: number } = {}
+  options: { digits?: number; symbol?: string; fixed?: number } = {},
 ) => {
   const digits = options.digits ?? 2;
   const symbol = options.symbol ?? "€";
@@ -39,8 +39,7 @@ export const parseNum = (
   ]);
   for (const [key, symbol] of mappings) {
     if (Math.abs(number) >= key) {
-      const mynum =
-        Math.round((Math.abs(number) / key) * 10 ** digits) / 10 ** digits;
+      const mynum = Math.round((Math.abs(number) / key) * 10 ** digits) / 10 ** digits;
       let s = mynum.toString();
       if (options.fixed && s.replace(".", "").length > options.fixed)
         s = s.slice(0, s.indexOf(".") > -1 ? options.fixed + 1 : options.fixed);
@@ -66,9 +65,7 @@ const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
 const TOUCH_POINTER_QUERY = "(pointer: coarse)";
 
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(
-    () => window.matchMedia(query).matches
-  );
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
 
   useEffect(() => {
     const mql = window.matchMedia(query);

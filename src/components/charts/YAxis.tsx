@@ -5,16 +5,11 @@ export const YAxis = (props: {
   range: { x: number[]; y: number[] };
   scale: d3.ScaleLinear<number, number>;
 }) => {
-    
-    const tickNumber = props.height < 300 ? 8 : 10;
-    const tickHighlight = props.height < 300 ? 2 : 5;
+  const tickNumber = props.height < 300 ? 8 : 10;
+  const tickHighlight = props.height < 300 ? 2 : 5;
 
   return (
-    <g
-      className="yaxis text-white"
-      textAnchor="end"
-      transform={`translate(${props.range.x[0]},0)`}
-    >
+    <g className="yaxis text-white" textAnchor="end" transform={`translate(${props.range.x[0]},0)`}>
       {props.scale.ticks(tickNumber).map((value, i) => {
         // Determine if this specific tick should be highlighted
         const isMajor = i % tickHighlight === 0;

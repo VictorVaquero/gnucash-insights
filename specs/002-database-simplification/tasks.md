@@ -17,6 +17,7 @@ insistence that the old (S3) path stay live until the new path is verified.
 ## Path Conventions
 
 Two repositories are touched:
+
 - `cashpy_v2/` (this repo) — dashboard SPA + new `api/` serverless function
 - `../cashpy-processor/` (sibling repo) — ingestion CLI
 
@@ -28,25 +29,24 @@ All paths below are relative to one of these two roots, stated explicitly per ta
 
 **Purpose**: Provision Turso and wire up credentials, before any code changes land.
 
-- [X] T001 Create the production Turso database (`cashpy`) and a separate guest database
+- [x] T001 Create the production Turso database (`cashpy`) and a separate guest database
       (`cashpy-guest`, per `plan.md`'s "Guest/demo dataset" decision) via `turso db
-      create`, both on the free tier, both in the `default` group (`aws-eu-west-1`).
+create`, both on the free tier, both in the `default` group (`aws-eu-west-1`).
       URLs: `libsql://cashpy-victor26.aws-eu-west-1.turso.io` (production) and
       `libsql://cashpy-guest-victor26.aws-eu-west-1.turso.io` (guest). (Considered the
       Vercel Marketplace Turso integration as a lower-friction alternative, but went
       CLI-only since it needs two separate databases with different purposes anyway.)
-- [X] T002 [P] Minted a long-lived full-access write token for the production database
+- [x] T002 [P] Minted a long-lived full-access write token for the production database
       via `turso db tokens create cashpy`, and stored it (with `TURSO_DATABASE_URL`) in
       `cashpy-processor/.env` (gitignored, real values) — `.env.example` keeps its
       existing empty placeholders, no real value committed.
-- [X] T003 [P] Minted a Turso Platform API admin token via `turso auth api-tokens mint`
-      and added it as the Vercel environment variable `TURSO_PLATFORM_TOKEN` (Production
-      + Preview only — Vercel disallows sensitive vars on Development), scoped to the
+- [x] T003 [P] Minted a Turso Platform API admin token via `turso auth api-tokens mint`
+      and added it as the Vercel environment variable `TURSO_PLATFORM_TOKEN` (Production + Preview only — Vercel disallows sensitive vars on Development), scoped to the
       `cashpy-v2` project.
-- [X] T004 [P] Added `TURSO_DATABASE_URL` (production) and `TURSO_GUEST_DATABASE_URL` to
+- [x] T004 [P] Added `TURSO_DATABASE_URL` (production) and `TURSO_GUEST_DATABASE_URL` to
       Vercel env vars (Production, Preview, Development; non-sensitive) via `vercel env
-      add`; `cashpy-processor/.env` (from T002) already has the production URL.
-- [X] T005 Confirmed `@libsql/client@^0.14.0` (pinned in `cashpy_v2/package.json`)
+add`; `cashpy-processor/.env` (from T002) already has the production URL.
+- [x] T005 Confirmed `@libsql/client@^0.14.0` (pinned in `cashpy_v2/package.json`)
       resolves and connects: a throwaway script (`createClient` + `select 1`) against
       the production DB returned `[{"ok":1}]`.
 
@@ -62,27 +62,27 @@ S3/Cognito read path is left fully intact through this phase — nothing is remo
 
 **⚠️ CRITICAL**: No user story below can be manually verified until this phase is done.
 
-- [X] T006 Implement Cognito ID token verification (JWKS-based) as a reusable helper in
+- [x] T006 Implement Cognito ID token verification (JWKS-based) as a reusable helper in
       `cashpy_v2/api/_lib/verifyCognitoToken.ts`
-- [X] T007 Implement `cashpy_v2/api/turso-token.ts`: verify the caller (T006), pick
+- [x] T007 Implement `cashpy_v2/api/turso-token.ts`: verify the caller (T006), pick
       real-vs-guest database per `contracts/turso-token-endpoint.md`, mint a short-lived
       read-only Turso token via the Platform API, return `{ url, token, expiresAt }`;
       return `401` on any verification failure
-- [X] T008 [P] Add a `useTursoToken` fetch/query hook in `cashpy_v2/src/hooks/useDB.tsx`
+- [x] T008 [P] Add a `useTursoToken` fetch/query hook in `cashpy_v2/src/hooks/useDB.tsx`
       (or a new `src/hooks/useTursoToken.ts`) that calls `/api/turso-token` with the
       current Cognito ID token and re-fetches on expiry
-- [X] T009 [P] Add a `drizzle-orm/libsql` connection factory in
+- [x] T009 [P] Add a `drizzle-orm/libsql` connection factory in
       `cashpy_v2/src/services/DbService.tsx` (new function alongside the existing
       `sql-js`-based `setupDB`, not replacing it yet) that takes `{ url, token }` and
       returns a Drizzle instance
-- [X] T010 Add a data-source toggle (env var or `config.json` flag, e.g.
+- [x] T010 Add a data-source toggle (env var or `config.json` flag, e.g.
       `VITE_DATA_SOURCE=s3|turso`) read in `cashpy_v2/src/hooks/useDB.tsx` so the app can
       run against either backend without a code branch removal, per constitution
       Principle I's reversible-cutover requirement
-- [X] T011 Wire the toggle: when `turso`, `useSetupDB` uses T008/T009's token hook +
+- [x] T011 Wire the toggle: when `turso`, `useSetupDB` uses T008/T009's token hook +
       libSQL connection instead of `fetchDBOptions`/`saveFile`/`setupDB`'s S3+sql.js path,
       in `cashpy_v2/src/hooks/useDB.tsx`
-- [X] T012 Manually verify: with the toggle set to `turso` and an **empty** Turso
+- [x] T012 Manually verify: with the toggle set to `turso` and an **empty** Turso
       database, the app connects without error (schema present, zero rows) — confirms the
       plumbing before any real data exists.
       **Superseded rather than run standalone**: by the time this was reached, both
@@ -110,33 +110,33 @@ steps against the current S3 pipeline (per spec.md's Independent Test for this s
 
 ### Implementation for User Story 1
 
-- [X] T013 [US1] Add a libSQL/Turso Python client dependency to
+- [x] T013 [US1] Add a libSQL/Turso Python client dependency to
       `cashpy-processor/pyproject.toml` (e.g. `libsql-client`), pinned
-- [X] T014 [US1] Rewrite `cashpy-processor/src/gcparser/core/sql.py`'s output step:
+- [x] T014 [US1] Rewrite `cashpy-processor/src/gcparser/core/sql.py`'s output step:
       replace the stdlib-`sqlite3`-to-local-file write with a libSQL/Turso write using
       `TURSO_DATABASE_URL`/`TURSO_WRITE_TOKEN`, keeping the same
       drop/create/bulk-insert-per-table logic (including the in-database `timetable`,
       `accountsClosure` recursive CTE, and `summary_*` builds) unchanged in substance
-- [X] T015 [US1] Update `cashpy-processor/src/gcparser/__main__.py` to call the new Turso
+- [x] T015 [US1] Update `cashpy-processor/src/gcparser/__main__.py` to call the new Turso
       write path (per `contracts/ingestion-write-contract.md`) instead of writing
       `cash.db` to `output_dir`
-- [X] T016 [US1] Remove the S3 get/put calls and `boto3` usage from
+- [x] T016 [US1] Remove the S3 get/put calls and `boto3` usage from
       `cashpy-processor/src/gcparser/app.py`, or delete the file outright if no
       Lambda-specific logic remains needed for this phase (full removal of the Lambda
       deployment itself is deferred to Phase 6's cutover step, per constitution
       Principle I — this task only stops it from being the ingestion entry point)
-- [X] T017 [US1] One-time load of the existing guest sample dataset into the guest Turso
+- [x] T017 [US1] One-time load of the existing guest sample dataset into the guest Turso
       database created in T001 (static data, not part of the regular ingestion run).
       Ran `python -m gcparser -f tests/data/gnucash.gnca -o tests/data/cash` (the repo's
       existing test fixture — its `Account*`-style IDs match `config.json`'s `guest`
       block) against `cashpy-guest`'s write token. Confirmed via `turso db shell
-      cashpy-guest`: all 14 tables present, `transactions` has 2505 rows.
+cashpy-guest`: all 14 tables present, `transactions` has 2505 rows.
       **Found and fixed a real bug while doing this**: `libsql-client==0.3.1`'s
       websocket (Hrana) transport fails its handshake against Turso's current server
       (`400 Invalid response status`) — switched `save_to_sql` in
       `cashpy-processor/src/gcparser/core/sql.py` to rewrite `libsql://` URLs to
       `https://` before connecting, which uses the HTTP transport instead and works.
-- [X] T018 [US1] Manually run
+- [x] T018 [US1] Manually run
       `python -m gcparser -f <export.gnca> -o <dir>` end-to-end against the production
       Turso database and confirm via `turso db shell` that all tables are rebuilt
       correctly (quickstart.md step 1).
@@ -156,7 +156,7 @@ steps against the current S3 pipeline (per spec.md's Independent Test for this s
       discarded via `git checkout -- tests/data/cash/` before anything was staged/committed,
       so no real data ever touched git. Confirmed via `turso db shell cashpy`: 4011
       transactions, 8686 splits, 112 accounts, max transaction date 2026-08-07.
-- [X] T019 [US1] With the dashboard toggle set to `turso`, confirm the dashboard reflects
+- [x] T019 [US1] With the dashboard toggle set to `turso`, confirm the dashboard reflects
       the freshly ingested data, and document the new step count (GnuCash export → run
       script → refresh browser) against today's baseline (S3 upload → Lambda trigger →
       client refetch), per spec.md's Acceptance Scenario 2 for this story.
@@ -208,7 +208,7 @@ comparable network conditions (spec.md's Independent Test for this story).
 
 ### Implementation for User Story 2
 
-- [X] T020 [P] [US2] Verify `api/turso-token.ts` (T007) responds well within a budget that
+- [x] T020 [P] [US2] Verify `api/turso-token.ts` (T007) responds well within a budget that
       keeps total time-to-data-visible competitive (e.g. sub-200ms server-side) — add
       basic timing logging if not already visible via Vercel function logs
 
@@ -223,7 +223,7 @@ comparable network conditions (spec.md's Independent Test for this story).
       measurement below showed no regression, but flagged here as the first place to look
       if a future regression does show up.
 
-- [X] T021 [US2] Manually measure time-to-data-visible on the summary page against the
+- [x] T021 [US2] Manually measure time-to-data-visible on the summary page against the
       current S3 baseline, real-user path, per `quickstart.md` step 5
 
       Automated instead of manual (owner requested full automation via a headless-browser
@@ -237,7 +237,7 @@ comparable network conditions (spec.md's Independent Test for this story).
       network round trip) and not expected to materially change the total. A literal
       real-login DevTools measurement remains a nice-to-have, not treated as blocking.
 
-- [X] T022 [US2] Manually measure the same for the guest path, confirming no new failure
+- [x] T022 [US2] Manually measure the same for the guest path, confirming no new failure
       mode (spec.md's Acceptance Scenario 2 for this story) — e.g. guest token issuance
       failing open/closed correctly, guest database reachable
 
@@ -260,7 +260,7 @@ comparable network conditions (spec.md's Independent Test for this story).
       Turso path is equal-or-faster and noticeably more consistent (tighter spread, no
       cold-start-like outlier) — no new failure mode observed on the guest path.
 
-- [X] T023 [US2] If either measurement regresses vs. baseline, address the specific
+- [x] T023 [US2] If either measurement regresses vs. baseline, address the specific
       bottleneck found (e.g. missing index, oversized token payload, cold-start on the
       Vercel function) before proceeding — file location depends on what's found, no
       task can be pre-specified here
@@ -284,14 +284,14 @@ compared to the old one, for the same underlying dataset.
 **Independent Test**: Exercise every existing route/query against the new data layer and
 confirm output matches the old data layer (spec.md's Independent Test for this story).
 
-*(Note: spec.md orders this as User Story 4; it's sequenced last here because it's the
+_(Note: spec.md orders this as User Story 4; it's sequenced last here because it's the
 regression gate that only makes sense to run once US1's real data and US2's read path are
 both in place and exercised — it is not a story with independent technical build tasks of
-its own, it is verification of what Phases 2–4 already built.)*
+its own, it is verification of what Phases 2–4 already built.)_
 
 ### Implementation for User Story 4
 
-- [X] T024 [US4] With the toggle on `turso` and the same GnuCash export used to populate
+- [x] T024 [US4] With the toggle on `turso` and the same GnuCash export used to populate
       both the current S3 `cash.db` and the new Turso database, open every existing route
       (summary, expenses, travels, investments, analysis) and compare numbers/charts
       against the S3-backed version of the same page, per `quickstart.md` step 3.
@@ -302,7 +302,7 @@ its own, it is verification of what Phases 2–4 already built.)*
       the S3/Turso real-user paths run the exact same query code as the guest paths
       compared below — same client, same `src/db/queries/*.ts`, only the underlying
       database differs).
-- [X] T025 [US4] Repeat T024 for the guest login path against the guest Turso database, per
+- [x] T025 [US4] Repeat T024 for the guest login path against the guest Turso database, per
       `quickstart.md` step 4. Automated with the Puppeteer harness from Phase 4 (isolated
       browser contexts, guest login, protection-bypass cookie for the Preview/Turso
       deployment), extended to visit summary/expenses/travels/investments/analysis and diff
@@ -310,7 +310,7 @@ its own, it is verification of what Phases 2–4 already built.)*
       `/expenses` and `/investments` identical; `/summary`, `/travels`, `/analysis`
       **different** — S3 showed `NaN€` values, missing year/month selector chips, and a
       completely empty Analysis page, while Turso rendered correctly.
-- [X] T026 [US4] Root-caused the T025 discrepancies before touching any query code.
+- [x] T026 [US4] Root-caused the T025 discrepancies before touching any query code.
       Loading the S3 guest `cash.db` (`guest/processed/20240930_000000_gnucash_export_Yo`)
       directly with sql.js and running its queries throws `no such table: fullTransactions`
       / `no such table: summary_monthly` — that static S3 export predates the
@@ -343,12 +343,12 @@ not treated as blocking Phase 6.
 verified, per constitution Principle I. Confirm spec.md's Success Criteria are fully met
 and record final numbers.
 
-- [X] T027 Remove the data-source toggle from T010, defaulting permanently to `turso`, in
+- [x] T027 Remove the data-source toggle from T010, defaulting permanently to `turso`, in
       `cashpy_v2/src/hooks/useDB.tsx`
       **Done**: `useDB.tsx` rewritten — `useSetupDB` now unconditionally builds the Turso
       client via `fetchTursoToken`/`setupTursoDB`; no `DATA_SOURCE`/`VITE_DATA_SOURCE`
       branch remains anywhere in the file.
-- [X] T028 [P] Delete `cashpy_v2/src/services/s3Service.tsx` and the S3-fetch branch of
+- [x] T028 [P] Delete `cashpy_v2/src/services/s3Service.tsx` and the S3-fetch branch of
       `cashpy_v2/src/services/DbService.tsx` (the `sql-js`/OPFS `setupDB`/`saveFile`/
       `fetchDBOptions` path), now unused
       **Done**: `s3Service.tsx` deleted outright. `DbService.tsx` stripped to just
@@ -357,7 +357,7 @@ and record final numbers.
       path — that whole file-listing/`FileContext`/`fileName` machinery is now removed from
       `main.tsx`, `metadata.tsx`, and `GlobalContext.tsx` (the "File" dropdown on
       `/metadata` is gone; "Book Id" dropdown and KPI cards unchanged).
-- [X] T029 [P] Remove `@aws-sdk/client-s3`, `sql.js`, and related WASM/vite plugins
+- [x] T029 [P] Remove `@aws-sdk/client-s3`, `sql.js`, and related WASM/vite plugins
       (`vite-plugin-wasm`, `vite-plugin-top-level-await` if unused elsewhere) from
       `cashpy_v2/package.json`, and the `sql.js` WASM handling from `vite.config.ts` if
       nothing else needs it
@@ -365,19 +365,19 @@ and record final numbers.
       `@types/sql.js`, `vite-plugin-wasm`, `vite-plugin-top-level-await` from
       `package.json`; ran `pnpm install` to update the lockfile. `vite.config.ts`'s
       `wasm()`/`topLevelAwait()` plugins and imports removed.
-- [X] T030 [P] Update `cashpy_v2/src/config.json`: remove `bucketName`/`folderPath`/
+- [x] T030 [P] Update `cashpy_v2/src/config.json`: remove `bucketName`/`folderPath`/
       `guestFolderPath`, keep only what's still needed (Cognito fields stay; Turso URLs
       come from env vars per T004, not this file)
       **Done**: also removed `identityPoolId` (only consumer, `getCredentialsAws`, was
       deleted from `authService.tsx`/`useAuth.ts` as part of T028's cleanup).
-- [X] T031 [P] Update `cashpy_v2/vercel.json`'s CSP `connect-src` to remove the
+- [x] T031 [P] Update `cashpy_v2/vercel.json`'s CSP `connect-src` to remove the
       `*.s3.eu-west-3.amazonaws.com` entry and add the Turso database host(s)
       **Done**: removed `https://*.s3.eu-west-3.amazonaws.com` and
       `https://cognito-identity.eu-west-3.amazonaws.com` (Identity Pool endpoint, now
       unused since S3 credential vending was deleted) from `connect-src`; removed
       `'wasm-unsafe-eval'` from `script-src` (no WASM left in the bundle). Turso hosts
       (`https://*.turso.io wss://*.turso.io`) were already present from Phase 2.
-- [X] T032 [P] Delete `cashpy-processor/src/gcparser/app.py` (Lambda handler) and
+- [x] T032 [P] Delete `cashpy-processor/src/gcparser/app.py` (Lambda handler) and
       `cashpy-processor/template.yml` (SAM config), and remove `boto3` from
       `cashpy-processor/pyproject.toml` if no longer used anywhere
       **Done**: both files deleted (`git rm`, staged but not yet committed in the separate
@@ -386,18 +386,18 @@ and record final numbers.
       this only removes repo files — the live AWS Lambda function and its S3 event trigger
       are not undeployed by this task; that remains a manual follow-up, same pattern as
       spec 001's decommission note.
-- [X] T033 Update `specs/002-database-simplification/spec.md` (or a completion note) with
+- [x] T033 Update `specs/002-database-simplification/spec.md` (or a completion note) with
       the final SC-001 (service count), SC-002 (monthly cost), and SC-003 (timing)
       measurements gathered in Phases 3–4
       **Done**: see spec.md's "SC-001/SC-002 measurement" section.
-- [X] T034 Run the full `quickstart.md` one final time end-to-end post-cutover (no S3
+- [x] T034 Run the full `quickstart.md` one final time end-to-end post-cutover (no S3
       fallback remaining) to confirm nothing silently depended on the removed path
       **Done**: `vercel dev` was previously unusable locally because it never loads
       `.env.local` into `/api` functions (only pulls the linked project's remote
       "Development" env target) — fixed by exporting `.env.local` into the shell before
       spawning `vercel dev` (`scripts/dev-with-api.sh`, `npm run dev:api`), and by
       automating platform-token minting (`scripts/mint-turso-token.sh`, `npm run
-      mint-turso-token`) since the token is intentionally Production/Preview-only in
+mint-turso-token`) since the token is intentionally Production/Preview-only in
       Vercel. Also fixed a `vercel.json` SPA-fallback rewrite that was swallowing Vite's
       dev-mode source/`@`-prefixed requests (`/dashboard/src/main.tsx`,
       `/dashboard/@vite/client`) and serving `index.html` instead. With both fixed, a
@@ -414,11 +414,11 @@ through SC-005) met and recorded.
 
 ## Post-Completion Incident
 
-- [X] T035 Resolve stale CSP on `victorvaquero.com/dashboard` blocking real (non-guest)
+- [x] T035 Resolve stale CSP on `victorvaquero.com/dashboard` blocking real (non-guest)
       logins from loading any Turso data
       **Done**: root-caused to an undocumented `vercel.json` rewrite-proxy + path-scoped
       CSP override living only in `resumeweb`'s (the domain-owning Vercel project's)
-      *live deployment*, never committed to that repo's git history, predating this
+      _live deployment_, never committed to that repo's git history, predating this
       spec's T031 CSP update and still allowing the old S3/Cognito-identity origins
       while blocking `*.turso.io`. Fixed (at the time) by restoring the rewrite and a
       corrected CSP via commit `434b6cf` and redeploying. Full incident writeup in

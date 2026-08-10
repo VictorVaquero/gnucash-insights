@@ -4,9 +4,9 @@
 
 ## Why this matters
 
-Direct owner ask this round: *"we should also aim to have the page to be mobile ready,
+Direct owner ask this round: _"we should also aim to have the page to be mobile ready,
 especially the graphs since right now they are mostly hover based, how can we improve
-that?"* Charts are the single hardest part of this app to use on a phone, and they're
+that?"_ Charts are the single hardest part of this app to use on a phone, and they're
 also where the two charting approaches (Recharts vs. hand-rolled D3) diverge most in how
 hard that is to fix.
 
@@ -31,7 +31,7 @@ hard that is to fix.
   along the series the way a mouse can, and no visual affordance telling a touch user
   that the chart is interactive at all.
 - Spec 004 (mobile responsiveness, already implemented — see
-  `specs/004-mobile-responsiveness/`) already added *some* tap-support (its FR-007) and
+  `specs/004-mobile-responsiveness/`) already added _some_ tap-support (its FR-007) and
   fixed the layout-level responsiveness of surrounding pages. This doc's scope is
   **interaction quality specifically for charts**, which spec 004 improved but — per the
   owner's framing this round ("mostly hover based") — did not fully solve. Treat spec
@@ -54,7 +54,7 @@ hard that is to fix.
 1. **Always-visible key values, no interaction required.** For the most important 1–2
    data points per chart (e.g. current month total, latest data point), render the
    value as a persistent on-chart label instead of gating it behind hover/tap entirely.
-   This is the cheapest fix and helps *every* user, not just touch users — hover-only
+   This is the cheapest fix and helps _every_ user, not just touch users — hover-only
    information is also bad for accessibility (see
    [07-accessibility.md](07-accessibility.md)).
 2. **Tap-to-pin tooltip, not tap-to-flash.** Where detail-on-demand is still needed,

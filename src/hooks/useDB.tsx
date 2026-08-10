@@ -41,9 +41,7 @@ export const useSetupDB = ({
 }) => {
   const [db, setDB] = useState<AppDatabase>();
 
-  const { data: tursoToken, isError } = useQuery(
-    tursoTokenOptions({ user, getIdToken })
-  );
+  const { data: tursoToken, isError } = useQuery(tursoTokenOptions({ user, getIdToken }));
 
   useEffect(() => {
     if (tursoToken) {

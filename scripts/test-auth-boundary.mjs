@@ -72,7 +72,7 @@ const testForgedGuestBearer = async () => {
   record(
     "Authorization: Bearer guest -> 401, no token/url/accountConfig",
     res.status === 401 && bodyEmpty,
-    `status=${res.status} bodyLength=${body.length}`
+    `status=${res.status} bodyLength=${body.length}`,
   );
 };
 
@@ -108,7 +108,7 @@ const testForgedRealToken = async () => {
   record(
     "Forged/malformed real-token Authorization -> 401, no partial credentials",
     res.status === 401 && body.length === 0,
-    `status=${res.status} bodyLength=${body.length}`
+    `status=${res.status} bodyLength=${body.length}`,
   );
 };
 
@@ -136,15 +136,13 @@ const testRateLimit = async () => {
   }
   const rateLimited = responses.filter((res) => res.status === 429);
   const retryAfterPresent = rateLimited.every((res) => res.headers.has("retry-after"));
-  const unexpectedStatus = responses.filter(
-    (res) => res.status !== 200 && res.status !== 429
-  );
+  const unexpectedStatus = responses.filter((res) => res.status !== 200 && res.status !== 429);
   record(
     `Burst of ${BURST_SIZE} guest requests -> at least one 429 with Retry-After`,
     rateLimited.length > 0 && retryAfterPresent && unexpectedStatus.length === 0,
     `429s=${rateLimited.length}/${BURST_SIZE} unexpectedStatuses=${unexpectedStatus
       .map((res) => res.status)
-      .join(",")}`
+      .join(",")}`,
   );
 };
 

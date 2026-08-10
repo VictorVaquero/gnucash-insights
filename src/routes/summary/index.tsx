@@ -1,10 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { accountsOptions } from "@/db/queries/global";
-import {
-  netCostsYearMonthOptions,
-  transactsSumOptions,
-} from "@/db/queries/summary";
+import { netCostsYearMonthOptions, transactsSumOptions } from "@/db/queries/summary";
 
 import {
   assetsDebtsYearMonthOptions,
@@ -73,26 +70,18 @@ export const Route = createFileRoute("/summary/")({
     if (db && bookId && auth?.user) {
       const dbconf = getConfig(auth.user);
       queryClient.ensureQueryData(accountsOptions({ db, bookId }));
-      queryClient.ensureQueryData(
-        netCostsYearMonthOptions({ db, user: auth.user, bookId })
-      );
-      queryClient.ensureQueryData(
-        assetsDebtsYearMonthOptions({ db, user: auth.user, bookId })
-      );
+      queryClient.ensureQueryData(netCostsYearMonthOptions({ db, user: auth.user, bookId }));
+      queryClient.ensureQueryData(assetsDebtsYearMonthOptions({ db, user: auth.user, bookId }));
       queryClient.ensureQueryData(
         transactsSumOptions({
           db,
           bookId,
           accountIds: [dbconf.income, dbconf.taxes],
           periodicity: "monthly",
-        })
+        }),
       );
-      queryClient.ensureQueryData(
-        taxesYearMonthOptions({ db, user: auth.user, bookId })
-      );
-      queryClient.ensureQueryData(
-        profitLossYearMonthOptions({ db, user: auth.user, bookId })
-      );
+      queryClient.ensureQueryData(taxesYearMonthOptions({ db, user: auth.user, bookId }));
+      queryClient.ensureQueryData(profitLossYearMonthOptions({ db, user: auth.user, bookId }));
     }
   },
 });
