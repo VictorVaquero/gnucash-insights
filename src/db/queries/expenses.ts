@@ -6,7 +6,7 @@ import { accountsTable, timeTable } from "../schema";
 import { subqueryColumnName } from "../utils";
 import { fullTransactionsQuery, getAccountsClosureQuery, getDomain } from "./global";
 
-const getExpensesYearlyQuery = async <TDB extends AnyDB>({
+export const getExpensesYearlyQuery = async <TDB extends AnyDB>({
   db,
   bookId,
 }: {

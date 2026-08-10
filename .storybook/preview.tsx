@@ -8,6 +8,7 @@ import {
   createRootRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { handlers } from "../src/mocks/handlers";
 
 /*
  * Initializes MSW
@@ -31,6 +32,9 @@ export const decorators = [
 
 const preview: Preview = {
   parameters: {
+    msw: {
+      handlers,
+    },
     layout: "centered",
     backgrounds: {
       values: [
