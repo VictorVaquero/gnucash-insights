@@ -9,6 +9,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "prepare": "husky",
     "dev": "vite",
     "dev:api": "bash scripts/dev-with-api.sh",
     "mint-turso-token": "bash scripts/mint-turso-token.sh",
@@ -81,7 +82,9 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "eslint-plugin-storybook": "^0.11.2",
+    "husky": "^9.1.7",
     "knip": "^6.32.1",
+    "lint-staged": "^15.5.2",
     "msw": "^2.7.0",
     "msw-storybook-addon": "^2.0.4",
     "postcss": "^8.5.2",
@@ -97,6 +100,15 @@
   "msw": {
     "workerDirectory": [
       "public"
+    ]
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
     ]
   },
   "pnpm": {
