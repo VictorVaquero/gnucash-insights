@@ -26,6 +26,19 @@ outstanding checks, copied forward unchanged from their source specs:
   `specs/004-mobile-responsiveness/quickstart.md`.
 - **Spec 004, T024**: full validation matrix across all four user stories plus at least
   one real phone.
+- **Spec 005 (repo hygiene, security hardening, public-repo readiness), T046**: golden
+  path (login → data loads → charts render) and guest path, re-verified in an actual
+  browser — desktop and at least one mobile viewport — against the T001 baseline, after
+  this spec's dependency bumps (`drizzle-orm`, `pnpm.overrides` for `fast-xml-parser`/
+  `seroval`/`tar`) and CSP tightening (`script-src 'unsafe-inline'` dropped). `tsc
+  --noEmit`, `vite build`, and `eslint` are all clean, and US4's auth-boundary
+  behavior was independently confirmed via a live Preview deployment (T023, 5/5), but
+  none of that substitutes for an actual rendered-page check — no browser tool is
+  available in this session. **Not yet done.**
+- **Spec 005, T038**: AWS Cognito console check (MFA/password-policy/account-lockout/
+  self-signup settings) for User Pool `eu-west-3_VHPSFHPrK` — deferred by the owner in
+  this session (CLI identity lacked `cognito-idp:DescribeUserPool`); see
+  `docs/decisions.md` under "Spec 005 US6". **Not yet done.**
 
 ## Goals
 
@@ -54,6 +67,8 @@ check something on a phone" mode.
    [16](16-internationalization.md)'s i18n work each land, append their own
    real-device/browser verification items here rather than treating each as fully done
    at the code-review stage.
+4. **Phase 4**: spec 005 items — the golden/guest-path browser re-check against the
+   T001 baseline, and the AWS Cognito console settings check.
 
 ## Open decisions (owner input needed)
 

@@ -60,13 +60,6 @@ export const getErrorMessage = (error: unknown) => {
   return String(error);
 };
 
-export function getObjByKey<T extends object>(obj: T, key: string): T[keyof T] {
-  if (key in obj) {
-    return obj[key as keyof T];
-  }
-  throw Error(`Unknown ${key} in object ${obj}`);
-}
-
 // Matches Tailwind's default `md` breakpoint (768px) so JS-side layout decisions
 // stay in sync with the CSS breakpoint used throughout the app.
 const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";

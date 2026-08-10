@@ -1,0 +1,36 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Route files, Vercel functions, and Storybook stories are only ever loaded by their
+  // respective runtimes, never imported by other source files, so they must be listed
+  // as entry points or every symbol in them would be misreported as unused.
+  "entry": [
+    "src/routeTree.gen.ts",
+    "api/**/*.ts",
+    "src/**/*.stories.tsx",
+    "src/drizzle.config.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}", "api/**/*.ts"],
+  "ignore": [
+    // shadcn/ui-generated boilerplate; not hand-authored, not worth pruning per-component.
+    "src/components/ui/**"
+  ],
+  "ignoreDependencies": [
+    // CSS-only imports (Tailwind plugin, animation utilities); knip's static analysis
+    // only follows JS/TS imports, so it can't see these are used from index.css.
+    "tw-animate-css",
+    "tailwindcss-animate",
+    "autoprefixer",
+    "postcss",
+    // Registered as a Storybook addon in .storybook/main.ts but only activates via an
+    // onboarding-flow UI knip's static analysis can't trace.
+    "@storybook/addon-onboarding",
+    // Used only as a CLI (`vercel dev`, `vercel env pull`) from package.json scripts and
+    // scripts/*.sh, never imported as a module — knip only tracks JS/TS imports, not
+    // shell-script CLI invocations.
+    "vercel"
+  ]
+  // Individual unused-export/unused-type false positives (vendored Tremor chart utils,
+  // Drizzle ORM row types kept for schema completeness, the parked Cognito self-signup
+  // flow) are annotated inline with `/** @public */` JSDoc tags at their declaration
+  // site instead of listed here, so the exception travels with the code if it moves.
+}

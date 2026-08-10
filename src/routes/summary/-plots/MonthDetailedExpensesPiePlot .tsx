@@ -16,7 +16,7 @@ import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
-export interface Data {
+interface Data {
   account: string | null;
   date: string;
   value: number;

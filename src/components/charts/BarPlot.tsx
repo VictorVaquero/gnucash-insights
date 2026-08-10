@@ -876,4 +876,4 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
 
 BarChart.displayName = "BarChart";
 
-export { BarChart, type BarChartEventProps, type TooltipProps };
+export { BarChart };

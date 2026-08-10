@@ -11,7 +11,7 @@ import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
 import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import { useAuth } from '@/contexts/useAuthContext';
 
-export interface Data {
+interface Data {
     key: string,
     name: string,
     value: number

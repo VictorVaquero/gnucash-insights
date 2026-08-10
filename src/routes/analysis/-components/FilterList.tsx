@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-export type Query = Record<string, string>;
+type Query = Record<string, string>;
 export interface SearchQuery {
     name: string,
     query: Query 

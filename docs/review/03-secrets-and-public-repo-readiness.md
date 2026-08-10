@@ -1,7 +1,7 @@
 # Secrets & public-repo readiness
 
 **Priority**: P0 — do this pass **before** the repo is made public, not after.
-**Status**: Planning done — see specs/005-repo-hygiene-security-and-public-readiness
+**Status**: Implemented — see specs/005-repo-hygiene-security-and-public-readiness
 
 ## Why this matters
 

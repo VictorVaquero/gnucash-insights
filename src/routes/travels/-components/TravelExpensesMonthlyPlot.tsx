@@ -21,7 +21,7 @@ import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
 import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 
-export interface Data {
+interface Data {
   date: string;
   value: number;
 }

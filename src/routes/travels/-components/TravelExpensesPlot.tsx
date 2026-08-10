@@ -18,7 +18,7 @@ import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs.tsx
 import { useQuery } from "@tanstack/react-query";
 import { getColor } from "./utils";
 
-export interface Data {
+interface Data {
   name: string;
   ini: string;
   fin: string;

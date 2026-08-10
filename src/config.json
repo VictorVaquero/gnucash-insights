@@ -2,33 +2,5 @@
   "region": "eu-west-3",
   "userPoolId": "eu-west-3_VHPSFHPrK",
   "clientId": "7q9umifk44cdfavtdolspaj991",
-  "cognitoUrl": "cognito-idp.eu-west-3.amazonaws.com/eu-west-3_VHPSFHPrK",
-  "database": {
-    "victor": {
-      "expenses": "REDACTED-ACCOUNT-GUID",
-      "income": "REDACTED-ACCOUNT-GUID",
-      "checking": "REDACTED-ACCOUNT-GUID",
-      "savings": "REDACTED-ACCOUNT-GUID",
-      "assets": "REDACTED-ACCOUNT-GUID",
-      "working": "REDACTED-ACCOUNT-GUID",
-      "liability": "REDACTED-ACCOUNT-GUID",
-      "investments": "REDACTED-ACCOUNT-GUID",
-      "taxes": "REDACTED-ACCOUNT-GUID",
-      "taxesAll": ["Impuestos", "IRPF", "Seguridad Social", "Contingencias Comunes", "Desempleo", "Formacion"],
-      "tripDesc": "Viaje"
-    },
-    "guest": {
-      "expenses": "Account29",
-      "income": "Account33",
-      "checking": "Account24",
-      "savings": "Account31",
-      "assets": "Account3",
-      "working": "Account19",
-      "liability": "Account46",
-      "investments": "Account19",
-      "taxes": "Account56",
-      "taxesAll": ["Account6", "Account28", "Account5", "Account42", "Account57", "Account56"],
-      "tripDesc": "Trip"
-    }
-  }
+  "cognitoUrl": "cognito-idp.eu-west-3.amazonaws.com/eu-west-3_VHPSFHPrK"
 }
