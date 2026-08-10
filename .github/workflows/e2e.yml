@@ -19,6 +19,13 @@ jobs:
       - run: pnpm run test:e2e
         env:
           CI: true
+          # playwright.config.ts's webServer runs `vercel dev`, which needs its own
+          # auth to talk to the Vercel API — separate from this app's own Turso/Cognito
+          # env vars below. VERCEL_ORG_ID/VERCEL_PROJECT_ID mirror the gitignored
+          # .vercel/project.json (not secret, just identifiers); VERCEL_TOKEN is.
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_ZzLBh1JbHsCn8ioMqZFP60ej
+          VERCEL_PROJECT_ID: prj_pXPurcxMsbWVwMiDxQxeFkNg3NpM
           TURSO_PLATFORM_TOKEN: ${{ secrets.TURSO_PLATFORM_TOKEN }}
           TURSO_ORG_SLUG: ${{ secrets.TURSO_ORG_SLUG }}
           TURSO_DATABASE_NAME: ${{ secrets.TURSO_DATABASE_NAME }}
