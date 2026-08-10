@@ -56,7 +56,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.66.0",
     "@tanstack/react-router": "^1.102.1",
-    "@tanstack/react-table": "^8.20.6",
+    "@tanstack/react-table": "^9.0.1",
     "@tanstack/router-plugin": "^1.102.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
