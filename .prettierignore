@@ -1,0 +1,10 @@
+dist/
+dist-ssr/
+storybook-static/
+src/routeTree.gen.ts
+pnpm-lock.yaml
+
+# Tool-managed files, not project source
+.claude/
+.specify/
+public/mockServiceWorker.js
