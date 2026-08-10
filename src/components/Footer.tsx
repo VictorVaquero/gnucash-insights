@@ -1,11 +1,11 @@
 const YEAR = new Date().getFullYear();
 
 export const Footer = () => (
-  <footer className="h-8 w-full flex items-center justify-center gap-1.5 px-6 text-xs text-shark-400 font-light">
+  <footer className="h-8 w-full flex items-center justify-center gap-1.5 px-6 text-xs text-shark-50 font-light">
     <span>Made by Victor</span>
-    <span className="text-shark-600">·</span>
+    <span className="text-shark-50">·</span>
     <span>&copy; {YEAR}</span>
-    <span className="text-shark-600">·</span>
+    <span className="text-shark-50">·</span>
     <a
       href="https://victorvaquero.com"
       target="_blank"

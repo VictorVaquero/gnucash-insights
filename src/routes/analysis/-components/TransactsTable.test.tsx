@@ -2,6 +2,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { axe } from "vitest-axe";
 import { DateTime } from "luxon";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import type { FullTransaction } from "..";
@@ -34,6 +35,11 @@ const data: FullTransaction[] = Array.from({ length: ROW_COUNT }, (_, i) => ({
 }));
 
 describe("TransactTable", () => {
+  it("has no axe violations", async () => {
+    const { container } = render(<TransactTable data={data} setFilteredData={noop} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
   it("shows only the first page (8 rows) by default", () => {
     render(<TransactTable data={data} setFilteredData={noop} />);
 

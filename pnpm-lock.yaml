@@ -104,6 +104,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@axe-core/react':
+        specifier: ^4.12.1
+        version: 4.12.1
       '@chromatic-com/storybook':
         specifier: ^3.2.4
         version: 3.2.7(react@19.2.0)(storybook@8.6.14(prettier@3.7.3))
@@ -251,6 +254,9 @@ importers:
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@edge-runtime/vm@3.2.0)(@types/node@20.19.25)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1)(msw@2.12.3(@types/node@20.19.25)(typescript@5.9.3))(vite@7.3.0(@types/node@20.19.25)(jiti@2.7.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.9.0))
+      vitest-axe:
+        specifier: ^0.1.0
+        version: 0.1.0(vitest@4.1.10)
 
 packages:
 
@@ -381,6 +387,9 @@ packages:
   '@aws/lambda-invoke-store@0.2.1':
     resolution: {integrity: sha512-sIyFcoPZkTtNu9xFeEoynMef3bPJIAbOfUh+ueYcfhVl6xm2VRtMcMclSxmZCMnHHd4hlYKJeq/aggmBEWynww==}
     engines: {node: '>=18.0.0'}
+
+  '@axe-core/react@4.12.1':
+    resolution: {integrity: sha512-8tZysxguMYomHHFA1iPSpJfWiHX0LPSXdHxboR1YKPs+taNOG8wiEqLaGdgXaFDZ2WKyX/+bzvlLcqdNsR/Gdg==}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -3966,6 +3975,10 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
+  axe-core@4.12.1:
+    resolution: {integrity: sha512-s7iGf5GaVMxEG0ENN9x+xTr7GFZCb1ZP/1uATUpCEK2X78nDB3RwbtFCo9pGAf9ru+VwoQ464DkaLEeRM08wJA==}
+    engines: {node: '>=4'}
+
   axe-core@4.13.0:
     resolution: {integrity: sha512-UzGt8zg7Ny8djbYMhxl2zuEevVa7r2gJjYY5Lwr1xM7+XU2nd6CkIWFTVcCIbAP63vSz71NaVyyuSk9lHKcy0A==}
     engines: {node: '>=4'}
@@ -6506,6 +6519,9 @@ packages:
   redux@5.0.1:
     resolution: {integrity: sha512-M9/ELqF6fy8FwmkpnF0S3YKOqMyoWJ4+CS5Efg2ct3oY9daQvd/Pc71FpGZsVsbl3Cpb+IIcjBDUnnyBdQbq4w==}
 
+  requestidlecallback@0.3.0:
+    resolution: {integrity: sha512-TWHFkT7S9p7IxLC5A1hYmAYQx2Eb9w1skrXmQ+dS1URyvR8tenMLl4lHbqEOUnpEYxNKpkVMXUgknVpBZWXXfQ==}
+
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
@@ -7336,6 +7352,11 @@ packages:
       yaml:
         optional: true
 
+  vitest-axe@0.1.0:
+    resolution: {integrity: sha512-jvtXxeQPg8R/2ANTY8QicA5pvvdRP4F0FsVUAHANJ46YCDASie/cuhlSzu0DGcLmZvGBSBNsNuK3HqfaeknyvA==}
+    peerDependencies:
+      vitest: '>=0.16.0'
+
   vitest@4.1.10:
     resolution: {integrity: sha512-R9jUTe5S4Qb0HCd4TNqpC7oGcrMssMRGXLW80ubjWsW9VH5GF8y1Y0SFLY9AbqSk6nt0PnOx4H4WNJYZ13GUPw==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
@@ -8004,6 +8025,11 @@ snapshots:
       tslib: 2.8.1
 
   '@aws/lambda-invoke-store@0.2.1': {}
+
+  '@axe-core/react@4.12.1':
+    dependencies:
+      axe-core: 4.12.1
+      requestidlecallback: 0.3.0
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -11593,6 +11619,8 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
+  axe-core@4.12.1: {}
+
   axe-core@4.13.0: {}
 
   b4a@1.8.1: {}
@@ -13725,7 +13753,7 @@ snapshots:
 
   node-abi@3.85.0:
     dependencies:
-      semver: 7.7.3
+      semver: 7.8.5
     optional: true
 
   node-domexception@1.0.0: {}
@@ -14288,6 +14316,8 @@ snapshots:
       redux: 5.0.1
 
   redux@5.0.1: {}
+
+  requestidlecallback@0.3.0: {}
 
   require-directory@2.1.1: {}
 
@@ -15179,6 +15209,16 @@ snapshots:
       terser: 5.44.1
       tsx: 4.21.0
       yaml: 2.9.0
+
+  vitest-axe@0.1.0(vitest@4.1.10):
+    dependencies:
+      aria-query: 5.3.2
+      axe-core: 4.13.0
+      chalk: 5.6.2
+      dom-accessibility-api: 0.5.16
+      lodash-es: 4.18.1
+      redent: 3.0.0
+      vitest: 4.1.10(@edge-runtime/vm@3.2.0)(@types/node@20.19.25)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1)(msw@2.12.3(@types/node@20.19.25)(typescript@5.9.3))(vite@7.3.0(@types/node@20.19.25)(jiti@2.7.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.9.0))
 
   vitest@4.1.10(@edge-runtime/vm@3.2.0)(@types/node@20.19.25)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1)(msw@2.12.3(@types/node@20.19.25)(typescript@5.9.3))(vite@7.3.0(@types/node@20.19.25)(jiti@2.7.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.9.0)):
     dependencies:

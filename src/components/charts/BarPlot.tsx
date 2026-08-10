@@ -621,6 +621,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
     >
       <ResponsiveContainer>
         <RechartsBarChart
+          accessibilityLayer
           data={data}
           onClick={
             hasOnValueChange && (activeLegend || activeBar)

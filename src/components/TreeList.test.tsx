@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { axe } from "vitest-axe";
 import { TreeList } from "./TreeList";
 
 const leaf = (key: string, header: string) => ({
@@ -22,6 +23,11 @@ const data = [
 ];
 
 describe("TreeList", () => {
+  it("has no axe violations", async () => {
+    const { container } = render(<TreeList data={data} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
   it("hides children until the parent row is clicked, then shows them", async () => {
     const user = userEvent.setup();
     render(<TreeList data={data} />);

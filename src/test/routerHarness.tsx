@@ -10,8 +10,8 @@ import {
 } from "@tanstack/react-router";
 
 export interface AuthStub {
-  user?: string;
-  getIdToken: () => Promise<string>;
+  user: string | undefined;
+  getIdToken: () => Promise<string | undefined>;
   signIn: () => Promise<void>;
   signInGuest: () => Promise<void>;
   signOut: () => void;

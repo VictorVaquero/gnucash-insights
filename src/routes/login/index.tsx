@@ -44,6 +44,9 @@ export const LoginPage = () => {
       <div className="text-white p-10 py-6 bg-shark-800 rounded">
         <form className="pt-4" onSubmit={handleSignIn}>
           <div>
+            <label htmlFor="user" className="sr-only">
+              Email
+            </label>
             <input
               className="p-4 bg-shark-600 text-white focus-visible:outline focus-visible:outline-shark-50 focus-visible:outline-1"
               name="user"
@@ -57,6 +60,9 @@ export const LoginPage = () => {
             />
           </div>
           <div className="mt-2">
+            <label htmlFor="password" className="sr-only">
+              Password
+            </label>
             <input
               className="inputText p-4 bg-shark-600 text-white focus-visible:outline focus-visible:outline-shark-50 focus-visible:outline-1"
               name="password"
