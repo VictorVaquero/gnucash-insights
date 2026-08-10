@@ -16,8 +16,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      - run: pnpm exec tsc --noEmit
+      # `vite build` generates src/routeTree.gen.ts (gitignored, tanstackRouter() Vite
+      # plugin) — must run before typecheck/test, which import it directly and have no
+      # plugin of their own to generate it on a clean checkout.
       - run: pnpm build
+      - run: pnpm exec tsc --noEmit
       - run: pnpm test
       - run: pnpm run format:check
       - run: pnpm run perf
