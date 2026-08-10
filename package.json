@@ -22,10 +22,26 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
+    "perf": "lhci autorun",
+    "size": "size-limit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "knip": "knip"
   },
+  "size-limit": [
+    {
+      "name": "main bundle",
+      "path": "dist/dashboard/assets/main-*.js",
+      "gzip": true,
+      "limit": "350 KB"
+    },
+    {
+      "name": "chart route chunk",
+      "path": "dist/dashboard/assets/CartesianChart-*.js",
+      "gzip": true,
+      "limit": "89 KB"
+    }
+  ],
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.744.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -61,8 +77,10 @@
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.4",
     "@eslint/js": "^9.20.0",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.62.1",
     "@recharts/devtools": "^0.0.5",
+    "@size-limit/file": "^13.0.3",
     "@storybook/addon-essentials": "^8.5.3",
     "@storybook/addon-interactions": "^8.5.3",
     "@storybook/addon-onboarding": "^8.5.3",
@@ -97,6 +115,7 @@
     "msw-storybook-addon": "^2.0.4",
     "postcss": "^8.5.2",
     "prettier": "^3.7.3",
+    "size-limit": "^13.0.3",
     "storybook": "^8.5.3",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
