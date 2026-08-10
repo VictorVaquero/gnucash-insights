@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "devCommand": "vite build && vite preview --port $PORT --strictPort",
   "rewrites": [
     { "source": "/dashboard/api/(.*)", "destination": "/api/$1" },
     {
