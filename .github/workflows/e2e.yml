@@ -1,0 +1,19 @@
+name: E2E
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # TODO(spec 006 US2, T040): install Playwright browsers and run `pnpm run test:e2e`
+      # once playwright.config.ts and e2e/*.spec.ts exist.
