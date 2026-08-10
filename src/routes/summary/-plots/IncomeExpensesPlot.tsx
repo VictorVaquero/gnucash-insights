@@ -21,11 +21,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
 type colorType = "g" | "r";
-export interface InputData {
-  date: string;
-  dateLabel: string;
-  value: number;
-}
 export interface PlotData {
   date: string;
   dateLabel: string;

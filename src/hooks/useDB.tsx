@@ -2,6 +2,7 @@ import { useRouteContext } from "@tanstack/react-router";
 import { useContext, useEffect, useState } from "react";
 
 import { AppDatabase } from "@/db/dbType";
+import { setAccountConfig } from "@/db/utils";
 import { DomainContext } from "@/contexts/GlobalContext";
 import { setupTursoDB } from "@/services/DbService";
 import { fetchTursoToken } from "@/services/tursoService";
@@ -47,8 +48,9 @@ export const useSetupDB = ({
   useEffect(() => {
     if (tursoToken) {
       setDB(setupTursoDB({ url: tursoToken.url, token: tursoToken.token }));
+      if (user) setAccountConfig(user, tursoToken.accountConfig);
     }
-  }, [tursoToken]);
+  }, [tursoToken, user]);
 
   const resetSetupDB = () => {
     setDB(undefined);

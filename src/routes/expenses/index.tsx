@@ -84,7 +84,7 @@ const ExpenseRow = ({
   );
 };
 
-export const Expenses = () => {
+const Expenses = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();

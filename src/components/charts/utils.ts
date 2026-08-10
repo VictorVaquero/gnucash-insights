@@ -2,6 +2,7 @@
 
 export type ColorUtility = "bg" | "stroke" | "fill" | "text";
 
+/** @public Vendored Tremor color-utility map; kept alongside its sibling helpers even where not all colors are currently consumed. */
 export const chartColors = {
   blue: {
     bg: "bg-blue-500",
@@ -119,6 +120,7 @@ export const getYAxisDomain = (
 
 // Tremor hasOnlyOneValueForKey [v0.1.0]
 
+/** @public Vendored Tremor helper; kept as part of the vendored utility set even though no current caller needs it. */
 export function hasOnlyOneValueForKey<T extends object>(
   array: T[],
   keyToCheck: keyof T

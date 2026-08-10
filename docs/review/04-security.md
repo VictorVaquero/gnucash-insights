@@ -1,6 +1,6 @@
 # Security (in depth)
 
-**Priority**: P0/P1 · **Status**: Planning done — see specs/005-repo-hygiene-security-and-public-readiness
+**Priority**: P0/P1 · **Status**: Implemented — see specs/005-repo-hygiene-security-and-public-readiness
 
 ## Why this matters
 

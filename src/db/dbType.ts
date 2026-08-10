@@ -1,10 +1,9 @@
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-import { SQLJsDatabase } from "drizzle-orm/sql-js";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
-// Concrete union: used at the app boundary (state/context/hooks) where a db
+// Concrete type: used at the app boundary (state/context/hooks) where a db
 // instance is just held and passed along, not used to compose subqueries.
-export type AppDatabase = SQLJsDatabase | LibSQLDatabase;
+export type AppDatabase = LibSQLDatabase;
 
 // Generic constraint: used by query-builder functions in db/queries/*.ts.
 // A plain `AppDatabase` union parameter breaks Drizzle's type inference for

@@ -1,5 +1,4 @@
-import { getObjByKey } from "@/common/utils";
-import config from "@/config.json";
+import { AccountConfig } from "@/services/tursoService";
 import { SQL, Subquery, sql } from "drizzle-orm";
 
 
@@ -8,12 +7,19 @@ export const subqueryColumnName = <T>(
   column: SQL.Aliased<T>
 ) => sql<T> `${sql.identifier(table._.alias)}.${sql.identifier(column.fieldAlias)}`;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const firstRow = (query: any) => async () => { const data = await query.execute(); return data[0] };
+// Populated by useSetupDB (src/hooks/useDB.tsx) as soon as each user's
+// /api/turso-token response arrives — the account-GUID mapping is no longer
+// file-based config, it's a runtime API response (data-model.md entity 2).
+const accountConfigByUser = new Map<string, AccountConfig>();
 
-export const getConfig = (user: string|undefined) => {
+export const setAccountConfig = (user: string, accountConfig: AccountConfig) => {
+  accountConfigByUser.set(user, accountConfig);
+};
+
+export const getConfig = (user: string | undefined): AccountConfig => {
   if (!user) throw Error('User not defined, cant create query');
-  const dbconf = getObjByKey(config.database, user);
+  const dbconf = accountConfigByUser.get(user);
+  if (!dbconf) throw Error(`Account config not yet loaded for user ${user}`);
   return dbconf;
 };
 

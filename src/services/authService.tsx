@@ -7,10 +7,27 @@ import {
   SignUpCommand,
   type InitiateAuthCommandInput
 } from "@aws-sdk/client-cognito-identity-provider";
+import { z } from "zod";
 
-import config from "../config.json";
+import rawConfig from "../config.json";
 
+const configSchema = z.object({
+  region: z.string().min(1),
+  userPoolId: z.string().min(1),
+  clientId: z.string().min(1),
+  cognitoUrl: z.string().min(1),
+});
 
+const parsedConfig = configSchema.safeParse(rawConfig);
+if (!parsedConfig.success) {
+  const fieldList = parsedConfig.error.issues
+    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    .join("; ");
+  throw new Error(`Invalid src/config.json — ${fieldList}`);
+}
+const config = parsedConfig.data;
+
+/** @public Shared Cognito client; also exported for reuse by callers of `signUp`/`confirmSignUp`. */
 export const cognitoClient = new CognitoIdentityProviderClient({
   region: config.region,
 });
@@ -81,6 +98,7 @@ const newPwdRequired = async (username: string, password: string, session: strin
 
 
 
+/** @public Self-signup flow, not currently wired to a route; kept pending the Cognito self-signup decision (spec 005 US6). */
 export const signUp = async (email: string, password: string) => {
   const params = {
     ClientId: config.clientId,
@@ -104,6 +122,7 @@ export const signUp = async (email: string, password: string) => {
   }
 };
 
+/** @public Self-signup flow, not currently wired to a route; kept pending the Cognito self-signup decision (spec 005 US6). */
 export const confirmSignUp = async (username: string, code: string) => {
   const params = {
     ClientId: config.clientId,

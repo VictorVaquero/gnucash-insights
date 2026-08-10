@@ -1,7 +1,22 @@
+export interface AccountConfig {
+  expenses: string;
+  income: string;
+  checking: string;
+  savings: string;
+  assets: string;
+  working: string;
+  liability: string;
+  investments: string;
+  taxes: string;
+  taxesAll: string[];
+  tripDesc: string;
+}
+
 export interface TursoTokenResponse {
   url: string;
   token: string;
   expiresAt: string;
+  accountConfig: AccountConfig;
 }
 
 export const fetchTursoToken = async ({

@@ -28,6 +28,7 @@ export const metaTable = sqliteTable("meta", {
   minDate: customDateTime(),
   maxDate: customDateTime(),
 });
+/** @public Row type for the `meta` table; part of the schema's typed query surface. */
 export type Meta = InferSelectModel<typeof metaTable>;
 
 export const booksTable = sqliteTable("books", {
@@ -39,6 +40,7 @@ export const booksTable = sqliteTable("books", {
   countSchedxaction: integer().notNull(),
   countTransaction: integer().notNull(),
 });
+/** @public Row type for the `books` table; part of the schema's typed query surface. */
 export type Book = InferSelectModel<typeof booksTable>;
 
 export const accountsTable = sqliteTable("accounts", {
@@ -55,6 +57,7 @@ export const accountsTable = sqliteTable("accounts", {
 });
 export type Account = InferSelectModel<typeof accountsTable>;
 
+/** @public Mirrors the real GnuCash `commodities` table; kept for schema completeness even though no current query joins against it. */
 export const commoditiesTable = sqliteTable("commodities", {
   bookId: text()
     .notNull()
@@ -66,8 +69,10 @@ export const commoditiesTable = sqliteTable("commodities", {
   version: text(),
   code: text(),
 });
+/** @public Row type for the `commodities` table; part of the schema's typed query surface. */
 export type Commodity = InferSelectModel<typeof commoditiesTable>;
 
+/** @public Mirrors the real GnuCash `prices` table; kept for schema completeness even though no current query joins against it. */
 export const pricesTable = sqliteTable("prices", {
   bookId: text()
     .notNull()
@@ -84,6 +89,7 @@ export const pricesTable = sqliteTable("prices", {
     .references(() => commoditiesTable.id),
   value: real().notNull(),
 });
+/** @public Row type for the `prices` table; part of the schema's typed query surface. */
 export type Price = InferSelectModel<typeof pricesTable>;
 
 export const transactionsTable = sqliteTable("transactions", {
@@ -102,6 +108,7 @@ export const transactionsTable = sqliteTable("transactions", {
   slFromSchedXaction: text(),
   slNotes: text(),
 });
+/** @public Row type for the `transactions` table; part of the schema's typed query surface. */
 export type Transaction = InferSelectModel<typeof transactionsTable>;
 
 export const splitsTable = sqliteTable("splits", {
@@ -117,6 +124,7 @@ export const splitsTable = sqliteTable("splits", {
   action: text(),
   memo: text(),
 });
+/** @public Row type for the `splits` table; part of the schema's typed query surface. */
 export type Split = InferSelectModel<typeof splitsTable>;
 
 export const timeTable = sqliteTable("timetable", {
@@ -129,6 +137,7 @@ export const timeTable = sqliteTable("timetable", {
   weekDayNum: integer(),
   weekDayName: text().notNull(),
 });
+/** @public Row type for the `timetable` table; part of the schema's typed query surface. */
 export type Time = InferSelectModel<typeof timeTable>;
 
 /// EXTRA TABLES
@@ -141,6 +150,7 @@ export const accountsClosureTable = sqliteTable("accountsClosure", {
   parent: text().references((): AnySQLiteColumn => accountsTable.id),
   depth: integer(),
 });
+/** @public Row type for the `accountsClosure` table; part of the schema's typed query surface. */
 export type AccountClosure = InferSelectModel<typeof accountsClosureTable>;
 
 export const summaryMonthlyTable = sqliteTable("summary_monthly", {
@@ -152,6 +162,7 @@ export const summaryMonthlyTable = sqliteTable("summary_monthly", {
   accountName: text().primaryKey(),
   totalValue: real().notNull(),
 });
+/** @public Row type for the `summary_monthly` table; part of the schema's typed query surface. */
 export type SummaryMonthly = InferSelectModel<typeof summaryMonthlyTable>;
 
 export const summaryQuarterlyTable = sqliteTable("summary_quarterly", {
@@ -163,6 +174,7 @@ export const summaryQuarterlyTable = sqliteTable("summary_quarterly", {
   accountName: text().primaryKey(),
   totalValue: real().notNull(),
 });
+/** @public Row type for the `summary_quarterly` table; part of the schema's typed query surface. */
 export type SummaryQuarterly = InferSelectModel<typeof summaryQuarterlyTable>;
 export const summaryYearlyTable = sqliteTable("summary_yearly", {
   date: text().notNull(),
@@ -173,6 +185,7 @@ export const summaryYearlyTable = sqliteTable("summary_yearly", {
   accountName: text().primaryKey(),
   totalValue: real().notNull(),
 });
+/** @public Row type for the `summary_yearly` table; part of the schema's typed query surface. */
 export type SummaryYearly = InferSelectModel<typeof summaryYearlyTable>;
 
 // TODO: Add slNotes, dsecription
@@ -195,4 +208,5 @@ export const fullTransactionsTable = sqliteTable("fullTransactions", {
     .references(() => commoditiesTable.id),
   value: real().notNull(),
 });
+/** @public Row type for the `fullTransactions` table; part of the schema's typed query surface. */
 export type FullTransaction = InferSelectModel<typeof fullTransactionsTable>;

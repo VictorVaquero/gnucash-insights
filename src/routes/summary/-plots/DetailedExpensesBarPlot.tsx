@@ -65,12 +65,12 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
 
 const DEFAULT_ACCOUNT_NAME = "Others";
 
-export type PivotedRow = {
+type PivotedRow = {
   date: string;
   dateLabel: string;
 } & Record<string, number | string>;
 
-export function pivotData(data: Data[]) {
+function pivotData(data: Data[]) {
   // 1. Get all unique account names first to ensure every row has every key
   const accountNames = Array.from(new Set(data.map((d) => d.accountName)));
 

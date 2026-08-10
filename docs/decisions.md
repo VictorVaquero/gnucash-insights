@@ -6,6 +6,215 @@ lives in each spec's `research.md`/`spec.md` under `specs/`; this is the "what a
 not the full writeup. Governing ground rules for all of these:
 `.specify/memory/constitution.md`.
 
+## Spec 005 US6: Pre-publish checklist — injection/XSS/dependency vectors (2026-08-10)
+
+**T037 — `dangerouslySetInnerHTML` grep**: `grep -rn "dangerouslySetInnerHTML" src/`
+returns zero matches. No usage to review. **Pass.**
+
+**T039 — `pnpm audit`**: Baseline (after US2's dead-dependency removal) was 115
+findings (3 critical / 61 high / 41 moderate / 10 low). `pnpm audit --fix` was tried
+first and rejected: it wrote an unbounded `pnpm-workspace.yaml` overrides block that
+cascaded into major-version jumps for build tooling (storybook 8→10, vite 7→8) and
+produced new unmet-peer-dependency errors — not a "safe" fix, reverted immediately.
+
+Root-caused the two production-reachable criticals by hand instead:
+- `drizzle-orm` (direct prod dependency, used in `src/db/*`): SQL-identifier-escaping
+  vulnerability, fixed upstream in `0.45.2`. Bumped `package.json`'s
+  `drizzle-orm` from `^0.36.4` to `^0.45.2` directly (a normal semver-compatible
+  dependency bump, not an override) — verified with `tsc --noEmit` and a full
+  `vite build`, both clean.
+- `fast-xml-parser` (transitive, via `@aws-sdk/client-cognito-identity-provider` →
+  `@aws-sdk/core` → `@aws-sdk/xml-builder`, pinned by AWS at a vulnerable version
+  regardless of which SDK release is installed) and `seroval` (transitive, via
+  `@tanstack/react-router` → `@tanstack/router-core` — genuinely shipped in the
+  browser bundle, not just the devtools package): both pinned via a targeted
+  `pnpm.overrides` block in `package.json` (`fast-xml-parser: >=5.5.7`,
+  `seroval: >=1.5.3`), each verified individually with `tsc --noEmit` + `vite build`
+  before moving to the next. Also overrode `tar: >=7.5.19` (used only by the
+  `vercel` CLI devDependency, not shipped) to close the remaining critical at zero
+  extra risk.
+
+Result: **0 critical** (was 3), high 61→47, moderate 41→37, low unchanged at 10 —
+all fixed without any breaking version bump.
+
+**Remaining findings, triaged and accepted**: everything left is a transitive
+dependency of build/dev-only tooling — `storybook`, `vite`, `@vercel/node`/`vercel`
+CLI, `eslint`-adjacent packages (`vite`, `rollup`, `postcss`, `picomatch`, `fast-uri`,
+`nanoid`, `ajv`, `ws`, `serialize-javascript`, `webpack`, `diff`, `@babel/core`).
+Confirmed via `pnpm why <pkg> --prod` that none of these resolve through a production
+dependency chain — they exist only in `node_modules` for local dev/build, never in
+the deployed Vercel Function bundle or the Vite-built browser bundle. Fixing the
+remainder requires major-version migrations (storybook 8→10, vite 7→8) with their own
+breaking-change review, judged out of scope for this hardening pass; deferred as a
+follow-up, not a silent gap.
+
+**Side fix**: `pnpm exec eslint .` was returning 20 errors (`no-undef` on `console`/
+`process`/`fetch`) in `scripts/*.mjs` — a config gap from earlier in this spec (T023/
+T028 added those scripts without a Node-globals block). Added a
+`{ files: ['scripts/**/*.mjs'], languageOptions: { globals: {...} } }` block to
+`eslint.config.mjs`. `eslint .` now: 0 errors, 7 pre-existing warnings unrelated to
+this spec.
+
+**T038 — AWS Cognito console check (MFA/password-policy/lockout/self-signup) —
+DEFERRED**: attempted via AWS CLI first (`aws cognito-idp describe-user-pool
+--user-pool-id eu-west-3_VHPSFHPrK`); the authenticated identity
+(`arn:aws:iam::397704334393:user/development`) got `AccessDeniedException` — it
+lacks `cognito-idp:DescribeUserPool`. Asked the owner whether to grant that
+read permission, check the console themselves, or defer; owner chose to defer.
+**Open item, not resolved in this pass** — someone with full Cognito console access
+needs to record the current MFA/password-policy/account-lockout/self-signup
+settings for `eu-west-3_VHPSFHPrK` before the repo goes public, since these are
+security-relevant defaults an attacker would check first.
+
+**T040 — `gitleaks` full-history scan**: `gitleaks` wasn't installed system-wide;
+downloaded the official `v8.30.1` portable binary from GitHub releases into the
+session scratchpad (not committed, not installed system-wide) rather than requiring
+a `sudo pacman -S`. Ran `gitleaks detect --source . --log-opts="--all"` against the
+full local repo history: **63 commits scanned, no leaks found.** Confirms US1's git-
+history scrub (the account-GUID/secrets removal) was effective and no other secrets
+exist anywhere in history. Scratchpad binary and report deleted after the run.
+
+**T041 — `cashpy-processor` PII-in-source spot-check — finding filed as follow-up,
+NOT ruled out**: `cashpy-processor` (`VictorVaquero/cashpy-processor`, currently
+**private** on GitHub — confirmed via `gh repo view`) has real, unanonymized personal
+data checked into its test fixtures: `tests/data/cash/accounts.csv`,
+`transactions.csv`, `splits.csv`, `cash.db`, and `tests/data/gnucash.gnca` all contain
+real third-party names (e.g. "Cesar", "Berru", "Gerardo") as GnuCash account names,
+plus real transaction descriptions, dates, and monetary amounts — the same category
+of PII this spec's US1 already removed from `cashpy_v2` itself. Notably, the same
+folder contains `tests/data/cash/anonimize` — a SQL script that *would* replace real
+account names/memos with synthetic ones (`Account1`, `Trip 1`, etc.) and randomize
+values — but the currently-committed fixtures show the real names, not the
+anonymized output, meaning the script exists but was never applied to what's checked
+in. No CLI/`git filter-repo` action was taken on `cashpy-processor` in this session:
+it's a separate repo with real third-party PII in its history, a materially different
+and more sensitive situation than the CSP fix made earlier in this spec, and the
+owner should decide the remediation approach (re-run the anonymize script and rewrite
+history, or keep the repo private indefinitely) rather than have it done unilaterally.
+**Filed as an explicit open follow-up, not "ruled out."**
+
+## Spec 005 US5: CSP tightened, HSTS/Permissions-Policy added, drift guardrail introduced (2026-08-10)
+
+**Decision**: `script-src 'unsafe-inline'` dropped from `vercel.json`'s CSP outright — a
+production `pnpm build` emits zero inline `<script>` content (the entry point is an
+external `<script type=module src=...>` tag) and a repo-wide grep found no dynamic
+inline-script-injection pattern anywhere in the codebase. `style-src 'unsafe-inline'` was
+kept: six `style={{}}` call sites are all dynamic (computed colors/positions/motion
+transforms), and `recharts`/`framer-motion` set inline style attributes at runtime
+pervasively for animation — none of that is coverable by a static hash allowlist, and a
+full nonce architecture (which would force `index.html` off static hosting and into a
+per-request Function/Middleware response) was judged disproportionate effort for this
+spec, per `research.md` item 5.
+
+Added `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` and a
+deny-by-default `Permissions-Policy` (camera, microphone, geolocation, payment — none of
+which this app uses) to `vercel.json`. Both were confirmed absent before this change.
+
+A CSP-drift guardrail was added: `scripts/check-csp-drift.mjs` (run via
+`pnpm run check-csp-drift`, wired into a new first-ever `.github/workflows/csp-drift.yml`
+on every push/PR) compares this repo's own CSP string against a hardcoded snapshot of
+`resumeweb`'s `/dashboard/:path*` CSP, committed at
+`scripts/resumeweb-dashboard-csp.snapshot.txt`. It intentionally does not fetch
+`resumeweb` live in CI — that repo is a separate, unrelated project this repo's tooling
+must not depend on the availability of (`research.md` item 6). The snapshot must be
+updated by hand, in the same PR, whenever either side's `/dashboard` CSP changes; that
+manual friction is deliberate, forcing the two to be kept in sync rather than silently
+drifting again.
+
+**Live bug found and fixed while pulling the T027 snapshot**: `vercel inspect
+victorvaquero.com --json` showed `resumeweb`'s deployed `/dashboard` CSP still reflected
+the pre-Turso, S3-based architecture — `connect-src` allowed only Cognito and S3 domains,
+no `turso.io` at all, plus a stale `'wasm-unsafe-eval'` and an extra `'unsafe-inline'` in
+`script-src` left over from the old sql.js-over-S3 driver. This meant real logins through
+`victorvaquero.com/dashboard` (the app's actual public-facing URL) were being silently
+CSP-blocked from reaching Turso in production — a live recurrence of the exact incident
+already documented under "Hosting: Vercel..." below. Root cause: `resumeweb`'s CSP had
+been correctly scoped to cashpy_v2's policy once (`10dfb07`), then patched for sql.js's
+WASM needs (`6999f23`) before the Turso cutover, and never cleaned up afterward. Fixed
+directly in `resumeweb` (a separate local repo at `/home/victor/workspace/resumeweb`,
+distinct from `bro_cv_web` — see the "Cross-repo naming incident" note below) with owner
+approval: commit `927c7cd`, pushed to `master`, live deploy confirmed via `curl` showing
+the corrected header. The committed snapshot reflects this now-corrected value.
+
+See `specs/005-repo-hygiene-security-and-public-readiness/research.md` items 5–7 for the
+full design and alternatives considered.
+
+## Spec 005 US4: guest/real-user auth boundary formally traced; rate limiting added (2026-08-10)
+
+**Decision**: The guest/real-user auth boundary on `POST /api/turso-token` was already
+correct by design (no code change needed to the branching logic) — confirmed by a full
+code trace (`research.md` item 4) and formalized as a regression test,
+`scripts/test-auth-boundary.mjs` (run via `pnpm run test-auth-boundary`). The trace: the
+client (`src/services/tursoService.ts`) never sends the literal `idToken: 'guest'` value
+as a Bearer token — it's converted to an `X-Guest-Request: true` header with no
+`Authorization` header at all; the endpoint branches purely on which headers are present,
+and even a hand-crafted `Authorization: Bearer guest` request fails real Cognito JWKS
+signature verification before any Turso token is minted. The two branches mint against
+disjoint, hardcoded env-var-sourced database identifiers, so there is no path from the
+guest branch to the production database.
+
+Proactive per-IP rate limiting was added to `api/turso-token.ts`: a module-scope
+`Map<string, { count, resetAt }>` fixed-window counter (60s window, 20 requests/IP),
+keyed by `x-forwarded-for`/`x-real-ip`, returning `429` + `Retry-After` once exceeded.
+Threshold rationale: the client caches minted tokens for ~55 minutes
+(`src/hooks/useDB.tsx`), so a normal session sends at most ~1 request per window — 20/60s
+is generous headroom above that while still catching a scripted burst (SC-003).
+
+**Known limitation, accepted**: this is a best-effort throttle, not a hard guarantee — the
+counter resets on a cold start and isn't shared across concurrent instances/regions
+(`research.md` item 3). It also does not persist across requests under local `vercel dev`
+(which reloads the function module per invocation), so the 429 path in
+`test-auth-boundary.mjs` can only be verified against a real deployment (Preview/
+Production, where Fluid Compute reuses warm instances), not localhost. The other four
+boundary checks (bearer-guest→401, guest-header→200 scoped correctly, forged-token→401,
+no-credentials→401) were verified against a live local `vercel dev` instance.
+
+See `specs/005-repo-hygiene-security-and-public-readiness/research.md` items 3–4 and
+`contracts/turso-token-endpoint-amendment.md` for the full design.
+
+**Verified against a live deployment (T023)**: deployed a Vercel Preview and ran
+`test-auth-boundary.mjs` against it (5/5 checks pass, including the 429 path). Also
+decoded a live-minted JWT: payload has `a: "ro"` (read-only), `exp - iat = 3600`
+(exactly 1h), correctly scoped to the guest database on the guest branch. One nuance
+found empirically: the 429 burst must be sent *sequentially*, not concurrently — a
+concurrent burst gets load-balanced across multiple Fluid Compute warm instances, each
+with its own independent counter, so it never trips the limit even well past the
+threshold. 30 sequential requests to the same warm instance correctly returned `200` for
+the first 20 and `429` + `Retry-After` for the rest. The test script was updated to send
+the burst sequentially and to support Vercel Deployment Protection (a
+`--protection-bypass`/`VERCEL_PROTECTION_BYPASS` token, since Preview deployments sit
+behind an SSO wall by default).
+
+## Spec 005 US1: account-GUID mapping moved server-side; git history scrubbed (2026-08-10)
+
+**Decision**: `src/config.json`'s `database.victor.*` real GnuCash account-GUID mapping
+was removed from the repo and now arrives at runtime as an `accountConfig` field on the
+already-authenticated `/api/turso-token` response, sourced server-side from a new
+`ACCOUNT_CONFIG_VICTOR` Vercel environment variable (Production + Preview, set via
+`vercel env add`). The guest mapping (synthetic demo IDs) stays hardcoded in
+`api/turso-token.ts` — not a secret. `getConfig(user)` in `src/db/utils.ts` now reads
+from a module-level cache populated by `useSetupDB` (`src/hooks/useDB.tsx`) as soon as
+each user's token response arrives, instead of importing `config.json`. See
+`specs/005-repo-hygiene-security-and-public-readiness/research.md` item 1 and
+`data-model.md` for the full design.
+
+**Git history**: owner explicitly chose to scrub git history (spec Acceptance Scenario
+3), not leave it as-is. Confirmed exactly 9 real account GUIDs appeared across this
+repo's full history (64 commits), confined to `src/config.json`. Rewrote history with
+`git-filter-repo --replace-text` (redacting only those 9 literal GUID strings to
+`REDACTED-ACCOUNT-GUID`, everything else — guest/synthetic values, all other history —
+untouched), force-pushed the rewritten history to `origin/master`
+(`github.com/VictorVaquero/cashpy_v2`, private repo). Verified zero remaining matches for
+all 9 GUIDs across `git log --all -p` post-rewrite before pushing. A full pre-rewrite
+backup bundle was made first: `~/workspace/cashpy_v2-history-backup-20260810-104915.bundle`
+(outside the repo tree, **not** committed) — this bundle still contains the original
+un-redacted GUIDs, so it should be deleted once the owner is satisfied the rewrite is
+correct, or moved somewhere access-controlled if kept longer.
+
+**Consequence**: every commit hash changed. Any other local clone or fork of this repo
+is now diverged from `origin/master` and must be re-cloned or hard-reset
+(`git fetch origin && git reset --hard origin/master`) rather than pulled normally.
+
 ## Owner decisions across the `docs/review/` planning folder (2026-08-10)
 
 **Decision**: the owner was interviewed through every open decision recorded across
