@@ -1,6 +1,6 @@
 # Developer automation (scripts, hooks, CI/CD)
 
-**Priority**: P1 · **Status**: Planning only
+**Priority**: P1 · **Status**: Planning done — see specs/006-dev-automation-and-quality-gates
 
 ## Why this matters
 

@@ -1,6 +1,6 @@
 # Config schemas & validation
 
-**Priority**: P2 · **Status**: Planning only
+**Priority**: P2 · **Status**: Planning done — see specs/005-repo-hygiene-security-and-public-readiness
 
 ## Why this matters
 
