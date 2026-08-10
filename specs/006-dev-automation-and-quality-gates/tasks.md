@@ -44,7 +44,7 @@ Single existing project — `src/`, `api/`, `.github/`, and root-level config fi
       any change — this is the regression baseline for the Polish-phase re-check (T066).
       Automated baseline captured (no interactive browser available in this session):
       `pnpm lint` clean (0 errors, 7 pre-existing warnings), `tsc --noEmit` clean, `pnpm
-    build` succeeds (main entry `index-CjRgCwWc.js` 317.53 kB gzip, `CartesianChart-*.js`
+  build` succeeds (main entry `index-CjRgCwWc.js` 317.53 kB gzip, `CartesianChart-*.js`
       80.28 kB gzip). Interactive golden-path click-through is deferred to T066, which the
       owner should also do manually in a real browser.
 
@@ -143,49 +143,62 @@ checkout with no manual setup beyond `pnpm install`.
 
 ### Implementation for User Story 2 — Vitest unit + component tests
 
-- [ ] T015 [P] [US2] Add `vitest`, `jsdom`, `@testing-library/react`,
+- [x] T015 [P] [US2] Add `vitest`, `jsdom`, `@testing-library/react`,
       `@testing-library/jest-dom`, `@testing-library/user-event`,
       `@vitest/coverage-v8` to `package.json` devDependencies; run `pnpm install`
       (research.md items 7-9).
-- [ ] T016 [US2] Create `vitest.config.ts` at repo root: standalone config (not merged
+- [x] T016 [US2] Create `vitest.config.ts` at repo root: standalone config (not merged
       into `vite.config.ts`), `react()` plugin only, `@` → `src` alias,
       `test: { environment: "jsdom", setupFiles: ["./src/test/setup.ts"], globals: true }`
       (research.md item 7, depends on T015).
-- [ ] T017 [P] [US2] Create `src/mocks/handlers.ts`: shared MSW request handlers,
+- [x] T017 [P] [US2] Create `src/mocks/handlers.ts`: shared MSW request handlers,
       including at minimum a `POST /api/turso-token` handler returning a synthetic
       `{ url, token, expiresAt, accountConfig }` shape with obviously-fake values
       (research.md item 12, data-model item 7).
-- [ ] T018 [US2] Create `src/mocks/server.ts` (`setupServer(...handlers)` from
+- [x] T018 [US2] Create `src/mocks/server.ts` (`setupServer(...handlers)` from
       `src/mocks/handlers.ts`, for Vitest/Node) (depends on T017).
-- [ ] T019 [US2] Create `src/test/setup.ts`: register `@testing-library/jest-dom`
+- [x] T019 [US2] Create `src/test/setup.ts`: register `@testing-library/jest-dom`
       matchers and the MSW server lifecycle
       (`beforeAll(() => server.listen())` / `afterEach(() => server.resetHandlers())` /
       `afterAll(() => server.close())`) — leave a clearly-marked spot for the
       `vitest-axe` matcher extension added by US4's T053 (research.md item 13, depends on
       T016, T018).
-- [ ] T020 [US2] Refactor `.storybook/preview.tsx` and
+- [x] T020 [US2] Refactor `.storybook/preview.tsx` and
       `src/routes/login/-loginPage.stories.tsx` to import and use
       `src/mocks/handlers.ts` instead of their current inline per-story handlers
-      (research.md item 12, Acceptance Scenario 4, depends on T017).
-- [ ] T021 [US2] Add `out: "./drizzle"` to `src/drizzle.config.ts`; run
+      (research.md item 12, Acceptance Scenario 4, depends on T017). `preview.tsx` now
+      supplies the shared `handlers` array globally; the login story's Cognito-failure
+      handler stays as a legitimate per-story override on top of it.
+- [x] T021 [US2] Add `out: "./drizzle"` to `src/drizzle.config.ts`; run
       `pnpm exec drizzle-kit generate` to produce a checked-in migration SQL file under
       `drizzle/` from `src/db/schema.ts`/`views.ts` (research.md item 10, data-model item
-      2).
-- [ ] T022 [US2] Create `src/test/db.ts`: a test-only helper that creates a fresh
+      2). Generated `drizzle/0000_lumpy_archangel.sql`.
+- [x] T022 [US2] Create `src/test/db.ts`: a test-only helper that creates a fresh
       `:memory:` `@libsql/client` + `drizzle-orm/libsql` instance, applies the migration
       SQL from `drizzle/`, and seeds a small fixed set of synthetic fixture rows
       (accounts/transactions/time rows) (research.md item 10, data-model item 2, depends
-      on T021).
-- [ ] T023 [P] [US2] Write `src/db/queries/global.test.ts` covering
+      on T021). Done via `src/test/db.ts` (`createTestDb`, applies
+      `drizzle/0000_lumpy_archangel.sql` against a `:memory:` libsql client) +
+      `src/test/fixtures.ts` (`seedFixtures`, a deterministic account hierarchy +
+      transaction set shared by all query tests).
+- [x] T023 [P] [US2] Write `src/db/queries/global.test.ts` covering
       `getAccountsClosureQuery` and `getDomain`, asserting exact computed totals against
-      `src/test/db.ts`'s fixtures (research.md item 10, depends on T022).
-- [ ] T024 [P] [US2] Write `src/db/queries/expenses.test.ts` and
+      `src/test/db.ts`'s fixtures (research.md item 10, depends on T022). Also covers
+      `getBooks`. 5 tests, all passing against real SQL execution.
+- [x] T024 [P] [US2] Write `src/db/queries/expenses.test.ts` and
       `src/db/queries/summary.test.ts` covering `getExpensesYearlyQuery` and related
-      exports (depends on T022).
-- [ ] T025 [P] [US2] Write `src/db/queries/travel.test.ts` covering the travel-query
-      exports (depends on T022).
-- [ ] T026 [P] [US2] Write `src/db/utils.test.ts` covering `setAccountConfig`/
-      `getConfig` (plain `Map`-backed, no DB fixture needed).
+      exports (depends on T022). Hand-computed rollup/year totals verified; exported
+      `getExpensesYearlyQuery` from `expenses.ts` (was previously unexported) for
+      direct testability, matching the export convention of sibling query files.
+- [x] T025 [P] [US2] Write `src/db/queries/travel.test.ts` covering the travel-query
+      exports (depends on T022). Covers the 3 travel queries that join `timeTable` via
+      direct `eq(timeTable.ymd, ft.ymdPosted)`; the 4 queries using
+      `substr(datePosted, 0, 11)` expect a different (date-only) `timetable.ymd`
+      storage convention and are documented as out of scope in the test file's header
+      comment rather than given fabricated coverage.
+- [x] T026 [P] [US2] Write `src/db/utils.test.ts` covering `setAccountConfig`/
+      `getConfig` (plain `Map`-backed, no DB fixture needed). 4 tests covering the
+      unset-user error, the not-yet-loaded error, and per-user isolation.
 - [ ] T027 [P] [US2] Write `src/components/TreeList.test.tsx`: 2-level fixture data,
       child rows absent until parent toggle clicked then present after, leaf-row (no
       children) branch renders `item.node` with no toggle button (research.md item 11,
