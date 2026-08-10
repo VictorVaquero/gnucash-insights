@@ -18,5 +18,5 @@ jobs:
       - run: pnpm lint
       - run: pnpm exec tsc --noEmit
       - run: pnpm build
-      # TODO(spec 006 US2, T032): replace with `pnpm test` once the Vitest suite exists.
+      - run: pnpm test
       - run: pnpm run format:check
