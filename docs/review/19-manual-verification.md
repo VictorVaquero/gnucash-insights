@@ -43,6 +43,16 @@ outstanding checks, copied forward unchanged from their source specs:
   confirmed MFA off/optional, standard password policy, lockout/threat-protection off
   (deliberate), and self-service sign-up disabled. No changes needed; see
   `docs/decisions.md` under "Spec 005 US6". **Done (2026-08-10).**
+- **Spec 006 (dev automation and quality gates), T041**: owner-side Cognito test-account
+  provisioning for `e2e/real-user-login.spec.ts`. Create one Cognito user in pool
+  `eu-west-3_VHPSFHPrK` (e.g. `playwright-test@<domain>`), set a permanent password via
+  the AWS Console or `aws cognito-idp admin-set-user-password --permanent`, and confirm
+  this account's Turso account-GUID mapping (`ACCOUNT_CONFIG_*` pattern, see
+  `api/turso-token.ts`) points at guest-equivalent or otherwise non-sensitive demo data —
+  never real financial data. Add the resulting credentials as GitHub Actions repo secrets
+  `PLAYWRIGHT_TEST_USER_EMAIL` / `PLAYWRIGHT_TEST_USER_PASSWORD` (consumed by
+  `.github/workflows/e2e.yml`). Until both secrets exist, `real-user-login.spec.ts`
+  self-skips rather than failing — this is expected, not a bug.
 
 ## Goals
 

@@ -15,5 +15,26 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # TODO(spec 006 US2, T040): install Playwright browsers and run `pnpm run test:e2e`
-      # once playwright.config.ts and e2e/*.spec.ts exist.
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run test:e2e
+        env:
+          CI: true
+          TURSO_PLATFORM_TOKEN: ${{ secrets.TURSO_PLATFORM_TOKEN }}
+          TURSO_ORG_SLUG: ${{ secrets.TURSO_ORG_SLUG }}
+          TURSO_DATABASE_NAME: ${{ secrets.TURSO_DATABASE_NAME }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_GUEST_DATABASE_NAME: ${{ secrets.TURSO_GUEST_DATABASE_NAME }}
+          TURSO_GUEST_DATABASE_URL: ${{ secrets.TURSO_GUEST_DATABASE_URL }}
+          COGNITO_REGION: ${{ secrets.COGNITO_REGION }}
+          COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+          COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          # Provisioned per docs/review/19-manual-verification.md; real-user-login.spec.ts
+          # self-skips until both secrets exist.
+          PLAYWRIGHT_TEST_USER_EMAIL: ${{ secrets.PLAYWRIGHT_TEST_USER_EMAIL }}
+          PLAYWRIGHT_TEST_USER_PASSWORD: ${{ secrets.PLAYWRIGHT_TEST_USER_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

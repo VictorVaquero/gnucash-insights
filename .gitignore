@@ -34,3 +34,7 @@ yarn.lock
 routeTree.gen.ts
 .vercel
 .env*
+
+# Playwright
+/playwright-report/
+/test-results/
