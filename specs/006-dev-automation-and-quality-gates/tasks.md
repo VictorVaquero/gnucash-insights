@@ -114,15 +114,19 @@ GitHub Actions check fails and reports the specific error without needing a loca
       checkout + `pnpm/action-setup@v4` + `actions/setup-node@v4` (`cache: pnpm`) steps.
       Leave a clearly-marked placeholder for the Playwright install/run steps (added by
       US2's T040) (research.md item 1, contracts/ci-checks-contract.md).
-- [~] T014 [US1] Manually validate `quickstart.md`'s US1 steps 1-6: pre-commit blocks a
-  lint violation; pre-commit auto-formats rather than blocking; pre-push blocks a type
-  error; a PR with a deliberate lint error fails the `ci.yml` check with the specific
-  error shown; Dependabot is visibly active on a weekly cadence; the PR template
-  appears pre-filled on a new PR (depends on T002-T013). Steps 1-3 verified locally
-  (lint-staged auto-fixes fixable violations and blocks on unfixable ones via its
-  non-zero exit code; `tsc --noEmit` blocks on a real type error). Steps 4-6 require a
-  pushed branch/PR on GitHub and are **not yet verified** — outstanding until this
-  branch is pushed and a PR opened.
+- [x] T014 [US1] Manually validate `quickstart.md`'s US1 steps 1-6: pre-commit blocks a
+      lint violation; pre-commit auto-formats rather than blocking; pre-push blocks a type
+      error; a PR with a deliberate lint error fails the `ci.yml` check with the specific
+      error shown; Dependabot is visibly active on a weekly cadence; the PR template
+      appears pre-filled on a new PR (depends on T002-T013). Steps 1-3 verified locally
+      (lint-staged auto-fixes fixable violations and blocks on unfixable ones via its
+      non-zero exit code; `tsc --noEmit` blocks on a real type error). Steps 4 and 6 not
+      independently re-verified with a throwaway PR — `pnpm lint` is a plain step in
+      `ci.yml` and `.github/pull_request_template.md` exists with the expected
+      Summary/Checklist content, both low-risk to trust directly (owner decision, see
+      docs/review/19-manual-verification.md). Step 5 (Dependabot weekly cadence) confirmed
+      live: `.github/dependabot.yml` produced 5 open PRs the same day it ran, correctly
+      grouped (minor/patch bundled via the `minor-and-patch` group, majors separate).
 
 **Checkpoint**: User Story 1 (MVP) is complete — every push/PR gets an automatic
 lint/typecheck/build signal, and local hooks catch problems before they reach CI.
@@ -594,47 +598,57 @@ exists and runs automatically.
 **Purpose**: Close out repo-settings work that can't live in a file, and do the final
 constitution-mandated regression pass.
 
-- [~] T065 Set `install-lint-typecheck-build-test`, `lighthouse`, and `bundle-size` (the
-  `ci.yml` job names) as required status checks in GitHub's branch protection
-  settings for `master` — a manual, one-time GitHub UI step outside any file this
-  repo's CI can write (contracts/ci-checks-contract.md, depends on T012, T049).
-  **Not done** — this session has no GitHub UI/API access to the repo's branch
-  protection settings; it also can't be verified until `ci.yml`'s jobs have run at
-  least once on GitHub (job names only become selectable as required checks after
-  their first run). Flagged as an outstanding owner action.
-- [~] T066 Full manual golden-path + guest-path regression pass (desktop + mobile
-  viewport), per constitution Principle III, confirming none of this spec's CI/hook/
-  test/a11y additions broke the app relative to T001's baseline (depends on all prior
-  tasks).
-  Automated proxy completed in this session (no interactive browser available):
-  `pnpm run format:check`, `pnpm run lint` (0 errors, 7 pre-existing warnings),
-  `tsc --noEmit`, `pnpm test` (10 files / 33 tests passing), and `pnpm run build` all
-  pass cleanly on the final Phase 6 commit — matching T001's baseline shape with no
-  new errors introduced. The interactive desktop+mobile click-through itself (guest
-  login → Summary renders → every route loads → nav collapse/expand → real-user
-  login) is **not done** and is flagged as an outstanding owner/manual-QA action,
-  same as T001 and T014 already noted.
-- [~] T067 Run `quickstart.md`'s full validation end-to-end (all four user-story
-  sections plus the Cross-cutting section) and record results, including whether the
-  Cognito test-account provisioning (T041) is still outstanding per
-  `docs/review/19-manual-verification.md` (depends on T014, T042, T050, T064, T066).
-  Summary of quickstart.md's four sections as validated across this spec's tasks:
-  **US1** — steps 1-3 verified locally (T014); steps 4-6 need a pushed branch/PR,
-  not yet done. **US2** — verified (T042): `pnpm test` passes on a clean checkout,
-  fixture-total assertions and the `fixed`-class `SideBar` assertions exist and
-  pass, Storybook still renders, the Playwright suite is wired into `e2e.yml` but
-  hasn't run on GitHub yet (needs the Turso/Cognito secrets noted in T040). **US3**
-  — verified (T050): `pnpm run perf`/`pnpm run size` both pass locally against real
-  budgets, regression-detection proven for both. **US4** — verified (T064): the new
-  `vitest-axe` assertions in `pnpm test` pass (nav, login, and the four named
-  components per SC-005); steps requiring an interactive browser/devtools (1, 2, 5,
-  6 as literally specified) are not done here. **Cross-cutting** — the full
-  desktop+mobile manual golden-path pass is not done (see T066); the Cognito
-  test-account provisioning (T041) **is still outstanding** per
-  `docs/review/19-manual-verification.md`'s own entry — `real-user-login.spec.ts`
-  still reports `skipped` locally and the `PLAYWRIGHT_TEST_USER_EMAIL`/`PASSWORD`
-  GitHub Actions secrets are not yet added, so `e2e.yml` will report that spec
-  skipped (not failed) on `master` until the owner completes provisioning.
+- [~] T065 Set `install-lint-typecheck-build-test`, `check-csp-drift`, and `e2e` (the
+  actual job names, confirmed via `gh api repos/VictorVaquero/cashpy_v2/commits/master/check-runs`)
+  as required status checks in GitHub's branch protection settings for `master`
+  (contracts/ci-checks-contract.md, depends on T012, T049).
+  **Blocked, not an oversight**: both the classic branch-protection API and the newer
+  Rulesets API return 403 `"Upgrade to GitHub Pro or make this repository public to
+enable this feature."` for this repo — GitHub Free does not support required status
+  checks on a private repo owned by a personal account, full stop, regardless of
+  UI vs API or classic vs Rulesets. A ruleset was created via the web UI but is very
+  likely a no-op (GitHub let it save without the entitlement to enforce it). Owner
+  decision: defer — repo will be made public later (this spec's sibling, 005, already
+  did the security/hygiene hardening for public-repo readiness), which unlocks this for
+  free with no further app-side changes needed. Revisit once the repo is public.
+- [x] T066 Full manual golden-path + guest-path regression pass (desktop + mobile
+      viewport), per constitution Principle III, confirming none of this spec's CI/hook/
+      test/a11y additions broke the app relative to T001's baseline (depends on all prior
+      tasks).
+      Automated proxy completed in this session: `pnpm run format:check`, `pnpm run lint`
+      (0 errors, 7 pre-existing warnings), `tsc --noEmit`, `pnpm test` (10 files / 33 tests
+      passing), and `pnpm run build` all pass cleanly on the final Phase 6 commit — matching
+      T001's baseline shape with no new errors introduced. Interactive click-through done
+      live against the production deploy (`https://cashpy-v2.vercel.app`, auto-deployed
+      from `master`): guest login → Summary renders with data → every top-level route loads
+      → nav collapse/expand stable → real-user (Cognito) login works, on both desktop and a
+      375px mobile viewport. Owner-confirmed clean on both passes, no issues found.
+- [x] T067 Run `quickstart.md`'s full validation end-to-end (all four user-story
+      sections plus the Cross-cutting section) and record results, including whether the
+      Cognito test-account provisioning (T041) is still outstanding per
+      `docs/review/19-manual-verification.md` (depends on T014, T042, T050, T064, T066).
+      Final summary, all sections now validated live on GitHub (branch pushed, secrets
+      added, CI/E2E green):
+      **US1** — complete (T014): pre-commit/pre-push hooks verified locally; Dependabot
+      confirmed active weekly with real PRs; PR template confirmed present. The
+      deliberate-lint-error throwaway PR was explicitly skipped as a redundant check by
+      owner decision (`pnpm lint` is a plain `ci.yml` step, same mechanism already proven
+      by every other step). **US2** — verified (T042) and now further confirmed live:
+      `install-lint-typecheck-build-test` and `e2e` jobs both pass on GitHub, including
+      `real-user-login.spec.ts` (previously untested end-to-end) after Cognito
+      test-account provisioning and Vercel CLI auth were fixed. **US3** — verified
+      (T050): `pnpm run perf`/`pnpm run size` pass locally and as CI steps. **US4** —
+      verified (T064): `vitest-axe` assertions pass; interactive devtools-console checks
+      folded into T066's live click-through instead of a separate pass. **Cross-cutting**
+      — the full desktop+mobile manual golden-path pass is done (T066, live against
+      `https://cashpy-v2.vercel.app`); Cognito test-account provisioning (T041) is
+      **complete** — `owners` Cognito group created, real financial data scoped to it
+      (`api/turso-token.ts`), a separate non-owner test account provisioned for
+      Playwright, and its credentials added as `PLAYWRIGHT_TEST_USER_EMAIL`/`_PASSWORD`
+      GitHub secrets — `real-user-login.spec.ts` now passes (not skipped) on `master`.
+      Only remaining gap: T065's required-status-checks branch protection is blocked by
+      GitHub Free's private-repo restriction, deferred until the owner makes the repo
+      public (owner decision, see T065).
 
 ---
 
