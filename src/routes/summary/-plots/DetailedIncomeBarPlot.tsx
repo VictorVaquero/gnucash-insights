@@ -125,7 +125,7 @@ export const DetailedIncomeBarPlot = () => {
   if (!data || !dateRange || !keyNames) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <BarLoader color="#36d7b7" />
+        <BarLoader />
       </div>
     );
   }

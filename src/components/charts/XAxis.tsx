@@ -9,7 +9,7 @@ export const XAxis = (props: {
 
   return (
     <g
-      className="xaxis text-white"
+      className="xaxis text-gray-500"
       textAnchor="middle"
       transform={"translate(0," + props.range.y[0] + ")"}
     >

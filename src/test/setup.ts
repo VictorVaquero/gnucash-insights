@@ -9,6 +9,22 @@ import { server } from "@/mocks/server";
 
 expect.extend({ toHaveNoViolations });
 
+// jsdom doesn't implement matchMedia; useTheme (and anything that renders it, e.g.
+// SideBar's ThemeToggle) calls it unconditionally, so every test needs this stub.
+// Defaults to "no match" (light/no-preference) since no test asserts dark-mode-specific
+// rendering; tests that do care about matchMedia behavior mock it themselves.
+const noop = () => undefined;
+window.matchMedia ??= ((query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: noop,
+  removeListener: noop,
+  addEventListener: noop,
+  removeEventListener: noop,
+  dispatchEvent: () => false,
+})) as typeof window.matchMedia;
+
 beforeAll(() => server.listen({ onUnhandledRequest: "warn" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());

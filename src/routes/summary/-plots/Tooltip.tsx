@@ -51,12 +51,12 @@ export const Tooltip = <D,>(props: PropsWithChildren<TooltipProps<D>>) => {
   return (
     <div
       className='tooltip
-                        bg-shark-800 text-white stroke-1 stroke-white opacity-98
+                        bg-popover text-popover-foreground border border-border opacity-98
                         rounded invisible
                         absolute top-0 left-0 z-10
                         pointer-events-none
                         before:absolute before:w-5 before:h-5 before:left-1/2 before:bottom-0
-                        before:bg-shark-800 before:content-[""]
+                        before:bg-popover before:content-[""]
                         before:transform before:origin-center
                         before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45'
       ref={tooltipRef}

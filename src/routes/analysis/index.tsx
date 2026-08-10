@@ -58,7 +58,7 @@ const Analysis = () => {
   if (!isSuccess || !transactions)
     return (
       <div className="w-full h-full flex flex-row items-center justify-center">
-        <BarLoader color="#36d7b7" />
+        <BarLoader />
       </div>
     );
 
@@ -86,7 +86,7 @@ const Analysis = () => {
       </div>
       <div className="md:row-start-2 md:col-start-2">
         <PeriodicityTabs activeMode={chartPeriodicity} onChange={setChartPeriodicity} />
-        <h2 className="text-white">Lista de filtros</h2>
+        <h2 className="text-foreground">Lista de filtros</h2>
         <SearchList data={queryData} />
       </div>
     </div>

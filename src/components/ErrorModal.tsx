@@ -16,7 +16,7 @@ export const ErrorModal = ({
         createPortal(
           <AnimatePresence>
             <motion.div
-              className="absolute left-[70%] top-0 m-10 text-white bg-shark-700"
+              className="absolute left-[70%] top-0 m-10 text-popover-foreground bg-popover border border-border rounded"
               key="login-modal"
               initial={{ opacity: 0 }}
               animate={{ opacity: [1, 1, 0, 1, 1] }}
@@ -24,12 +24,12 @@ export const ErrorModal = ({
               exit={{ opacity: 0 }}
             >
               <div className="p-6 pb-2">
-                <h2 className="text-xl text-white">Logging Failure</h2>
-                <p className="pt-6 text-base text-gray-400">{msg}</p>
+                <h2 className="text-xl text-popover-foreground">Logging Failure</h2>
+                <p className="pt-6 text-base text-muted-foreground">{msg}</p>
               </div>
               <div className="p-4 pt-2 flex flex-row justify-end">
                 <button
-                  className="p-4 text-shark-200 hover:bg-shark-500"
+                  className="p-4 text-muted-foreground hover:bg-accent rounded"
                   onClick={() => setVisible(false)}
                 >
                   Close

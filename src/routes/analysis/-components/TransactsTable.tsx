@@ -125,7 +125,7 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="border-collapse border-spacing-y-4 border-shark-600 text-white">
+        <table className="border-collapse border-spacing-y-4 border-shark-600 text-foreground">
           <thead>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
@@ -150,7 +150,7 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
               </tr>
             ))}
           </thead>
-          <tbody className="mt-2 bg-shark-800">
+          <tbody className="mt-2 bg-shark-800 text-white">
             {table.getRowModel().rows.map((row) => (
               <tr
                 className="hover:bg-shark-600"
@@ -167,8 +167,8 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           </tbody>
         </table>
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-white">
-        <span className="flex items-center gap-1">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-foreground">
+        <span className="flex items-center gap-1 text-white">
           <button
             className="rounded p-1 bg-shark-800"
             onClick={() => table.firstPage()}
@@ -199,13 +199,13 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           </button>
         </span>
         <span className="flex items-center gap-1">
-          <div className="text-gray-400">Page</div>
+          <div className="text-foreground">Page</div>
           <span>{table.getState().pagination.pageIndex + 1}</span>
-          <div className="text-gray-400">of</div>
+          <div className="text-foreground">of</div>
           <span>{table.getPageCount().toLocaleString()}</span>
         </span>
         <span className="flex items-center gap-1">
-          <label htmlFor="go-to-page" className="text-gray-400">
+          <label htmlFor="go-to-page" className="text-foreground">
             | Go to page:
           </label>
           <input
@@ -217,12 +217,12 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
               const page = e.target.value ? Number(e.target.value) - 1 : 0;
               table.setPageIndex(page);
             }}
-            className="p-1 rounded w-16 bg-shark-800"
+            className="p-1 rounded w-16 bg-shark-800 text-white"
           />
         </span>
         <select
           aria-label="Rows per page"
-          className="p-2 rounded bg-shark-800"
+          className="p-2 rounded bg-shark-800 text-white"
           value={table.getState().pagination.pageSize}
           onChange={(e) => {
             table.setPageSize(Number(e.target.value));
@@ -235,11 +235,11 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           ))}
         </select>
         <p>
-          <span className="text-gray-400">Showing </span>
+          <span className="text-foreground">Showing </span>
           {table.getRowModel().rows.length.toLocaleString()}
-          <span className="text-gray-400"> of </span>
+          <span className="text-foreground"> of </span>
           {table.getRowCount().toLocaleString()}
-          <span className="text-gray-400"> Rows</span>
+          <span className="text-foreground"> Rows</span>
         </p>
       </div>
     </div>

@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-10
 
-**Status**: Draft — ready to plan/task via `/speckit-plan`
+**Status**: Tasked — tasks.md done (80 tasks across 6 user stories); ready to implement via `/speckit-implement`
 
 **Review docs covered**: [`docs/review/12-library-choice-review.md`](../../docs/review/12-library-choice-review.md), [`docs/review/13-component-library-and-design-system.md`](../../docs/review/13-component-library-and-design-system.md), [`docs/review/14-charts-and-mobile-interaction.md`](../../docs/review/14-charts-and-mobile-interaction.md), [`docs/review/15-theming-light-dark-mode.md`](../../docs/review/15-theming-light-dark-mode.md)
 

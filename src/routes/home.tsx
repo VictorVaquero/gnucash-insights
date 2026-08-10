@@ -7,10 +7,10 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { useAuth } from "@/contexts/useAuthContext";
 
 const PREVIEW_STATS = [
-  { name: "Net", value: "4,231 €", color: "text-white" },
+  { name: "Net", value: "4,231 €", color: "text-foreground" },
   { name: "Income", value: "2,845 €", color: "text-green-500" },
   { name: "Expenses", value: "1,120 €", color: "text-red-500" },
-  { name: "Assets", value: "18,940 €", color: "text-white" },
+  { name: "Assets", value: "18,940 €", color: "text-foreground" },
 ];
 
 const PREVIEW_TREND = [
@@ -34,11 +34,11 @@ const PreviewPanel = () => (
     initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-    className="w-full max-w-md rounded-xl border border-shark-700 bg-shark-900/60 p-5 shadow-xl"
+    className="w-full max-w-md rounded-xl border border-border bg-secondary p-5 shadow-xl"
   >
     <div className="flex items-center justify-between px-1">
-      <span className="text-sm text-shark-200 font-light">Live preview</span>
-      <span className="flex items-center gap-2 text-xs text-shark-300">
+      <span className="text-sm text-muted-foreground font-light">Live preview</span>
+      <span className="flex items-center gap-2 text-xs text-muted-foreground">
         <span className="h-2 w-2 rounded-full bg-green-500" />
         sample data
       </span>
@@ -46,32 +46,36 @@ const PreviewPanel = () => (
 
     <div className="mt-4 grid grid-cols-2 gap-2">
       {PREVIEW_STATS.map((stat) => (
-        <div key={stat.name} className="rounded-md bg-shark-800 p-3">
-          <span className="block text-xs text-shark-300">{stat.name}</span>
+        <div key={stat.name} className="rounded-md bg-background p-3">
+          <span className="block text-xs text-muted-foreground">{stat.name}</span>
           <span className={"text-lg " + stat.color}>{stat.value}</span>
         </div>
       ))}
     </div>
 
-    <div className="mt-4 h-28 rounded-md bg-shark-800 p-2">
+    <div className="mt-4 h-28 rounded-md bg-background p-2">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={PREVIEW_TREND} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id="previewTrendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.4} />
-              <stop offset="100%" stopColor="#38bdf8" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--color-brand)" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="var(--color-brand)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <XAxis dataKey="month" hide />
           <Tooltip
-            contentStyle={{ background: "#202427", border: "none", borderRadius: 6 }}
-            labelStyle={{ color: "#778490" }}
-            itemStyle={{ color: "#fff" }}
+            contentStyle={{
+              background: "var(--color-popover)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 6,
+            }}
+            labelStyle={{ color: "var(--color-popover-foreground)" }}
+            itemStyle={{ color: "var(--color-popover-foreground)" }}
           />
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#38bdf8"
+            stroke="var(--color-brand)"
             strokeWidth={2}
             fill="url(#previewTrendFill)"
           />
@@ -98,18 +102,18 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div className="flex items-center gap-2 text-sky-400">
+          <div className="flex items-center gap-2 text-brand">
             <FontAwesomeIcon icon={faWallet} className="h-5 w-5" />
             <span className="text-sm font-medium tracking-wide">CashPy</span>
           </div>
 
-          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
             Your money,
             <br />
             fully visible.
           </h1>
 
-          <p className="mt-5 text-lg text-shark-100 font-light max-w-md">
+          <p className="mt-5 text-lg text-foreground font-light max-w-md">
             Track spending, savings and investments in one live dashboard, synced straight from your
             own AWS data.
           </p>
@@ -124,7 +128,7 @@ const Home = () => {
             <Link
               to="/login"
               search={{ redirect: "/summary" }}
-              className="px-5 py-3 rounded-md border border-shark-600 text-white hover:bg-shark-800 font-medium transition-colors"
+              className="px-5 py-3 rounded-md border border-border text-foreground hover:bg-accent font-medium transition-colors"
             >
               Sign in
             </Link>
@@ -132,8 +136,8 @@ const Home = () => {
 
           <ul className="mt-10 space-y-3">
             {FEATURES.map((feature) => (
-              <li key={feature.text} className="flex items-center gap-3 text-shark-100 font-light">
-                <FontAwesomeIcon icon={feature.icon} className="h-4 w-4 text-sky-400 shrink-0" />
+              <li key={feature.text} className="flex items-center gap-3 text-foreground font-light">
+                <FontAwesomeIcon icon={feature.icon} className="h-4 w-4 text-brand shrink-0" />
                 <span>{feature.text}</span>
               </li>
             ))}

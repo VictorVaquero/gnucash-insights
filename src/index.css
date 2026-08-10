@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source inline("col-start-{1..17}");
 
 @theme {
@@ -29,5 +31,85 @@
       left: 100%;
       width: 30%;
     }
+  }
+}
+
+/*
+ * `inline` is required here: it makes Tailwind reference `var(--background)` etc.
+ * directly inside each generated utility (e.g. `bg-background` ->
+ * `background-color: var(--background)`), instead of pre-resolving `--color-background`
+ * once against `:root`'s value. Without `inline`, `.dark`'s overrides below would be
+ * inherited-but-shadowed and every `bg-*`/`text-*` utility would stay pinned to the
+ * light value.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+}
+
+:root {
+  --background: var(--color-slate-50);
+  --foreground: var(--color-shark-900);
+  --primary: var(--color-shark-700);
+  --primary-foreground: white;
+  --secondary: var(--color-slate-100);
+  --secondary-foreground: var(--color-shark-900);
+  --muted: var(--color-slate-100);
+  --muted-foreground: var(--color-slate-600);
+  --accent: var(--color-slate-200);
+  --accent-foreground: var(--color-shark-900);
+  --destructive: var(--color-red-600);
+  --destructive-foreground: white;
+  --popover: white;
+  --popover-foreground: var(--color-shark-900);
+  --border: var(--color-slate-200);
+  --input: var(--color-slate-200);
+  --ring: var(--color-slate-400);
+  --brand: var(--color-sky-700);
+}
+
+.dark {
+  --background: var(--color-shark-900);
+  --foreground: var(--color-shark-50);
+  --primary: var(--color-shark-50);
+  --primary-foreground: var(--color-shark-950);
+  --secondary: var(--color-shark-800);
+  --secondary-foreground: var(--color-gray-400);
+  --muted: var(--color-shark-800);
+  --muted-foreground: var(--color-gray-400);
+  --accent: var(--color-shark-700);
+  --accent-foreground: white;
+  --destructive: var(--color-red-600);
+  --destructive-foreground: white;
+  --popover: var(--color-shark-900);
+  --popover-foreground: var(--color-shark-50);
+  --border: var(--color-shark-700);
+  --input: var(--color-shark-700);
+  --ring: var(--color-shark-400);
+  --brand: var(--color-sky-400);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

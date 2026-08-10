@@ -41,14 +41,14 @@ export const LoginPage = () => {
 
   return (
     <div className="h-full min-h-fit flex justify-center items-center overflow-y-auto py-6">
-      <div className="text-white p-10 py-6 bg-shark-800 rounded">
+      <div className="text-secondary-foreground p-10 py-6 bg-secondary rounded">
         <form className="pt-4" onSubmit={handleSignIn}>
           <div>
             <label htmlFor="user" className="sr-only">
               Email
             </label>
             <input
-              className="p-4 bg-shark-600 text-white focus-visible:outline focus-visible:outline-shark-50 focus-visible:outline-1"
+              className="p-4 bg-background text-foreground focus-visible:outline focus-visible:outline-ring focus-visible:outline-1"
               name="user"
               id="user"
               type="user"
@@ -64,7 +64,7 @@ export const LoginPage = () => {
               Password
             </label>
             <input
-              className="inputText p-4 bg-shark-600 text-white focus-visible:outline focus-visible:outline-shark-50 focus-visible:outline-1"
+              className="inputText p-4 bg-background text-foreground focus-visible:outline focus-visible:outline-ring focus-visible:outline-1"
               name="password"
               id="password"
               type="password"
@@ -77,13 +77,16 @@ export const LoginPage = () => {
           </div>
           <div className="pt-4 flex flex-row justify-between">
             <button
-              className="p-3 px-4 bg-shark-800 hover:bg-shark-600"
+              className="p-3 px-4 rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
               type="button"
               onClick={handleGuestSignIn}
             >
               {"Guest"}
             </button>
-            <button className="p-3 px-4 bg-shark-800 hover:bg-shark-600" type="submit">
+            <button
+              className="p-3 px-4 rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              type="submit"
+            >
               {"Sign In"}
             </button>
           </div>

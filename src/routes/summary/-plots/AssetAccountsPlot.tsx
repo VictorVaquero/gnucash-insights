@@ -163,7 +163,7 @@ export const AssetAccountsPlot = () => {
   if (!data || !accounts || !dateRange)
     return (
       <div className="w-full h-full flex flex-row items-center justify-center">
-        <BarLoader color="#36d7b7" />
+        <BarLoader />
       </div>
     );
 

@@ -43,6 +43,15 @@ outstanding checks, copied forward unchanged from their source specs:
   confirmed MFA off/optional, standard password policy, lockout/threat-protection off
   (deliberate), and self-service sign-up disabled. No changes needed; see
   `docs/decisions.md` under "Spec 005 US6". **Done (2026-08-10).**
+- **Spec 007 (design system theming and charts), T019**: dark/light theme contrast fixes
+  in `src/index.css` (`--secondary-foreground`, `--primary`, `--accent-foreground`,
+  `--muted-foreground`, `--brand`, `--destructive` — see tasks.md T019 done-note for the
+  full list) were derived from computed WCAG contrast ratios against the token hex
+  values, not from rendering in a real browser (`vitest-axe`'s `color-contrast` rule is a
+  no-op in jsdom — confirmed by probe). Needs an actual browser pass, both themes,
+  covering: SideBar nav (default + active + hover), login submit button, `Button`
+  destructive/link variants, PeriodicityTabs inactive tab, dropdown-menu hover/focus
+  state.
 - **Spec 006 (dev automation and quality gates), T041**: owner-side Cognito test-account
   provisioning for `e2e/real-user-login.spec.ts`. Create one Cognito user in pool
   `eu-west-3_VHPSFHPrK` (e.g. `playwright-test@<domain>`), set a permanent password via
