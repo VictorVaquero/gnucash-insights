@@ -10,6 +10,12 @@ const prodDatabaseName = process.env.TURSO_DATABASE_NAME;
 const prodDatabaseUrl = process.env.TURSO_DATABASE_URL;
 const guestDatabaseName = process.env.TURSO_GUEST_DATABASE_NAME;
 const guestDatabaseUrl = process.env.TURSO_GUEST_DATABASE_URL;
+// Real production data is scoped to members of this Cognito group, not to "any
+// successfully authenticated Cognito user" — the pool may contain other accounts
+// (e.g. a CI test user) that must fall back to guest-equivalent data, never real
+// financials. Cognito includes `cognito:groups` in the ID token automatically for
+// group members; no app-client attribute permissions needed.
+const OWNER_GROUP = "owners";
 
 export interface AccountConfig {
   expenses: string;
@@ -159,9 +165,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (authHeader?.startsWith("Bearer ")) {
-      // Real-user path: a Turso credential scoped to real financial data is only
-      // ever issued after Cognito verification succeeds.
-      await verifyCognitoIdToken(authHeader.slice("Bearer ".length));
+      const payload = await verifyCognitoIdToken(authHeader.slice("Bearer ".length));
+      const groups = Array.isArray(payload["cognito:groups"]) ? payload["cognito:groups"] : [];
+      const isOwner = groups.includes(OWNER_GROUP);
+
+      if (!isOwner) {
+        // Authenticated but not in the owners group (e.g. the Playwright CI test
+        // account): same guest-equivalent data as the unauthenticated guest path,
+        // never real financials — only owners-group membership unlocks the real
+        // database.
+        const token = await mintReadOnlyToken(guestDatabaseName);
+        res.status(200).json({
+          url: guestDatabaseUrl,
+          token,
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          accountConfig: GUEST_ACCOUNT_CONFIG,
+        });
+        return;
+      }
+
+      // Owner path: a Turso credential scoped to real financial data is only ever
+      // issued after Cognito verification succeeds AND the token carries owners-group
+      // membership.
       const accountConfig = getRealAccountConfig();
       if (!accountConfig) {
         console.error("turso-token: missing or malformed ACCOUNT_CONFIG_VICTOR env var");
