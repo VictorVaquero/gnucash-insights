@@ -20,3 +20,5 @@ jobs:
       - run: pnpm build
       - run: pnpm test
       - run: pnpm run format:check
+      - run: pnpm run perf
+      - run: pnpm run size

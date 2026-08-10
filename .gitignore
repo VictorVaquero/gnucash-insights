@@ -38,3 +38,6 @@ routeTree.gen.ts
 # Playwright
 /playwright-report/
 /test-results/
+
+# Lighthouse CI
+/.lighthouseci/

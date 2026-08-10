@@ -12,6 +12,14 @@ export default defineConfig({
   build: {
     outDir: "dist/dashboard",
     assetsDir: "assets/",
+    rollupOptions: {
+      output: {
+        // Route/module chunks are also often named "index-*" (many route folders have
+        // an index.tsx), which collides with the real entry chunk in size-limit's glob
+        // (package.json's "size-limit" config) — give the entry a distinct prefix.
+        entryFileNames: "assets/main-[hash].js",
+      },
+    },
   },
   base: "/dashboard/",
 });

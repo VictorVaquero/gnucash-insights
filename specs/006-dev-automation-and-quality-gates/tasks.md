@@ -367,34 +367,86 @@ large dependency) in a test branch; confirm the `size-limit` CI check fails.
 
 ### Implementation for User Story 3
 
-- [ ] T043 [P] [US3] Add `@lhci/cli`, `size-limit`, `@size-limit/file` to `package.json`
+- [x] T043 [P] [US3] Add `@lhci/cli`, `size-limit`, `@size-limit/file` to `package.json`
       devDependencies; run `pnpm install` (research.md items 19-20).
-- [ ] T044 [US3] Run `pnpm build && pnpm preview` locally, then
+      Installed `@lhci/cli@0.15.1`, `size-limit@13.0.3`, `@size-limit/file@13.0.3` via
+      `pnpm add -D`.
+- [x] T044 [US3] Run `pnpm build && pnpm preview` locally, then
       `npx lhci autorun --collect.numberOfRuns=3` once to measure a real performance/
       best-practices/seo baseline score against `http://localhost:4173/dashboard/`
       (research.md item 19, depends on T043).
-- [ ] T045 [US3] Create `lighthouserc.json`: `startServerCommand: "pnpm build && pnpm preview"`,
+      This sandbox has no system Chrome; `lhci`'s healthcheck failed with "Chrome
+      installation not found" until `CHROME_PATH` was pointed at Playwright's cached
+      chromium (`~/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome`) — a
+      local-only workaround, not needed in CI since `ubuntu-latest` ships Chrome
+      pre-installed. Measured performance score was noisy across repeated runs of the
+      _same unmodified build_: 0.75-0.80 across three separate measurement attempts
+      (standalone preview, full `pnpm run perf`, fresh preview). best-practices and seo
+      were stable at ~0.96 and ~0.92 respectively.
+- [x] T045 [US3] Create `lighthouserc.json`: `startServerCommand: "pnpm build && pnpm preview"`,
       `numberOfRuns: 3`, `categories:performance`/`categories:best-practices` asserted at
       `"error"` with `minScore` set from T044's measured score (or 0.03-0.05 below it if >0.95), `categories:seo` at `"warn"`, `categories:accessibility` at `"off"`
       (research.md item 19, data-model item 3, depends on T044).
-- [ ] T046 [US3] Add a `"perf": "lhci autorun"` script to `package.json`.
-- [ ] T047 [US3] Run `pnpm build`; read the actual gzip byte sizes of
+      Deviated from a literal reading of research.md item 19 for the `performance`
+      category: since the score is not >0.95, the letter of the methodology says use the
+      measured score directly, but the observed 0.75-0.80 noise band meant a threshold at
+      the top of that range (0.8) failed on its own very next re-run against unmodified
+      code — a miscalibrated, flaky gate. Set `performance` minScore to `0.7`, safely
+      below the lowest of three observed measurements, so the gate catches real
+      regressions without false-failing on environment noise. `best-practices` set to
+      `0.95` (error) and `seo` to `0.9` (warn), both comfortably below their stable
+      measured scores. `categories:accessibility` set to `"off"` per research.md item 19's
+      documented rationale — `vitest-axe`/`@axe-core/react` (Phase 6/US4) own that concern
+      with more actionable per-element detail, avoiding double-gating with contradictory
+      thresholds.
+- [x] T046 [US3] Add a `"perf": "lhci autorun"` script to `package.json`.
+- [x] T047 [US3] Run `pnpm build`; read the actual gzip byte sizes of
       `dist/dashboard/assets/index-*.js` (main entry chunk) and
       `dist/dashboard/assets/CartesianChart-*.js` (heaviest route chunk) (research.md
       item 20, depends on T043).
-- [ ] T048 [US3] Add a `"size-limit"` config block to `package.json` with the two entries
+      Discovered the entry-chunk glob as literally specified collides with unrelated
+      chunks: Rollup's default naming gives every source module with no better-inferable
+      name a filename starting with `index-<hash>.js`, and many per-route `index.tsx`
+      files (`src/routes/summary/index.tsx`, `src/routes/expenses/index.tsx`, etc.) each
+      produce their own `index-*.js` chunk — confirmed via `ls dist/dashboard/assets/`
+      showing 8 different `index-*.js` files. Fixed by adding
+      `build.rollupOptions.output.entryFileNames: "assets/main-[hash].js"` to
+      `vite.config.ts`, giving only the true entry chunk (verified against the `<script>`
+      src in `dist/dashboard/index.html`) a distinct `main-*.js` prefix. Measured real
+      gzip sizes after `rm -rf dist && pnpm build`:
+      `dist/dashboard/assets/main-B35Qsmlc.js` = 316,549 bytes (~317.22 kB gzip-reported)
+      and `dist/dashboard/assets/CartesianChart-DkSqYyVM.js` = 80,204 bytes (~80.15 kB
+      gzip-reported).
+- [x] T048 [US3] Add a `"size-limit"` config block to `package.json` with the two entries
       from T047, `limit` set to each measured gzip size + ~10% headroom; add a
       `"size": "size-limit"` script (research.md item 20, data-model item 4, depends on
       T047).
-- [ ] T049 [US3] Replace `ci.yml`'s Lighthouse/size-limit placeholder (from US1's T012)
+      Config targets `dist/dashboard/assets/main-*.js` (limit `350 KB`, ~10% over the
+      measured 317.22 kB) and `dist/dashboard/assets/CartesianChart-*.js` (limit `89 KB`,
+      ~11% over the measured 80.15 kB).
+- [x] T049 [US3] Replace `ci.yml`'s Lighthouse/size-limit placeholder (from US1's T012)
       with `pnpm run perf` and `pnpm run size` steps, both after `build`, both required
       (research.md item 21, contracts/ci-checks-contract.md, depends on T012, T045, T046,
       T048).
-- [ ] T050 [US3] Manually validate `quickstart.md`'s US3 steps: `pnpm run perf` and
+      Added `- run: pnpm run perf` and `- run: pnpm run size` after the existing
+      `pnpm run format:check` step in `.github/workflows/ci.yml`, so both gate every PR
+      (not merge-only), matching research.md item 21's placement decision.
+- [x] T050 [US3] Manually validate `quickstart.md`'s US3 steps: `pnpm run perf` and
       `pnpm run size` pass on current `master`; a deliberate bundle-size regression on a
       scratch branch fails `pnpm run size`; a deliberate performance regression fails
       `pnpm run perf`; both revert cleanly; `lighthouserc.json` uses `vite preview`, not a
       live URL (depends on T045, T048, T049).
+      All validated locally: (1) `pnpm run perf` and `pnpm run size` both pass cleanly
+      against the final config. (2) Temporarily lowered the `main bundle` `size-limit`
+      entry to `1 KB` → `pnpm run size` failed with exit code 1 ("Package size limit has
+      exceeded by 316.21 kB"); reverted to `350 KB` → passes again. (3) Temporarily raised
+      `lighthouserc.json`'s `performance` minScore to `0.99` → `pnpm run perf` failed with
+      exit code 1 ("expected: >=0.99, found: 0.79, all values: 0.77, 0.78, 0.79");
+      reverted to `0.7` → passes again. (4) `lighthouserc.json`'s `startServerCommand` is
+      `"pnpm build && pnpm preview"` (`vite preview` under the hood), not a live URL —
+      confirmed by inspection. (5) PR-level required-check verification (a real PR
+      showing both checks as required and passing) not verifiable without pushing a
+      branch to GitHub, consistent with how T014 handled the equivalent US1 step.
 
 **Checkpoint**: User Stories 1-3 all work independently — a future change that regresses
 Core Web Vitals or bloats the bundle is caught before it reaches production.
