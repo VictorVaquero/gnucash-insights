@@ -13,6 +13,7 @@ export function chooseTooltipPointLine<D>(
     const bisectY = d3.bisector(yf).center;
 
     function choose(event: PointerEvent): [number, number, D|null] {
+        if (dates.length === 0) return [0, 0, null];
         const [x, y] = [xScale.invert(d3.pointer(event)[0]), yScale.invert(d3.pointer(event)[1])]
         const u = bisectX(dates, x);
         const split = dates[u][1];
