@@ -1,16 +1,22 @@
 import { BarLoader } from "@/components/ui/BarLoader";
-import * as d3 from "d3";
 import { DateTime } from "luxon";
-import { RefObject, useMemo, useRef } from "react";
+import { useMemo } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  TooltipContentProps,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-import { parseNum, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/charts/XAxis";
-import { YAxis } from "@/components/charts/YAxis";
+import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesDetailedOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
-import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
-import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getColor } from "./utils";
 
@@ -20,83 +26,70 @@ interface Data {
   fin: string;
   value: number;
 }
+interface ChartRow extends Data {
+  finLabel: string;
+}
 
-const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
-const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
+const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
+const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const xf = (d: Data) => DateTime.fromISO(d.fin);
-const yf = (d: Data) => d.value;
-const orderxf = (a: Data, b: Data) => (xf(a) > xf(b) ? 1 : -1);
-const orderyf = (a: Data, b: Data) => (yf(a) > yf(b) ? 1 : -1);
 
-const DrawTravelExpensesPlot = (props: {
-  data: Data[];
-  domain: { startDate: DateTime; endDate: DateTime };
-}) => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const [width, height] = useWindowSize(svgRef);
+const ChartTooltipContent = ({ active, payload }: TooltipContentProps<number, string>) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const d = payload[0].payload as ChartRow;
+  return (
+    <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
+      <span style={{ color: getColor(d.name) }}>{d.name}</span>
+      <span className="text-muted-foreground text-xs">
+        {d.ini} | {d.fin}
+      </span>
+      <span className="text-red-500">{parseNum(d.value)}</span>
+    </div>
+  );
+};
+
+const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
-  const range = useMemo(() => {
-    return {
-      x: [margin.l, width - margin.r],
-      y: [height - margin.b, margin.t],
-    };
-  }, [width, height, margin]);
 
-  const sortedData = [...props.data].sort(orderyf).sort(orderxf);
-
-  const xDomain = [props.domain.startDate.minus({ month: 4 }), props.domain.endDate];
-  const yDomain = [0, Math.max(...sortedData.map(yf))];
-  const xScale = d3.scaleUtc(xDomain, range.x);
-  const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
-  const rectWidth = (width / sortedData.length) * 1.4;
-
-  const choosePoint = chooseTooltipPointLine(sortedData, xf, yf, xScale, yScale);
-  const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: Data) => {
-    if (ref.current !== null) {
-      const tooltip = d3.select(ref.current);
-      tooltip.select("#title").text(d.name);
-      tooltip.select("#title").style("color", getColor(d.name));
-      tooltip.select("#range").text(`${d.ini} | ${d.fin}`);
-      tooltip.select("#value").text(parseNum(d.value));
-    }
-  };
+  const chartData: ChartRow[] = useMemo(
+    () =>
+      [...props.data]
+        .sort((a, b) => (xf(a) > xf(b) ? 1 : -1))
+        .map((d) => ({ ...d, finLabel: xf(d).toFormat("LLL yy") })),
+    [props.data],
+  );
 
   return (
     <div className="relative w-full h-full">
-      <svg className="w-full h-full" ref={svgRef}>
-        <XAxis width={width} range={range} xScale={xScale} />
-        <YAxis height={height} range={range} scale={yScale} />
-        <g className="rect">
-          {sortedData.map((d) => (
-            <rect
-              fill={getColor(d.name)}
-              fillOpacity={0.4}
-              key={d.name + d.fin}
-              strokeWidth="1.5"
-              shapeRendering="geometricPrecision"
-              stroke={getColor(d.name)}
-              x={xScale(xf(d)) - rectWidth / 2}
-              y={yScale(yf(d))}
-              height={range.y[0] - yScale(yf(d))}
-              width={rectWidth}
-            />
-          ))}
-        </g>
-      </svg>
-      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
-        <div className="flex flex-col items-center px-6 py-2">
-          <span className="text-shark-300" id="title">
-            Title
-          </span>
-          <span className="text-shark-300" id="range">
-            Range
-          </span>
-          <span id="value" className="text-red-500">
-            Value
-          </span>
-        </div>
-      </Tooltip>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={margin}>
+          <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          <XAxis
+            dataKey="finLabel"
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+            tickFormatter={(value: number) => parseNum(value)}
+            width={margin.left}
+          />
+          <RechartsTooltip
+            content={(props: TooltipContentProps<number, string>) => (
+              <ChartTooltipContent {...props} />
+            )}
+          />
+          <Bar dataKey="value" fillOpacity={0.4} isAnimationActive={false}>
+            {chartData.map((d) => (
+              <Cell key={d.name + d.fin} fill={getColor(d.name)} stroke={getColor(d.name)} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -116,5 +109,5 @@ export const TravelExpensesPlot = () => {
       </div>
     );
 
-  return <DrawTravelExpensesPlot data={data as Data[]} domain={{ startDate: from, endDate: to }} />;
+  return <DrawTravelExpensesPlot data={data as Data[]} />;
 };

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import * as d3 from "d3";
 import { useCallback } from "react";
 
+import { groupBy, rollup, sum } from "@/common/aggregate";
 import { parseNum } from "@/common/utils";
 import { BarChart } from "@/components/charts/BarPlot";
 import { BarLoader } from "@/components/ui/BarLoader";
@@ -32,9 +32,9 @@ function pivotData(data: Data[]) {
   const accountNames = Array.from(new Set(data.map((d) => d.accountName)));
 
   // We calculate totals by accountId to sort the returned keys by value
-  const idTotals = d3.rollup(
+  const idTotals = rollup(
     data,
-    (v) => d3.sum(v, (d) => d.value),
+    (v) => sum(v, (d) => d.value),
     (d) => d.accountId,
   );
 
@@ -42,7 +42,7 @@ function pivotData(data: Data[]) {
     (a, b) => (idTotals.get(b) || 0) - (idTotals.get(a) || 0),
   );
 
-  const groupedByDate = d3.group(data, (d) => d.date);
+  const groupedByDate = groupBy(data, (d) => d.date);
 
   const pivoted = Array.from(groupedByDate, ([date, records]): PivotedRow => {
     // 2. Initialize the row with metadata

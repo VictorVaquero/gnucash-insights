@@ -1,19 +1,24 @@
 import { BarLoader } from "@/components/ui/BarLoader";
-import * as d3 from "d3";
 import { DateTime } from "luxon";
-import { RefObject, useMemo, useRef } from "react";
+import { useMemo } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import type { TooltipContentProps } from "recharts";
 
 import { getRandomColor } from "@/common/getColors";
-import { parseNum, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/charts/XAxis";
-import { YAxis } from "@/components/charts/YAxis";
+import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
 import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
-import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
-import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -28,100 +33,92 @@ interface Account {
   id: string;
   name: string;
 }
+interface ChartRow {
+  date: string;
+  dateLabel: string;
+  [accountId: string]: string | number;
+}
 
-const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
-const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
-const xf = (d: Data) => DateTime.fromISO(d.date);
-const yf = (d: Data) => Math.abs(d.value);
+const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
+const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 
-const DrawMonthlyAccountsPlot = ({
-  data,
+const ChartTooltipContent = ({
+  active,
+  payload,
+  label,
   accounts,
-  domain,
-}: {
-  data: Data[];
-  accounts: Account[];
-  domain: { startDate: DateTime; endDate: DateTime };
-}) => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const [width, height] = useWindowSize(svgRef);
+}: TooltipContentProps<number, string> & { accounts: Account[] }) => {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center gap-0.5">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      {payload.map((entry) => {
+        const account = accounts.find((a) => a.id === entry.dataKey);
+        return (
+          <span key={entry.dataKey} style={{ color: entry.color }}>
+            {account?.name}: {parseNum(entry.value as number)}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: Account[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
-  const range = {
-    x: [margin.l, width - margin.r],
-    y: [height - margin.b, margin.t],
-  };
-  const xDomain = [domain.startDate.minus({ month: 1 }), domain.endDate];
-  const yDomain = [0, d3.max(data, yf) as number];
 
-  const xScale = d3.scaleUtc(xDomain, range.x);
-  const yScale = d3.scaleLinear(yDomain, range.y);
-  const line = d3
-    .line<Data>()
-    .curve(d3.curveLinear)
-    .x((d) => xScale(xf(d)))
-    .y((d) => yScale(yf(d)));
-
-  const findPointById = (id: string): Data | undefined =>
-    data.find((d) => "circle" + d.accountId + d.date === id);
-
-  const choosePoint = chooseTooltipPointNode<Data>(findPointById, "circle");
-  const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: Data) => {
-    if (ref.current !== null) {
-      const tooltip = d3.select(ref.current);
-      tooltip.select("#title").text(d.accountName);
-      tooltip.select("#date").text(d.dateLabel);
-      tooltip.select("#value").style("color", getRandomColor(d.accountId));
-      tooltip.select("#value").text(parseNum(yf(d)));
+  const chartData = useMemo(() => {
+    const byDate = new Map<string, ChartRow>();
+    for (const d of data) {
+      const row = byDate.get(d.date) ?? { date: d.date, dateLabel: d.dateLabel };
+      row[d.accountId] = Math.abs(d.value);
+      byDate.set(d.date, row);
     }
-  };
+    return Array.from(byDate.values()).sort(
+      (a, b) => DateTime.fromISO(a.date).toMillis() - DateTime.fromISO(b.date).toMillis(),
+    );
+  }, [data]);
 
   return (
     <div className="relative w-full h-full">
-      <svg className="w-full h-full" ref={svgRef}>
-        <XAxis width={width} range={range} xScale={xScale} />
-        <YAxis height={height} range={range} scale={yScale} />
-        <g className="lines">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={margin}>
+          <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          <XAxis
+            dataKey="dateLabel"
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+            tickFormatter={(value: number) => parseNum(value)}
+            width={margin.left}
+          />
+          <RechartsTooltip
+            content={(props: TooltipContentProps<number, string>) => (
+              <ChartTooltipContent {...props} accounts={accounts} />
+            )}
+          />
           {accounts.map((s) => (
-            <path
-              fill="none"
+            <Line
+              key={s.id}
+              type="linear"
+              dataKey={s.id}
+              name={s.name}
               stroke={getRandomColor(s.id)}
-              key={"account" + s.id}
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeOpacity="1"
-              shapeRendering="geometricPrecision"
-              d={line(data.filter((d) => d.accountId === s.id)) as string}
+              strokeWidth={1.5}
+              dot={false}
+              activeDot={{ r: 4 }}
+              connectNulls
+              isAnimationActive={false}
             />
           ))}
-        </g>
-        <g className="circles">
-          {data.map((d) => (
-            <circle
-              fill={"#00000000"}
-              key={"circle" + d.accountId + d.date}
-              id={"circle" + d.accountId + d.date}
-              strokeWidth="1.5"
-              shapeRendering="geometricPrecision"
-              r="20"
-              cx={xScale(xf(d))}
-              cy={yScale(yf(d))}
-            />
-          ))}
-        </g>
-      </svg>
-      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
-        <div className="flex flex-col items-center px-6 py-2">
-          <span className="text-shark-300" id="title">
-            Title
-          </span>
-          <span className="text-shark-300" id="date">
-            Date
-          </span>
-          <span id="value">Value</span>
-        </div>
-      </Tooltip>
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -167,11 +164,5 @@ export const AssetAccountsPlot = () => {
       </div>
     );
 
-  return (
-    <DrawMonthlyAccountsPlot
-      data={data}
-      accounts={accounts}
-      domain={{ startDate: dateRange.from, endDate: dateRange.to }}
-    />
-  );
+  return <DrawMonthlyAccountsPlot data={data} accounts={accounts} />;
 };

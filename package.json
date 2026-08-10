@@ -39,7 +39,7 @@
       "name": "chart route chunk",
       "path": "dist/dashboard/assets/CartesianChart-*.js",
       "gzip": true,
-      "limit": "89 KB"
+      "limit": "105 KB"
     }
   ],
   "dependencies": {
@@ -59,7 +59,6 @@
     "@tanstack/router-plugin": "^1.102.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "d3": "^7.9.0",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.8",
     "luxon": "^3.5.0",
@@ -91,7 +90,6 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.3",
-    "@types/d3": "^7.4.3",
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.17.17",
     "@types/react": "^19.2.7",

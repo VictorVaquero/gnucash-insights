@@ -1,17 +1,23 @@
 import { BarLoader } from "@/components/ui/BarLoader";
-import * as d3 from "d3";
-import { DateTime } from "luxon";
-import { RefObject, useMemo, useRef } from "react";
+import { useMemo } from "react";
+import {
+  Bar,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  TooltipContentProps,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-import { parseNum, twStyles, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/charts/XAxis";
-import { YAxis } from "@/components/charts/YAxis";
+import { parseNum, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { transactsSumOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
-import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
-import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -23,132 +29,95 @@ export interface PlotData {
   income: number;
   net: number;
 }
+interface ChartRow extends PlotData {
+  netAbs: number;
+}
 
 const colorCodes: Record<colorType, string> = {
   g: twStyles.getPropertyValue("--color-emerald-500"),
   r: twStyles.getPropertyValue("--color-red-500"),
 };
 
-const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
-const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
+const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
+const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const getColor = (d: colorType) => colorCodes[d];
-const xf = (d: PlotData) => DateTime.fromISO(d.date);
-const yf = (d: PlotData) => Math.max(d.income, d.expenses, d.net);
 
-const DrawMonthlyIncomeExpensesPlot = ({
-  data,
-  domain,
-}: {
-  data: PlotData[];
-  domain: { startDate: DateTime; endDate: DateTime };
-}) => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const [width, height] = useWindowSize(svgRef);
+const ChartTooltipContent = ({ active, payload }: TooltipContentProps<number, string>) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const d = payload[0].payload as ChartRow;
+  return (
+    <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
+      <span className="text-muted-foreground text-xs">{d.dateLabel}</span>
+      <div className="text-muted-foreground text-sm">
+        Income: <span style={{ color: getColor("g") }}>{parseNum(d.income)}</span>
+      </div>
+      <div className="text-muted-foreground text-sm">
+        Expenses: <span style={{ color: getColor("r") }}>{parseNum(d.expenses)}</span>
+      </div>
+      <div className="text-muted-foreground text-sm">
+        Net: <span style={{ color: getColor(d.net > 0 ? "g" : "r") }}>{parseNum(d.net)}</span>
+      </div>
+    </div>
+  );
+};
+
+const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
-  const range = useMemo(() => {
-    return {
-      x: [margin.l, width - margin.r],
-      y: [height - margin.b, margin.t],
-    };
-  }, [width, height, margin]);
 
-  const xDomain = [domain.startDate.minus({ month: 1 }), domain.endDate];
-  const yDomain = [0, Math.max(...data.map(yf))];
-  const xScale = d3.scaleUtc(xDomain, range.x);
-  const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
-  const lineIncome = d3
-    .line<PlotData>()
-    .curve(d3.curveLinear)
-    .x((d) => xScale(xf(d)))
-    .y((d) => yScale(d.income));
-  const lineExpenses = d3
-    .line<PlotData>()
-    .curve(d3.curveLinear)
-    .x((d) => xScale(xf(d)))
-    .y((d) => yScale(d.expenses));
-  const rectWidth = (width / data.length) * 0.7;
-
-  const choosePoint = chooseTooltipPointLine(data, xf, yf, xScale, yScale);
-  const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: PlotData) => {
-    if (ref.current !== null) {
-      const tooltip = d3.select(ref.current);
-      tooltip.select("#title").text(d.dateLabel);
-      tooltip.select("#income").text(parseNum(d.income));
-      tooltip.select("#expenses").text(parseNum(d.expenses));
-      tooltip.select("#net").style("color", getColor(d.net > 0 ? "g" : "r"));
-      tooltip.select("#net").text(parseNum(d.net));
-    }
-  };
+  const chartData: ChartRow[] = useMemo(
+    () => data.map((d) => ({ ...d, netAbs: Math.abs(d.net) })),
+    [data],
+  );
 
   return (
     <div className="relative w-full h-full">
-      <svg className="w-full h-full" ref={svgRef}>
-        <XAxis width={width} range={range} xScale={xScale} />
-        <YAxis height={height} range={range} scale={yScale} />
-        <g className="rect">
-          {data.map((d) => (
-            <rect
-              fill={getColor(d.net > 0 ? "g" : "r")}
-              fillOpacity={0.4}
-              key={"rect" + d.date}
-              strokeWidth="1.5"
-              shapeRendering="geometricPrecision"
-              stroke={getColor(d.net > 0 ? "g" : "r")}
-              x={xScale(xf(d)) - rectWidth / 2}
-              y={yScale(Math.abs(d.net))}
-              height={range.y[0] - yScale(Math.abs(d.net))}
-              width={rectWidth}
-            />
-          ))}
-        </g>
-        <g className="lineExpenses">
-          <path
-            fill="none"
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={chartData} margin={margin}>
+          <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          <XAxis
+            dataKey="dateLabel"
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+            tickFormatter={(value: number) => parseNum(value)}
+            width={margin.left}
+          />
+          <RechartsTooltip
+            content={(props: TooltipContentProps<number, string>) => (
+              <ChartTooltipContent {...props} />
+            )}
+          />
+          <Bar dataKey="netAbs" fillOpacity={0.4} isAnimationActive={false}>
+            {chartData.map((d) => (
+              <Cell key={"net" + d.date} fill={getColor(d.net > 0 ? "g" : "r")} />
+            ))}
+          </Bar>
+          <Line
+            type="linear"
+            dataKey="expenses"
             stroke={getColor("r")}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeOpacity="1"
-            shapeRendering="geometricPrecision"
-            d={lineExpenses(data) ?? ""}
+            strokeWidth={1.5}
+            dot={false}
+            activeDot={{ r: 4 }}
+            isAnimationActive={false}
           />
-        </g>
-        <g className="lineIncome">
-          <path
-            fill="none"
+          <Line
+            type="linear"
+            dataKey="income"
             stroke={getColor("g")}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeOpacity="1"
-            shapeRendering="geometricPrecision"
-            d={lineIncome(data) ?? ""}
+            strokeWidth={1.5}
+            dot={false}
+            activeDot={{ r: 4 }}
+            isAnimationActive={false}
           />
-        </g>
-      </svg>
-      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
-        <div className="flex flex-col items-center px-6 py-2">
-          <span className="text-shark-300" id="title">
-            Title
-          </span>
-          <div className="text-shark-400">
-            Income:{" "}
-            <span id="income" className="text-emerald-500">
-              Income
-            </span>
-          </div>
-          <div className="text-shark-400">
-            Expenses:{" "}
-            <span id="expenses" className="text-red-500">
-              Expenses
-            </span>
-          </div>
-          <div className="text-shark-400">
-            Net: <span id="net">net</span>
-          </div>
-        </div>
-      </Tooltip>
+        </ComposedChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -229,10 +198,5 @@ export const IncomeExpensesPlot = () => {
       </div>
     );
 
-  return (
-    <DrawMonthlyIncomeExpensesPlot
-      data={data}
-      domain={{ startDate: dateRange.from, endDate: dateRange.to }}
-    />
-  );
+  return <DrawMonthlyIncomeExpensesPlot data={data} />;
 };

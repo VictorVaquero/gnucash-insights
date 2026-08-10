@@ -1,117 +1,131 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useQuery } from "@tanstack/react-query";
-import * as d3 from "d3";
 import { DateTime } from "luxon";
-import { MutableRefObject, useMemo, useRef } from "react";
+import { useMemo } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ReferenceArea,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  TooltipContentProps,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-import { parseNum, twStyles, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/charts/XAxis";
-import { YAxis } from "@/components/charts/YAxis";
+import { parseNum, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesYearMonthOptions, travelExpensesYearOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
-import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
-import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 
 interface Data {
   date: string;
   value: number;
 }
+interface ChartRow extends Data {
+  dateLabel: string;
+}
+interface YearBand {
+  year: string;
+  x1: string;
+  x2: string;
+  value: number;
+}
 
 const redColor = twStyles.getPropertyValue("--color-red-500");
 
-const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
-const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
+const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
+const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const getColor = () => redColor;
 const xf = (d: Data) => DateTime.fromISO(d.date);
-const yf = (d: Data) => d.value;
-const orderxf = (a: Data, b: Data) => (xf(a) > xf(b) ? 1 : -1);
-const orderyf = (a: Data, b: Data) => (yf(a) > yf(b) ? 1 : -1);
 
-const DrawTravelExpensesMonthlyPlot = (props: {
-  data: Data[];
-  dataYearly: Data[];
-  domain: { startDate: DateTime; endDate: DateTime };
-}) => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const [width, height] = useWindowSize(svgRef);
+const ChartTooltipContent = ({ active, payload }: TooltipContentProps<number, string>) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const d = payload[0].payload as ChartRow;
+  return (
+    <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
+      <span className="text-muted-foreground text-xs">{d.dateLabel}</span>
+      <span className="text-red-500">{parseNum(d.value)}</span>
+    </div>
+  );
+};
+
+const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
-  const range = useMemo(() => {
-    return {
-      x: [margin.l, width - margin.r],
-      y: [height - margin.b, margin.t],
-    };
-  }, [width, height, margin]);
 
-  const sortedData = [...props.data].sort(orderyf).sort(orderxf);
-  const sortedDataYearly = [...props.dataYearly].sort(orderyf).sort(orderxf);
+  const chartData: ChartRow[] = useMemo(
+    () =>
+      [...props.data]
+        .sort((a, b) => (xf(a) > xf(b) ? 1 : -1))
+        .map((d) => ({ ...d, dateLabel: xf(d).toFormat("LLL yy") })),
+    [props.data],
+  );
 
-  const xDomain = [props.domain.startDate.minus({ month: 4 }), props.domain.endDate];
-  const yDomain = [0, Math.max(...sortedDataYearly.map(yf))];
-  const xScale = d3.scaleUtc(xDomain, range.x);
-  const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
-  const rectWidth = (width / sortedData.length) * 0.6 * 0.7;
-  const rectWidthYearly =
-    xScale(props.domain.startDate.plus({ year: 1 })) - xScale(props.domain.startDate);
-
-  const choosePoint = chooseTooltipPointLine(sortedData, xf, yf, xScale, yScale);
-  const updateTooltip = (ref: MutableRefObject<HTMLDivElement | null>, d: Data) => {
-    if (ref.current !== null) {
-      const tooltip = d3.select(ref.current);
-      tooltip.select("#title").text(d.date);
-      tooltip.select("#value").text(parseNum(d.value));
+  const yearBands: YearBand[] = useMemo(() => {
+    const bands: YearBand[] = [];
+    for (const y of props.dataYearly) {
+      const year = xf(y).toFormat("yyyy");
+      const monthsInYear = chartData.filter((d) => d.date.startsWith(year));
+      if (monthsInYear.length === 0) continue;
+      bands.push({
+        year,
+        x1: monthsInYear[0].dateLabel,
+        x2: monthsInYear[monthsInYear.length - 1].dateLabel,
+        value: y.value,
+      });
     }
-  };
+    return bands;
+  }, [props.dataYearly, chartData]);
 
   return (
     <div className="relative w-full h-full">
-      <svg className="w-full h-full" ref={svgRef}>
-        <XAxis width={width} range={range} xScale={xScale} />
-        <YAxis height={height} range={range} scale={yScale} />
-        <g className="rectYear">
-          {sortedDataYearly.map((d) => (
-            <rect
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={margin}>
+          <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          <XAxis
+            dataKey="dateLabel"
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+            tickFormatter={(value: number) => parseNum(value)}
+            width={margin.left}
+          />
+          {yearBands.map((b) => (
+            <ReferenceArea
+              key={b.year}
+              x1={b.x1}
+              x2={b.x2}
+              y1={0}
+              y2={b.value}
               fill={getColor()}
               fillOpacity={0.2}
-              key={d.date}
-              strokeWidth="0"
-              shapeRendering="geometricPrecision"
-              stroke={getColor()}
-              x={xScale(xf(d))}
-              y={yScale(yf(d))}
-              height={range.y[0] - yScale(yf(d))}
-              width={rectWidthYearly}
+              stroke="none"
+              ifOverflow="visible"
             />
           ))}
-        </g>
-        <g className="rect">
-          {sortedData.map((d) => (
-            <rect
-              fill={getColor()}
-              fillOpacity={0.4}
-              key={d.date}
-              strokeWidth="1.5"
-              shapeRendering="geometricPrecision"
-              stroke={getColor()}
-              x={xScale(xf(d)) - rectWidth / 2}
-              y={yScale(yf(d))}
-              height={range.y[0] - yScale(yf(d))}
-              width={rectWidth}
-            />
-          ))}
-        </g>
-      </svg>
-      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
-        <div className="flex flex-col items-center px-6 py-2">
-          <span className="text-shark-300" id="title">
-            Title
-          </span>
-          <span id="value" className="text-red-500">
-            Value
-          </span>
-        </div>
-      </Tooltip>
+          <RechartsTooltip
+            content={(props: TooltipContentProps<number, string>) => (
+              <ChartTooltipContent {...props} />
+            )}
+          />
+          <Bar
+            dataKey="value"
+            fill={getColor()}
+            fillOpacity={0.4}
+            stroke={getColor()}
+            strokeWidth={1.5}
+            barSize={isNarrowViewport ? 8 : 14}
+            isAnimationActive={false}
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -134,11 +148,5 @@ export const TravelExpensesMonthlyPlot = () => {
       </div>
     );
 
-  return (
-    <DrawTravelExpensesMonthlyPlot
-      data={data}
-      dataYearly={dataYearly}
-      domain={{ startDate: from, endDate: to }}
-    />
-  );
+  return <DrawTravelExpensesMonthlyPlot data={data} dataYearly={dataYearly} />;
 };

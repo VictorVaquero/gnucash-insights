@@ -108,7 +108,7 @@ by manually adding `class="dark"` to `<html>` in devtools.)
       Tailwind's built-in `--color-red-600`, matching the `red-500`/`red-600` already used
       ad hoc across the app for expense/error styling). Also added the standard shadcn
       `@layer base { * { @apply border-border; } body { @apply bg-background
-    text-foreground; } }` block, since `dropdown-menu.tsx`'s bare `border` utility and
+  text-foreground; } }` block, since `dropdown-menu.tsx`'s bare `border` utility and
       shadcn's own convention both expect it (finding beyond T002's literal scope, noted
       here rather than opening a new task) — `index.html`'s body still carries its own
       hardcoded `bg-white dark:bg-shark-900` classes which currently win over this base
@@ -370,7 +370,7 @@ returns zero results.
       Confirmed bugs list (fixed in T017): `src/components/charts/XAxis.tsx`,
       `src/components/charts/YAxis.tsx` (D3 axis text/gridlines, transparent chart
       backdrop), `src/components/AccountMenu.tsx` ("Log In" link), `src/layout/
-    ErrorPage.tsx` and `src/layout/NotFoundPage.tsx` (root text + their `bg-shark-800`
+  ErrorPage.tsx` and `src/layout/NotFoundPage.tsx` (root text + their `bg-shark-800`
       button/link, which itself needed forcing back to explicit white since it's a
       permanently-dark pill), `src/routes/analysis/index.tsx` ("Lista de filtros" `h2`),
       `src/routes/analysis/-components/FilterList.tsx` (`SearchList` item text),
@@ -510,56 +510,122 @@ dependency tree returns zero results; every chart renders via Recharts primitive
 
 ### Implementation for User Story 4 — prep
 
-- [ ] T025 [US4] Re-confirm the D3 file inventory is still accurate:
+- [x] T025 [US4] Re-confirm the D3 file inventory is still accurate:
       `git grep -l 'import \* as d3 from "d3"' src` (expect the 15 files listed in
       `data-model.md`'s Chart Migration Inventory).
-- [ ] T026 [P] [US4] Write the TanStack Router keep-confirmation entry in
+      **Done**: confirmed exactly 15 matches, identical to `data-model.md`'s inventory
+      (including the two trailing-space filenames, preserved as-is).
+- [x] T026 [P] [US4] Write the TanStack Router keep-confirmation entry in
       `docs/decisions.md` (FR-010, research.md item 9).
-- [ ] T027 [P] [US4] Write the TanStack Query keep-confirmation entry in
+      **Done**: added under "Dependency keep: TanStack Router" in `docs/decisions.md`.
+- [x] T027 [P] [US4] Write the TanStack Query keep-confirmation entry in
       `docs/decisions.md` (FR-010, research.md item 9).
+      **Done**: added under "Dependency keep: TanStack Query" in `docs/decisions.md`.
 
 ### Implementation for User Story 4 — per-file migration to Recharts
 
-- [ ] T028 [P] [US4] Migrate `src/routes/summary/-plots/AssetAccountsPlot.tsx` from D3 to
+- [x] T028 [P] [US4] Migrate `src/routes/summary/-plots/AssetAccountsPlot.tsx` from D3 to
       Recharts (`ResponsiveContainer` + Line/AreaChart), preserving current data/metrics
       (spec Acceptance Scenario US4.1).
-- [ ] T029 [P] [US4] Migrate `src/routes/summary/-plots/DetailedExpensesBarPlot.tsx` from
+      **Done**: replaced the manual `<svg>`+D3-scale/line/circle-hit-target implementation
+      with `ResponsiveContainer` + `LineChart`, one `<Line>` per account
+      (`getRandomColor(accountId)` stroke, unchanged), long-format query data pivoted to
+      one row per date via a `useMemo`. Recharts' own `XAxis`/`YAxis`/`Tooltip` used
+      (shared D3 `XAxis`/`YAxis`/`Tooltip`/`tooltipFuncs` components dropped for this
+      file). Tap-to-pin/always-visible-key-value/scrubber wiring deferred to US5/US6 per
+      tasks.md's phase separation (contract's (d)/(e) requirements land there, not here).
+- [x] T029 [P] [US4] Migrate `src/routes/summary/-plots/DetailedExpensesBarPlot.tsx` from
       D3 to a Recharts `BarChart`.
-- [ ] T030 [P] [US4] Migrate `src/routes/summary/-plots/DetailedIncomeBarPlot.tsx` from D3
+      **Done**: this file's chart rendering already went through the existing Recharts
+      `BarChart` wrapper (`src/components/charts/BarPlot.tsx`, not one of the 15 D3
+      files); its only `d3` usage was data aggregation (`d3.rollup`/`d3.sum`/
+      `d3.flatRollup`/`d3.group` in `collapseMinorAccounts`/`pivotData`). Replaced with
+      new plain-JS equivalents in `src/common/aggregate.ts` (`rollup`/`sum`/
+      `flatRollup`/`groupBy`), same insertion-order/grouping semantics, zero behavior
+      change.
+- [x] T030 [P] [US4] Migrate `src/routes/summary/-plots/DetailedIncomeBarPlot.tsx` from D3
       to a Recharts `BarChart`.
-- [ ] T031 [P] [US4] Migrate `src/routes/summary/-plots/IncomeExpensesPlot.tsx` from D3 to
+      **Done**: same pattern as T029 — chart already Recharts via `BarPlot.tsx`; swapped
+      `d3.rollup`/`d3.sum`/`d3.group` in `pivotData` for `src/common/aggregate.ts`.
+- [x] T031 [P] [US4] Migrate `src/routes/summary/-plots/IncomeExpensesPlot.tsx` from D3 to
       Recharts.
-- [ ] T032 [P] [US4] Migrate `src/routes/summary/-plots/MonthDetailedExpensesPiePlot .tsx`
+      **Done**: replaced D3 `<svg>` (rects + two lines + custom tooltip) with a Recharts
+      `ComposedChart` — `<Bar dataKey="netAbs">` with per-bar `<Cell>` colored by
+      sign(net) (green/red, same `getPropertyValue` color source), plus `<Line>` for
+      income and expenses. Custom `Tooltip` content component reproduces the
+      income/expenses/net readout.
+- [x] T032 [P] [US4] Migrate `src/routes/summary/-plots/MonthDetailedExpensesPiePlot .tsx`
       from D3 to a Recharts `PieChart`.
-- [ ] T033 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesDetailedPlot.tsx`
+      **Done**: replaced D3 `pie()`/`arc()` donut with Recharts `<Pie>`
+      (`innerRadius`/`outerRadius` percentages, `paddingAngle`), one `<Cell>` per account
+      colored via the existing `getRandomColor`/`getDefaultColor`/hide-account-gray
+      logic; click-to-hide-account preserved via `onClick` on each `<Cell>`. Centered
+      month/total label kept as the pre-existing absolutely-positioned overlay div
+      (unchanged pattern, independent of the SVG). Filename's trailing space preserved.
+- [x] T033 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesDetailedPlot.tsx`
       from D3 to Recharts.
-- [ ] T034 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesMonthlyPlot.tsx`
+      **Done**: replaced D3 `d3.stack`/`d3.index`/`d3.union` stacked-rect implementation
+      with a Recharts `BarChart` using one `<Bar stackId="travel">` per travel name —
+      Recharts' native stacking replaces the manual `d3.stack` offset math entirely, data
+      pivoted to one row per date with one field per travel name.
+- [x] T034 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesMonthlyPlot.tsx`
       from D3 to Recharts.
-- [ ] T035 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesPiePlot .tsx`
+      **Done**: replaced the two-D3-rect-layer implementation (translucent full-year
+      background band + opaque month bar) with a Recharts `BarChart`
+      (`dataKey="value"`, `barSize` narrowed) plus one `<ReferenceArea>` per year
+      (`x1`/`x2` = that year's first/last month category, `y1=0`/`y2=`year total,
+      translucent fill) reproducing the year-band-behind-month-bars visual. Documented
+      here as a visual-approximation deviation per the chart contract's non-goals
+      (pixel-identical output not required).
+- [x] T035 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesPiePlot .tsx`
       from D3 to a Recharts `PieChart`.
-- [ ] T036 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesPlot.tsx` from
+      **Done**: same donut pattern as T032 (no click-to-hide here, matching the original
+      — simpler, read-only per-travel breakdown), custom tooltip showing name/value/
+      percentage-of-total. Filename's trailing space preserved.
+- [x] T036 [P] [US4] Migrate `src/routes/travels/-components/TravelExpensesPlot.tsx` from
       D3 to Recharts.
-- [ ] T037 [P] [US4] Migrate `src/routes/analysis/-components/TransactsPlot.tsx` from D3
+      **Done**: replaced D3 rect-per-travel bar chart with a Recharts `BarChart`, one
+      `<Cell>` per bar colored via the existing `getColor` (from `./utils`), x-axis
+      category label formatted from each travel's end date.
+- [x] T037 [P] [US4] Migrate `src/routes/analysis/-components/TransactsPlot.tsx` from D3
       to Recharts.
-- [ ] T038 [P] [US4] Resolve `src/routes/analysis/-components/KpiBlock.tsx`'s `d3` usage
+      **Done**: replaced D3 line+circle implementation with a Recharts `LineChart`
+      (single line — the source data always groups under one constant `name: "Mixin"`,
+      preserved as-is, not a behavior change). Grouping (`d3.groups`/`d3.sum`) replaced
+      with `src/common/aggregate.ts`'s `groupBy`/`sum`.
+- [x] T038 [P] [US4] Resolve `src/routes/analysis/-components/KpiBlock.tsx`'s `d3` usage
       (scale/number-formatting only, not a full chart per research.md item 4): drop the
       `d3` import in favor of `parseNum`/plain arithmetic, or migrate to a small Recharts
       primitive if a real chart is warranted — confirm scope during implementation.
+      **Done**: confirmed no chart here (KPI number cards only) — dropped `d3` entirely,
+      replaced `d3.groups`/`d3.sum` with `src/common/aggregate.ts`'s `groupBy`/`sum`.
 
 ### Implementation for User Story 4 — cleanup
 
-- [ ] T039 [US4] Delete `src/routes/summary/-plots/Tooltip.tsx` and
+- [x] T039 [US4] Delete `src/routes/summary/-plots/Tooltip.tsx` and
       `src/routes/summary/-plots/tooltipFuncs.tsx` once no chart file imports them
       (depends on T028-T038).
-- [ ] T040 [US4] Delete `src/components/charts/XAxis.tsx` and
+      **Done**: confirmed via grep no remaining importers, then deleted both files.
+- [x] T040 [US4] Delete `src/components/charts/XAxis.tsx` and
       `src/components/charts/YAxis.tsx` once no chart file imports them (depends on
       T028-T038).
-- [ ] T041 [US4] Remove `d3` and `@types/d3` from `package.json` (depends on T039, T040).
-- [ ] T042 [P] [US4] Verify `git grep -l 'import \* as d3 from "d3"' src` returns zero
+      **Done**: confirmed via grep no remaining importers, then deleted both files.
+- [x] T041 [US4] Remove `d3` and `@types/d3` from `package.json` (depends on T039, T040).
+      **Done**: ran `pnpm remove d3 @types/d3`; `package.json`/`pnpm-lock.yaml` updated,
+      no errors (one pre-existing, unrelated Storybook/Vite peer-dependency warning).
+- [x] T042 [P] [US4] Verify `git grep -l 'import \* as d3 from "d3"' src` returns zero
       results (spec SC-003) (depends on T041).
-- [ ] T043 [US4] Re-measure `pnpm build` + `pnpm size` against the T001 baseline; adjust
+      **Done**: confirmed zero results; also confirmed no `d3` references anywhere in
+      `src/` or `package.json`.
+- [x] T043 [US4] Re-measure `pnpm build` + `pnpm size` against the T001 baseline; adjust
       the `size-limit` "chart route chunk" budget in `package.json` if the real
       post-migration number differs materially (research.md item 11) (depends on T041).
+      **Done**: re-ran `pnpm build`/`pnpm size`. Main bundle: 318.13 KB gzip (limit 350 KB,
+      unchanged, passes). Chart route chunk: 94.49 KB gzip, exceeding the old 89 KB limit
+      by 5.49 KB (expected — Recharts pulls more sub-components into the shared chunk
+      than the old hand-rolled D3 code did); raised the `size-limit` "chart route chunk"
+      limit in `package.json` to 105 KB (deliberate headroom over the measured 94.49 KB).
+      Both budgets pass after the adjustment.
 
 **Checkpoint**: every chart renders through Recharts; `d3` fully removed.
 
@@ -705,7 +771,7 @@ resize, touch, and scrubber support.
 - [ ] T079 Manually re-verify the golden path and guest path (Constitution Principle III)
       against the T001 baseline, in both light and dark mode.
 - [ ] T080 Update `docs/review/12-library-choice-review.md`, `13-component-library-and-
-    design-system.md`, `14-charts-and-mobile-interaction.md`,
+  design-system.md`, `14-charts-and-mobile-interaction.md`,
       `15-theming-light-dark-mode.md`, and this spec's `spec.md` Status line from
       "Planning done"/"Planned" to reflect implementation is complete.
 

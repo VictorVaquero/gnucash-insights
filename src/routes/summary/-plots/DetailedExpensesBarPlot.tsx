@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import * as d3 from "d3";
 import { useCallback } from "react";
 
+import { flatRollup, groupBy, rollup, sum } from "@/common/aggregate";
 import { parseNum } from "@/common/utils";
 import { BarChart } from "@/components/charts/BarPlot";
 import { BarLoader } from "@/components/ui/BarLoader";
@@ -23,9 +23,9 @@ export interface Data {
 
 function collapseMinorAccounts(data: Data[], limit: number): Data[] {
   // 1. Calculate totals per account to find the "Heavy Hitters"
-  const totalByAccount = d3.rollup(
+  const totalByAccount = rollup(
     data,
-    (v) => d3.sum(v, (d) => d.value),
+    (v) => sum(v, (d) => d.value),
     (d) => d.accountId,
   );
 
@@ -39,14 +39,14 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
 
   // 3. Roll up data.
   // Note: We group by BOTH date and the "Calculated AccountId"
-  const collapsed = d3.flatRollup(
+  const collapsed = flatRollup(
     data,
     (v) => ({
       // Take metadata from the first entry in the group
       dateLabel: v[0].dateLabel,
       // If it's a top account, keep the name; otherwise, call it "Others"
       accountName: topAccounts.has(v[0].accountId) ? v[0].accountName : DEFAULT_ACCOUNT_NAME,
-      value: d3.sum(v, (d) => d.value),
+      value: sum(v, (d) => d.value),
     }),
     (d) => d.date,
     (d) => (topAccounts.has(d.accountId) ? d.accountId : DEFAULT_ACCOUNT_NAME),
@@ -73,9 +73,9 @@ function pivotData(data: Data[]) {
   const accountNames = Array.from(new Set(data.map((d) => d.accountName)));
 
   // We calculate totals by accountId to sort the returned keys by value
-  const idTotals = d3.rollup(
+  const idTotals = rollup(
     data,
-    (v) => d3.sum(v, (d) => d.value),
+    (v) => sum(v, (d) => d.value),
     (d) => d.accountId,
   );
 
@@ -83,7 +83,7 @@ function pivotData(data: Data[]) {
     (a, b) => (idTotals.get(b) || 0) - (idTotals.get(a) || 0),
   );
 
-  const groupedByDate = d3.group(data, (d) => d.date);
+  const groupedByDate = groupBy(data, (d) => d.date);
 
   const pivoted = Array.from(groupedByDate, ([date, records]): PivotedRow => {
     // 2. Initialize the row with metadata
