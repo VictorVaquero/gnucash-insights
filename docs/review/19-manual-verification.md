@@ -30,15 +30,19 @@ outstanding checks, copied forward unchanged from their source specs:
   path (login → data loads → charts render) and guest path, re-verified in an actual
   browser — desktop and at least one mobile viewport — against the T001 baseline, after
   this spec's dependency bumps (`drizzle-orm`, `pnpm.overrides` for `fast-xml-parser`/
-  `seroval`/`tar`) and CSP tightening (`script-src 'unsafe-inline'` dropped). `tsc
-  --noEmit`, `vite build`, and `eslint` are all clean, and US4's auth-boundary
-  behavior was independently confirmed via a live Preview deployment (T023, 5/5), but
-  none of that substitutes for an actual rendered-page check — no browser tool is
-  available in this session. **Not yet done.**
+  `seroval`/`tar`) and CSP tightening (`script-src 'unsafe-inline'` dropped). The owner's
+  live re-check caught two real regressions: `/dashboard/` (trailing slash) 404'ing on
+  the root domain (fixed in the separate `resumeweb` repo), and dashboard charts
+  rendering empty due to `ReactQueryDevtools` shipping unconditionally to production and
+  tripping the tightened CSP (fixed by gating it dev-only, commit `cc7a0a3`). Owner
+  re-verified live post-deploy — both the golden path and guest path now work correctly.
+  **Done (2026-08-10).**
 - **Spec 005, T038**: AWS Cognito console check (MFA/password-policy/account-lockout/
-  self-signup settings) for User Pool `eu-west-3_VHPSFHPrK` — deferred by the owner in
-  this session (CLI identity lacked `cognito-idp:DescribeUserPool`); see
-  `docs/decisions.md` under "Spec 005 US6". **Not yet done.**
+  self-signup settings) for User Pool `eu-west-3_VHPSFHPrK` — CLI identity lacked
+  `cognito-idp:DescribeUserPool`, so the owner checked the console directly and
+  confirmed MFA off/optional, standard password policy, lockout/threat-protection off
+  (deliberate), and self-service sign-up disabled. No changes needed; see
+  `docs/decisions.md` under "Spec 005 US6". **Done (2026-08-10).**
 
 ## Goals
 
@@ -67,8 +71,9 @@ check something on a phone" mode.
    [16](16-internationalization.md)'s i18n work each land, append their own
    real-device/browser verification items here rather than treating each as fully done
    at the code-review stage.
-4. **Phase 4**: spec 005 items — the golden/guest-path browser re-check against the
-   T001 baseline, and the AWS Cognito console settings check.
+4. **Phase 4**: spec 005 items — done. Both the AWS Cognito console settings check and
+   the golden/guest-path browser re-check against the T001 baseline are complete — see
+   above.
 
 ## Open decisions (owner input needed)
 

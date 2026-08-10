@@ -56,15 +56,23 @@ T028 added those scripts without a Node-globals block). Added a
 this spec.
 
 **T038 — AWS Cognito console check (MFA/password-policy/lockout/self-signup) —
-DEFERRED**: attempted via AWS CLI first (`aws cognito-idp describe-user-pool
---user-pool-id eu-west-3_VHPSFHPrK`); the authenticated identity
-(`arn:aws:iam::397704334393:user/development`) got `AccessDeniedException` — it
-lacks `cognito-idp:DescribeUserPool`. Asked the owner whether to grant that
-read permission, check the console themselves, or defer; owner chose to defer.
-**Open item, not resolved in this pass** — someone with full Cognito console access
-needs to record the current MFA/password-policy/account-lockout/self-signup
-settings for `eu-west-3_VHPSFHPrK` before the repo goes public, since these are
-security-relevant defaults an attacker would check first.
+RESOLVED (owner-verified via console, 2026-08-10)**: attempted via AWS CLI first
+(`aws cognito-idp describe-user-pool --user-pool-id eu-west-3_VHPSFHPrK`); the
+authenticated identity (`arn:aws:iam::397704334393:user/development`) got
+`AccessDeniedException` — it lacks `cognito-idp:DescribeUserPool`. Rather than
+grant that read permission, the owner checked the AWS Cognito console directly
+for User Pool `eu-west-3_VHPSFHPrK` (region `eu-west-3`) and confirmed all four
+settings are already in the intended safe state:
+- **MFA**: off/optional (not required) — consistent with the app's login UI,
+  which has no MFA step.
+- **Password policy**: standard Cognito defaults — nothing weakened.
+- **Account lockout / threat protection**: off — a deliberate cost trade-off
+  for a small personal-use pool, not an oversight.
+- **Self-service sign-up**: **disabled** — the security-relevant one, since
+  this app is meant for owner + guest-demo login only; an open self-signup
+  would have let anyone register a real account.
+
+No changes were needed. Owner-verified, closing this item.
 
 **T040 — `gitleaks` full-history scan**: `gitleaks` wasn't installed system-wide;
 downloaded the official `v8.30.1` portable binary from GitHub releases into the

@@ -351,13 +351,13 @@ pass/fail for each.
 - [X] T037 [P] [US6] Grep `src/` for `dangerouslySetInnerHTML`; record the result (and
       review any usage found for user-controllable input) in `docs/decisions.md`.
       Zero matches. Recorded in `docs/decisions.md` under "Spec 005 US6".
-- [ ] T038 [US6] Check the AWS Cognito console (this app's User Pool) for MFA,
+- [X] T038 [US6] Check the AWS Cognito console (this app's User Pool) for MFA,
       password-policy, account-lockout, and self-signup settings; record findings and
-      any changes made in `docs/decisions.md`. **DEFERRED**: the CLI identity used in
-      this session (`arn:aws:iam::397704334393:user/development`) lacks
-      `cognito-idp:DescribeUserPool` permission; owner chose to skip rather than grant
-      broader IAM access or check the console themselves right now. Open item — see
-      `docs/decisions.md`.
+      any changes made in `docs/decisions.md`. CLI identity lacked
+      `cognito-idp:DescribeUserPool`, so the owner checked the console directly for
+      `eu-west-3_VHPSFHPrK` and confirmed MFA off/optional, standard password policy,
+      account lockout/threat-protection off (deliberate), and self-service sign-up
+      **disabled**. No changes needed. See `docs/decisions.md`.
 - [X] T039 [US6] Run `pnpm audit`; fix what's safely fixable; document any
       triaged/accepted findings in `docs/decisions.md` (run after Phase 4/US2's
       dependency removals for a clean baseline). Baseline 115 findings (3 critical/61
@@ -428,20 +428,24 @@ pass/fail for each.
       T023/T026 (5/5 and headers-present respectively) — not re-deployed again here,
       cited from those task notes. US6's 6 items per T043. All pass or have an
       explicit documented outcome.
-- [ ] T046 Manually re-verify the golden path (login → data loads → charts render) and
+- [X] T046 Manually re-verify the golden path (login → data loads → charts render) and
       the guest path in a browser, desktop and at least one mobile viewport, per
       constitution Principle III, against the T001 baseline; record this pass — plus
       T024's Cognito boundary confirmation, T038's Cognito console check, T040's
       git-history scan, and T041's `cashpy-processor` spot-check — in
       `docs/review/19-manual-verification.md`, per the spec's own Assumptions.
-      **PARTIALLY DONE**: `docs/review/19-manual-verification.md` updated with a new
-      "Spec 005" entry recording this open item plus a pointer to T024 (already
-      recorded in `docs/decisions.md`, no browser needed — code-level trace), T038
-      (deferred, recorded), T040 (done, 0 leaks), and T041 (done, filed as follow-up).
-      The golden-path/guest-path **browser session itself is not yet done** — no
-      browser tool is available in this session; left open, tracked, not guessed at
-      (same honesty standard this doc already applies to specs 001/004's open items).
-      Left unchecked deliberately.
+      **DONE (owner-verified in browser, 2026-08-10)**: the owner's live re-check
+      surfaced two real regressions this task was designed to catch: (1) `/dashboard/`
+      (trailing slash, root domain) 404'd — fixed in the separate `resumeweb` repo's
+      `vercel.json` by adding an explicit rewrite for the bare-trailing-slash case; (2)
+      dashboard charts loaded data but rendered empty, root-caused to
+      `ReactQueryDevtools` being unconditionally bundled/rendered in production
+      (unlike `TanStackRouterDevtools`, which was already dev-only-gated), tripping the
+      tightened `script-src 'self'` CSP — fixed by gating it the same way, plus a
+      defensive bounds check in `chooseTooltipPointLine` and removal of a leftover
+      debug `console.log` in `KpiBlock`. Fix committed (`cc7a0a3`) and pushed; owner
+      re-verified live post-deploy and confirmed both the golden path and guest path
+      now work correctly.
 
 ---
 
