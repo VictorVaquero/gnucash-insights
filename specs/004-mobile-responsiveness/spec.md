@@ -4,7 +4,9 @@
 
 **Created**: 2026-08-07
 
-**Status**: Draft
+**Status**: Mostly Complete — 20/24 tasks done; remaining items (T009, T016, T019, T024)
+are manual on-device/viewport validation checks — see `tasks.md` and
+`docs/review/19-manual-verification.md`.
 
 **Input**: User description: "Mobile responsiveness: make the cashpy_v2 dashboard usable on phone-sized viewports. Replace the brittle isMobile() user-agent sniffing with a reactive viewport/pointer-based check used consistently app-wide. Fix route-level layouts that use fixed multi-column CSS grids with no responsive breakpoints (travels, analysis) so they degrade to single-column on narrow screens, matching the existing pattern already used in summary. Redesign the Expenses page's pivot-table grid for mobile, since it structurally cannot fit a phone width and needs a different presentation. Make the analysis page's transaction table usable on mobile via horizontal scroll and/or column hiding, and clean up the pagination footer's wrap behavior. Fix chart responsiveness (fixed-height containers, window-resize-only sizing, fixed pixel margins that don't scale). Verify touch/interaction details on real devices: the hover-dependent account menu, and the login page's card positioning on short-height mobile viewports."
 
