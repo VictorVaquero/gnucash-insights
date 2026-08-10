@@ -594,18 +594,47 @@ exists and runs automatically.
 **Purpose**: Close out repo-settings work that can't live in a file, and do the final
 constitution-mandated regression pass.
 
-- [ ] T065 Set `install-lint-typecheck-build-test`, `lighthouse`, and `bundle-size` (the
-      `ci.yml` job names) as required status checks in GitHub's branch protection
-      settings for `master` — a manual, one-time GitHub UI step outside any file this
-      repo's CI can write (contracts/ci-checks-contract.md, depends on T012, T049).
-- [ ] T066 Full manual golden-path + guest-path regression pass (desktop + mobile
-      viewport), per constitution Principle III, confirming none of this spec's CI/hook/
-      test/a11y additions broke the app relative to T001's baseline (depends on all prior
-      tasks).
-- [ ] T067 Run `quickstart.md`'s full validation end-to-end (all four user-story
-      sections plus the Cross-cutting section) and record results, including whether the
-      Cognito test-account provisioning (T041) is still outstanding per
-      `docs/review/19-manual-verification.md` (depends on T014, T042, T050, T064, T066).
+- [~] T065 Set `install-lint-typecheck-build-test`, `lighthouse`, and `bundle-size` (the
+  `ci.yml` job names) as required status checks in GitHub's branch protection
+  settings for `master` — a manual, one-time GitHub UI step outside any file this
+  repo's CI can write (contracts/ci-checks-contract.md, depends on T012, T049).
+  **Not done** — this session has no GitHub UI/API access to the repo's branch
+  protection settings; it also can't be verified until `ci.yml`'s jobs have run at
+  least once on GitHub (job names only become selectable as required checks after
+  their first run). Flagged as an outstanding owner action.
+- [~] T066 Full manual golden-path + guest-path regression pass (desktop + mobile
+  viewport), per constitution Principle III, confirming none of this spec's CI/hook/
+  test/a11y additions broke the app relative to T001's baseline (depends on all prior
+  tasks).
+  Automated proxy completed in this session (no interactive browser available):
+  `pnpm run format:check`, `pnpm run lint` (0 errors, 7 pre-existing warnings),
+  `tsc --noEmit`, `pnpm test` (10 files / 33 tests passing), and `pnpm run build` all
+  pass cleanly on the final Phase 6 commit — matching T001's baseline shape with no
+  new errors introduced. The interactive desktop+mobile click-through itself (guest
+  login → Summary renders → every route loads → nav collapse/expand → real-user
+  login) is **not done** and is flagged as an outstanding owner/manual-QA action,
+  same as T001 and T014 already noted.
+- [~] T067 Run `quickstart.md`'s full validation end-to-end (all four user-story
+  sections plus the Cross-cutting section) and record results, including whether the
+  Cognito test-account provisioning (T041) is still outstanding per
+  `docs/review/19-manual-verification.md` (depends on T014, T042, T050, T064, T066).
+  Summary of quickstart.md's four sections as validated across this spec's tasks:
+  **US1** — steps 1-3 verified locally (T014); steps 4-6 need a pushed branch/PR,
+  not yet done. **US2** — verified (T042): `pnpm test` passes on a clean checkout,
+  fixture-total assertions and the `fixed`-class `SideBar` assertions exist and
+  pass, Storybook still renders, the Playwright suite is wired into `e2e.yml` but
+  hasn't run on GitHub yet (needs the Turso/Cognito secrets noted in T040). **US3**
+  — verified (T050): `pnpm run perf`/`pnpm run size` both pass locally against real
+  budgets, regression-detection proven for both. **US4** — verified (T064): the new
+  `vitest-axe` assertions in `pnpm test` pass (nav, login, and the four named
+  components per SC-005); steps requiring an interactive browser/devtools (1, 2, 5,
+  6 as literally specified) are not done here. **Cross-cutting** — the full
+  desktop+mobile manual golden-path pass is not done (see T066); the Cognito
+  test-account provisioning (T041) **is still outstanding** per
+  `docs/review/19-manual-verification.md`'s own entry — `real-user-login.spec.ts`
+  still reports `skipped` locally and the `PLAYWRIGHT_TEST_USER_EMAIL`/`PASSWORD`
+  GitHub Actions secrets are not yet added, so `e2e.yml` will report that spec
+  skipped (not failed) on `master` until the owner completes provisioning.
 
 ---
 
