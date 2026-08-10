@@ -238,50 +238,118 @@ checkout with no manual setup beyond `pnpm install`.
 
 ### Implementation for User Story 2 — Playwright e2e
 
-- [ ] T033 [P] [US2] Add `@playwright/test` to `package.json` devDependencies; run
+- [x] T033 [P] [US2] Add `@playwright/test` to `package.json` devDependencies; run
       `pnpm install`; run `pnpm exec playwright install --with-deps chromium`
-      (research.md item 14).
-- [ ] T034 [US2] Create `playwright.config.ts` at repo root: `webServer` running
+      (research.md item 14). **Done.** `@playwright/test@^1.62.1` added. On this sandbox
+      (Arch Linux, no `apt-get`), `--with-deps` fails since Playwright's system-dependency
+      installer assumes an apt-based OS; `pnpm exec playwright install chromium` (browser
+      binary only, ubuntu24.04-x64 fallback build) was used locally instead and verified
+      to launch correctly. CI runs on real Ubuntu GitHub Actions runners, where
+      `--with-deps` works as documented, so `e2e.yml` (T040) still uses it.
+- [x] T034 [US2] Create `playwright.config.ts` at repo root: `webServer` running
       `vercel dev --listen 3111 --yes`, `baseURL: http://localhost:3111`, a default
       Chromium project plus a second project reusing Chromium at
       `{ viewport: { width: 375, height: 812 } }` (research.md items 14-15, depends on
-      T033).
-- [ ] T035 [P] [US2] Write `e2e/guest-golden-path.spec.ts`: guest login → `/summary`
+      T033). **Done**, with two adjustments discovered while getting the first spec to
+      actually run. First, `baseURL` must include the app's Vite `base: "/dashboard/"`
+      path (`http://localhost:3111/dashboard/`), and every `page.goto(...)` call must
+      use a bare relative path with no leading slash — a leading `/` resolves against
+      the origin root and drops the base path entirely (WHATWG URL resolution). Second,
+      **found and fixed a real, pre-existing bug**: `vercel dev` serves the same
+      production `Content-Security-Policy` (`script-src 'self'`, no
+      `unsafe-inline`/nonce) as real Vercel deployments, and Vite's dev-mode React Fast
+      Refresh injects an inline `<script type="module">` HMR preamble that this strict
+      CSP blocks — the app never rendered at all under `vercel dev`
+      (`@vitejs/plugin-react can't detect preamble`). This was a latent regression from
+      spec 005's CSP hardening that nobody had exercised against `vercel dev` locally
+      until this task. Fixed by adding
+      `"devCommand": "vite build && vite preview --port $PORT --strictPort"` to
+      `vercel.json`, so `vercel dev` serves the CSP-compliant production bundle instead
+      of the live dev server. This only affects the `vercel dev`/`pnpm run dev:api`
+      pathway (documented as the "test-against-real-secrets" path, not the primary dev
+      loop); plain `pnpm dev` is unaffected and keeps HMR. Reporter set to
+      `[["list"], ["html", { open: "never"
+}]]` so CI can upload the HTML report as an artifact on failure (T040).
+- [x] T035 [P] [US2] Write `e2e/guest-golden-path.spec.ts`: guest login → `/summary`
       renders with a populated KPI/chart element (research.md item 16, depends on T034).
-- [ ] T036 [P] [US2] Write `e2e/routes-smoke.spec.ts`: after guest login, visit every
+      **Done** — asserts the "Net" KPI label renders after `guestLogin()`.
+- [x] T036 [P] [US2] Write `e2e/routes-smoke.spec.ts`: after guest login, visit every
       top-level route (`/home`, `/metadata`, `/summary`, `/expenses`, `/travels`,
       `/investments`, `/analysis?query=%7B%7D`), asserting zero `error`-level console
-      messages per route (research.md item 16, depends on T034).
-- [ ] T037 [P] [US2] Write `e2e/nav-stability.spec.ts`: toggle `SideBar` collapse/expand,
+      messages per route (research.md item 16, depends on T034). **Done.** This surfaced
+      a second real bug (see T042 notes): "Account config not yet loaded for user guest"
+      console errors on every protected route, fixed in `src/routes/__root.tsx`.
+- [x] T037 [P] [US2] Write `e2e/nav-stability.spec.ts`: toggle `SideBar` collapse/expand,
       assert a stable content element's (e.g. page `<h1>`) bounding box `x`/`width`
-      doesn't change (research.md item 16, depends on T034).
-- [ ] T038 [P] [US2] Write `e2e/mobile-smoke.spec.ts`: same route list as
+      doesn't change (research.md item 16, depends on T034). **Done.**
+- [x] T038 [P] [US2] Write `e2e/mobile-smoke.spec.ts`: same route list as
       `routes-smoke.spec.ts`, run under the 375px-viewport project, asserting
       `document.documentElement.scrollWidth <= 375` and zero console errors (research.md
-      item 16, depends on T034).
-- [ ] T039 [US2] Write `e2e/real-user-login.spec.ts`: logs in via the real Cognito form
+      item 16, depends on T034). **Done**, verified via `pnpm exec playwright test
+--project=mobile` (passing).
+- [x] T039 [US2] Write `e2e/real-user-login.spec.ts`: logs in via the real Cognito form
       using `process.env.PLAYWRIGHT_TEST_USER_EMAIL`/`PLAYWRIGHT_TEST_USER_PASSWORD`,
       asserts `/summary` renders; guarded by
       `test.skip(!process.env.PLAYWRIGHT_TEST_USER_EMAIL, "...")` so it reports skipped,
       not failed, until those secrets exist (research.md items 16-17, depends on T034).
-- [ ] T040 [US2] Add `"test:e2e": "playwright test"` script to `package.json`; replace
+      **Done** — reports `skipped` locally (secrets not provisioned; see T041).
+- [x] T040 [US2] Add `"test:e2e": "playwright test"` script to `package.json`; replace
       `e2e.yml`'s placeholder (from US1's T013) with
       `pnpm exec playwright install --with-deps chromium` + `pnpm run test:e2e`, wiring in
       the Turso secrets `api/turso-token.ts` needs plus (once provisioned)
-      `PLAYWRIGHT_TEST_USER_EMAIL`/`PASSWORD` (depends on T013, T035-T039).
-- [ ] T041 [US2] Add a task entry to `docs/review/19-manual-verification.md` documenting
+      `PLAYWRIGHT_TEST_USER_EMAIL`/`PASSWORD` (depends on T013, T035-T039). **Done.**
+      `e2e.yml` now installs Chromium with system deps and runs `pnpm run test:e2e` with
+      env: `TURSO_PLATFORM_TOKEN`, `TURSO_ORG_SLUG`, `TURSO_DATABASE_NAME`,
+      `TURSO_DATABASE_URL`, `TURSO_GUEST_DATABASE_NAME`, `TURSO_GUEST_DATABASE_URL`
+      (all six required at `api/turso-token.ts` module load, even for guest-only
+      requests), `COGNITO_REGION`/`COGNITO_USER_POOL_ID`/`COGNITO_CLIENT_ID` (needed only
+      if `real-user-login.spec.ts` runs), and `PLAYWRIGHT_TEST_USER_EMAIL`/`PASSWORD`.
+      Uploads `playwright-report/` as a build artifact on failure. These GitHub Actions
+      secrets still need the owner to actually add them in repo settings before the
+      workflow can run its guest-covering specs — flagged in the completion report.
+      Also fixed a bug this task's local run surfaced: `vitest.config.ts` had no
+      `exclude` for `e2e/`, so `pnpm test` was picking up the new `e2e/*.spec.ts` files
+      and failing (`Playwright's test() from an async describe` — a Vitest/Playwright
+      API clash), which would have broken `ci.yml`'s `pnpm test` step. Added
+      `exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"]`.
+- [x] T041 [US2] Add a task entry to `docs/review/19-manual-verification.md` documenting
       the owner-side Cognito test-account provisioning step (create a dedicated
       `playwright-test@<domain>` user, set a permanent password, confirm its
       `ACCOUNT_CONFIG_*` mapping points at non-sensitive demo data, add
       `PLAYWRIGHT_TEST_USER_EMAIL`/`PASSWORD` as GitHub Actions secrets) (research.md
-      item 17).
-- [ ] T042 [US2] Manually validate `quickstart.md`'s US2 steps: `pnpm test` passes on a
+      item 17). **Done** — entry added under spec 006.
+- [x] T042 [US2] Manually validate `quickstart.md`'s US2 steps: `pnpm test` passes on a
       clean checkout; the query tests assert exact fixture totals; the `SideBar` test
       asserts the `fixed` class in both states; Storybook still renders correctly after
       the MSW refactor; the Playwright suite runs on push to `master` (or locally via
       `pnpm run test:e2e`) covering all five scenarios; `real-user-login.spec.ts` reports
       skipped without the secrets; a PR's status reflects only the fast suite, not e2e
-      (depends on T032, T040, T041).
+      (depends on T032, T040, T041). **Done**, all seven steps verified: 1. `pnpm test` → 9 files / 28 tests pass. 2. `src/db/queries/expenses.test.ts`/`global.test.ts` assert exact fixture totals
+      (confirmed in T027-T032). 3. `SideBar.test.tsx` asserts `fixed` class in both collapsed/expanded states. 4. `pnpm exec storybook build` succeeds against `src/mocks/handlers.ts`. 5. `pnpm exec playwright test --project=chromium` and `--project=mobile` both pass
+      (4/4 chromium including 1 expected-skip, 1/1 mobile). 6. `real-user-login.spec.ts` shows `skipped` (no `PLAYWRIGHT_TEST_USER_*` env set). 7. `e2e.yml` triggers only on `push: branches: [master]`; `ci.yml` triggers on
+      `push`+`pull_request` — a PR's checks reflect only the fast suite.
+
+      **Real app bug found and fixed while validating step 5**: `routes-smoke.spec.ts`
+      caught 46 repeated console errors — `"Error: Account config not yet loaded for
+      user guest"` — on every protected route. Root cause: `signInGuest()`
+      (`src/hooks/useAuth.ts`) sets `user`/`idToken` synchronously, so
+      `auth.isAuthenticated()` becomes true and the router navigates to `/summary`
+      immediately, before the async `/api/turso-token` round-trip that populates
+      `accountConfigByUser` (`src/db/utils.ts`) via `setAccountConfig` (`src/hooks/
+      useDB.tsx`) has resolved. At least 9 components/queries call `getConfig(user)`
+      unconditionally during render (`KpiBlock`, `SavingsBlock`, `SettingsBlock`, four
+      summary plots, `expenses/index.tsx`, `src/db/queries/summary.ts`/`travel.ts`),
+      several *before* their own loading-state check, so patching each site
+      individually wasn't a viable minimal fix. Fixed once at the root instead:
+      `src/routes/__root.tsx`'s `RootComponent` now reads `auth`/`db`/`bookId` from
+      router context and renders a `BarLoader` in place of `<Outlet />` until either the
+      user is unauthenticated (routes that don't need `db`, e.g. `/login`) or `db` and
+      `bookId` are both ready — which by construction is always after
+      `setAccountConfig` has already run for that user. Verified: `pnpm exec tsc
+      --noEmit` clean, full `chromium` + `mobile` Playwright projects pass consistently
+      across repeated runs (no flakes observed after the fix — the earlier flaky-looking
+      `guest-golden-path.spec.ts` failure in a parallel run was this same race, not
+      independent flakiness).
 
 **Checkpoint**: User Story 1 AND 2 both work independently — CI signal plus a real test
 suite covering the highest-value logic, interactive components, and golden-path flows.
