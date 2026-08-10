@@ -17,6 +17,7 @@
     "check-csp-drift": "node scripts/check-csp-drift.mjs",
     "build": "vite build && tsc",
     "lint": "eslint .",
+    "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",

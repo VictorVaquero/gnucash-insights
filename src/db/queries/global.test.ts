@@ -23,8 +23,8 @@ describe("db/queries/global", () => {
   describe("getDomain", () => {
     it("returns the min/max dates from the meta table", async () => {
       const domain = await getDomain(db);
-      expect(domain?.min.toUTC().toISO()).toBe(MIN_DATE.toUTC().toISO());
-      expect(domain?.max.toUTC().toISO()).toBe(MAX_DATE.toUTC().toISO());
+      expect(domain?.min?.toUTC().toISO()).toBe(MIN_DATE.toUTC().toISO());
+      expect(domain?.max?.toUTC().toISO()).toBe(MAX_DATE.toUTC().toISO());
     });
   });
 

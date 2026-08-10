@@ -44,7 +44,7 @@ Single existing project — `src/`, `api/`, `.github/`, and root-level config fi
       any change — this is the regression baseline for the Polish-phase re-check (T066).
       Automated baseline captured (no interactive browser available in this session):
       `pnpm lint` clean (0 errors, 7 pre-existing warnings), `tsc --noEmit` clean, `pnpm
-  build` succeeds (main entry `index-CjRgCwWc.js` 317.53 kB gzip, `CartesianChart-*.js`
+build` succeeds (main entry `index-CjRgCwWc.js` 317.53 kB gzip, `CartesianChart-*.js`
       80.28 kB gzip). Interactive golden-path click-through is deferred to T066, which the
       owner should also do manually in a real browser.
 
@@ -199,30 +199,42 @@ checkout with no manual setup beyond `pnpm install`.
 - [x] T026 [P] [US2] Write `src/db/utils.test.ts` covering `setAccountConfig`/
       `getConfig` (plain `Map`-backed, no DB fixture needed). 4 tests covering the
       unset-user error, the not-yet-loaded error, and per-user isolation.
-- [ ] T027 [P] [US2] Write `src/components/TreeList.test.tsx`: 2-level fixture data,
+- [x] T027 [P] [US2] Write `src/components/TreeList.test.tsx`: 2-level fixture data,
       child rows absent until parent toggle clicked then present after, leaf-row (no
       children) branch renders `item.node` with no toggle button (research.md item 11,
-      depends on T016).
-- [ ] T028 [US2] Create `src/test/routerHarness.tsx`: a shared test helper providing
+      depends on T016). 3 tests, all passing.
+- [x] T028 [US2] Create `src/test/routerHarness.tsx`: a shared test helper providing
       `createMemoryHistory` + `createRouter` with a stub root route supplying
       `{ auth: {...} }` context, wrapped in `RouterProvider`, for components that need
-      `Link`/`useRouterState`/route-context (depends on T016).
-- [ ] T029 [P] [US2] Write `src/components/AccountMenu.test.tsx` using
+      `Link`/`useRouterState`/route-context (depends on T016). Exposes `renderWithRouter`
+      and `createAuthStub`. Note: since the root route's component is a closure over the
+      `ui` argument, each distinct prop combination needs its own `renderWithRouter` call
+      (RTL's `rerender()` can't propagate through it) — this pattern is documented in the
+      consuming tests (SideBar.test.tsx).
+- [x] T029 [P] [US2] Write `src/components/AccountMenu.test.tsx` using
       `src/test/routerHarness.tsx`: authenticated case (avatar renders, "Log Out" calls
       `signOut()`) and unauthenticated case ("Log In" link, no dropdown) (research.md
-      item 11, Acceptance Scenario 2, depends on T028).
-- [ ] T030 [P] [US2] Write `src/components/SideBar.test.tsx` using
+      item 11, Acceptance Scenario 2, depends on T028). 2 tests, all passing.
+- [x] T030 [P] [US2] Write `src/components/SideBar.test.tsx` using
       `src/test/routerHarness.tsx`: assert the `<aside>` always carries the `fixed`
       positioning class in both collapsed/expanded renders (the nav-redesign
       content-shift regression guard); assert the toggle button calls `toggleSidebar`
       and `aria-expanded` matches `!isCollapsed` (research.md item 11, depends on T028).
-- [ ] T031 [P] [US2] Write
+      4 tests, all passing. Note: the expanded state renders two links both named "Home"
+      (header wordmark + nav item), so that assertion uses `findAllByRole` and checks
+      every match is inside the `<aside>`, rather than assuming a single match.
+- [x] T031 [P] [US2] Write
       `src/routes/analysis/-components/TransactsTable.test.tsx`: fixture array > 8 rows,
       default `pageSize: 8` shows only 8 rows, next-page control changes rendered rows,
       page-size `<select>` (10/20/30/40/50) changes row count, "Go to page" input jumps
-      `pageIndex` (research.md item 11, depends on T016).
-- [ ] T032 [US2] Add `"test": "vitest run"` script to `package.json`; replace `ci.yml`'s
+      `pageIndex` (research.md item 11, depends on T016). 4 tests, all passing. Note: the
+      component's `useColumnFilters` hook binds to the real `/analysis/` route via
+      `getRouteApi` for URL-synced filters; since pagination is independent of that
+      syncing, `useColumnFilters` is mocked with local `useState` to keep this test
+      focused on pagination and avoid standing up a full route tree.
+- [x] T032 [US2] Add `"test": "vitest run"` script to `package.json`; replace `ci.yml`'s
       placeholder test step (from US1's T012) with `pnpm test` (depends on T012, T023-T031).
+      Full suite: 9 test files, 28 tests, all passing.
 
 ### Implementation for User Story 2 — Playwright e2e
 

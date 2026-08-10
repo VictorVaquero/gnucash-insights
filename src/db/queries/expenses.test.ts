@@ -4,6 +4,11 @@ import { createTestDb } from "@/test/db";
 import { seedFixtures } from "@/test/fixtures";
 import { getExpensesYearlyQuery } from "./expenses";
 
+// getExpensesYearlyQuery adds one column per year in the fixture's date range at runtime
+// (see its `yearRange.reduce` in expenses.ts), so those keys aren't part of its static
+// return type. This reads them without widening the row type everywhere else.
+const yearValue = (row: object, year: string): number => (row as Record<string, number>)[year];
+
 describe("db/queries/expenses", () => {
   let db: AppDatabase;
 
@@ -24,17 +29,17 @@ describe("db/queries/expenses", () => {
       expect(Object.keys(byName).sort()).toEqual(["Expenses", "Groceries", "Transport"]);
 
       expect(byName.Expenses.total).toBe(-165);
-      expect(byName.Expenses["2023"]).toBe(-125);
-      expect(byName.Expenses["2024"]).toBe(-40);
+      expect(yearValue(byName.Expenses, "2023")).toBe(-125);
+      expect(yearValue(byName.Expenses, "2024")).toBe(-40);
       expect(byName.Expenses.last).toBe(-40);
 
       expect(byName.Groceries.total).toBe(-145);
-      expect(byName.Groceries["2023"]).toBe(-105);
-      expect(byName.Groceries["2024"]).toBe(-40);
+      expect(yearValue(byName.Groceries, "2023")).toBe(-105);
+      expect(yearValue(byName.Groceries, "2024")).toBe(-40);
 
       expect(byName.Transport.total).toBe(-20);
-      expect(byName.Transport["2023"]).toBe(-20);
-      expect(byName.Transport["2024"]).toBe(0);
+      expect(yearValue(byName.Transport, "2023")).toBe(-20);
+      expect(yearValue(byName.Transport, "2024")).toBe(0);
     });
 
     it("excludes INCOME-type accounts entirely", async () => {
