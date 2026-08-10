@@ -4,7 +4,10 @@
 
 **Created**: 2026-08-07
 
-**Status**: Draft
+**Status**: Complete — 35/35 tasks done, cut over to Turso in production (S3/Lambda data
+path removed). Two dead-code leftovers from the old path remain (`src/hooks/useS3.ts`,
+the `SQLJsDatabase` type union member) — tracked in
+`docs/review/01-dependencies-and-config-hygiene.md`.
 
 **Input**: User description: "Simplify how the dashboard gets its financial data. Today, a separate pipeline (cashpy-processor) parses a GnuCash export and uploads a ~4MB SQLite file to an AWS S3 bucket; the browser downloads the whole file via Cognito-authenticated S3 requests and queries it client-side with sql.js. Evaluate whether this can be simplified — e.g. loading into a small hosted database instead of a downloaded file — including whether a free/low-cost option exists, and compare alternatives before picking one."
 
@@ -286,8 +289,11 @@ against `cashpy-v2.vercel.app` directly, the owner reported real (non-guest) log
 the custom domain `victorvaquero.com/dashboard` rendering a blank page with no data.
 
 **Root cause**: `victorvaquero.com/dashboard/*` is served by a separate Vercel project
-(`victor-cv-web`, the `bro_cv_web` repo — the marketing site that owns the apex domain)
-via a `vercel.json` rewrite proxy to `cashpy-v2.vercel.app`, plus its own path-scoped
+(`resumeweb`, the owner's personal resume/CV site that owns the apex domain — at the
+time this was written, misidentified in this repo's docs as `bro_cv_web`; see
+`docs/architecture.md`'s "Cross-repo naming incident" note for the correction and its
+2026-08-10 consequences) via a `vercel.json` rewrite proxy to `cashpy-v2.vercel.app`,
+plus its own path-scoped
 `headers` block re-declaring a Content-Security-Policy for that path. This proxy config
 existed only in that project's *live production deployment* — it was never committed to
 `bro_cv_web`'s git history on any branch — so it silently predated this spec's Phase 6
@@ -308,11 +314,18 @@ of any such config). Confirmed via `vercel inspect victorvaquero.com --json`, wh
 surfaces the deployment's actual live `vercelConfig` (rewrites + headers) — a view the
 CLI's higher-level `domains inspect`/`project inspect` commands don't expose.
 
-**Fix**: restored the rewrite and a corrected, Turso-compatible CSP into `bro_cv_web`'s
-`vercel.json` (now tracked in git, `bro_cv_web@434b6cf`) and redeployed to production.
-Verified `victorvaquero.com/dashboard/*` (HTML document and JS assets) now serves the
-same CSP as `cashpy-v2.vercel.app`, with the marketing site's own non-dashboard headers
-unaffected. This is out of this spec's original scope (it's `bro_cv_web`, not
-`cashpy_v2`) but is recorded here since it was a direct, real-impact consequence of this
-spec's CSP change (T031) landing before the sibling project's copy was ever brought
-in sync.
+**Fix (as understood at the time)**: restored the rewrite and a corrected,
+Turso-compatible CSP into what was believed to be `resumeweb`'s `vercel.json` (commit
+`434b6cf`) and redeployed to production. Verified `victorvaquero.com/dashboard/*` (HTML
+document and JS assets) now served the same CSP as `cashpy-v2.vercel.app`. This is out of
+this spec's original scope (it's `resumeweb`, not `cashpy_v2`) but is recorded here since
+it was a direct, real-impact consequence of this spec's CSP change (T031) landing before
+the sibling project's copy was ever brought in sync.
+
+**2026-08-10 correction**: commit `434b6cf` was actually pushed to `bro_cv_web`
+(`PabloVaqueroCVWeb`, an unrelated third-party client repo at `drpablovaquero.com`), not
+`resumeweb`, due to a local-folder naming collision. It is unknown whether `resumeweb`'s
+production config ever received this fix as a committed change, or only as a manual,
+uncommitted Vercel dashboard edit (the same fragile state that caused this incident in
+the first place). See `docs/review/VERCEL-HARDENING-CHECKLIST.md` item 4 for the
+required re-verification.

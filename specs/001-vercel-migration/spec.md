@@ -4,7 +4,9 @@
 
 **Created**: 2026-08-07
 
-**Status**: Draft
+**Status**: Mostly Complete — 23/29 tasks done; remaining items (T021-T025, T029) are
+manual sign-off checks (guest-login re-verify, throwaway-branch preview-deploy check,
+final end-to-end pass) — see `tasks.md` and `docs/review/19-manual-verification.md`.
 
 **Input**: User description: "Move the cashpy dashboard from AWS S3/CloudFront to Vercel, following the same pattern already used successfully in the sibling resumeweb project, while keeping the app reachable at victorvaquero.com/dashboard. Keep the existing data layer (SQLite file on S3, fetched and queried client-side) and Cognito auth unchanged in this phase — this is a hosting-only move."
 

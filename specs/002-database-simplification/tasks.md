@@ -417,13 +417,16 @@ through SC-005) met and recorded.
 - [X] T035 Resolve stale CSP on `victorvaquero.com/dashboard` blocking real (non-guest)
       logins from loading any Turso data
       **Done**: root-caused to an undocumented `vercel.json` rewrite-proxy + path-scoped
-      CSP override living only in `bro_cv_web`'s (the `victor-cv-web` Vercel project's)
+      CSP override living only in `resumeweb`'s (the domain-owning Vercel project's)
       *live deployment*, never committed to that repo's git history, predating this
       spec's T031 CSP update and still allowing the old S3/Cognito-identity origins
-      while blocking `*.turso.io`. Fixed by restoring the rewrite and a corrected CSP
-      into `bro_cv_web/vercel.json` (commit `434b6cf`) and redeploying. Full incident
-      writeup in `spec.md`'s "Post-cutover incident" section. Verified via `curl`
-      (matching CSP/etag between `victorvaquero.com/dashboard/*` and
+      while blocking `*.turso.io`. Fixed (at the time) by restoring the rewrite and a
+      corrected CSP via commit `434b6cf` and redeploying. Full incident writeup in
+      `spec.md`'s "Post-cutover incident" section, including a 2026-08-10 correction:
+      `434b6cf` actually landed in the wrong repo (`bro_cv_web`/`PabloVaqueroCVWeb`, an
+      unrelated third-party site), not `resumeweb` — re-verification needed, see
+      `docs/review/VERCEL-HARDENING-CHECKLIST.md`. Verified via `curl` (matching
+      CSP/etag between `victorvaquero.com/dashboard/*` and
       `cashpy-v2.vercel.app/dashboard/*`); owner confirmed real (non-guest) login on
       mobile now loads data correctly on `victorvaquero.com/dashboard`.
 

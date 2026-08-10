@@ -4,7 +4,11 @@
 
 **Created**: 2026-08-07
 
-**Status**: Draft
+**Status**: Draft — not yet planned/tasked. Its ground is covered informally by the
+`docs/review/` folder (see especially `12-library-choice-review.md`,
+`13-component-library-and-design-system.md`) for the current review pass; run
+`/speckit-plan` on this spec if/when a formal spec-kit implementation pass through it is
+wanted instead.
 
 **Input**: User description: "Review the actual page: update libraries, move onto better ones if they exist, clean up everything, make sure we're using best practices. Suggest other improvements found during the review."
 
