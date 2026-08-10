@@ -6,6 +6,38 @@ lives in each spec's `research.md`/`spec.md` under `specs/`; this is the "what a
 not the full writeup. Governing ground rules for all of these:
 `.specify/memory/constitution.md`.
 
+## Spec 006 US4: D3-based charts remain hover-only, keyboard access not fixed (2026-08-10)
+
+**Decision**: `research.md` item 26 planned to fix hover-only chart interactions by
+adding Recharts' `accessibilityLayer` prop everywhere. That fix landed on the one place
+it actually applies — `src/components/charts/BarPlot.tsx`'s `RechartsBarChart` (T057),
+which also covers its two consumers, `DetailedIncomeBarPlot.tsx` and
+`DetailedExpensesBarPlot.tsx`. It does **not** apply to the other charts named in
+T058/T059 — `src/routes/summary/-plots/AssetAccountsPlot.tsx`,
+`IncomeExpensesPlot.tsx`, `MonthDetailedExpensesPiePlot .tsx`, everything under
+`src/routes/travels/-components/`, and `src/routes/analysis/-components/
+TransactsPlot.tsx` — because none of them use Recharts. They're hand-rolled D3 SVG
+line/area/pie charts (`src/routes/summary/-plots/Tooltip.tsx` wires the shared tooltip
+purely through `pointermove`/`pointerleave`/`click` D3 event listeners on the `<svg>`
+ref), so there is no Recharts primitive to opt into — `accessibilityLayer` doesn't
+exist on a hand-rolled `<svg>`.
+
+**Why left unfixed rather than reworked**: matches research.md item 26's own
+"Alternatives considered" — bespoke per-chart keyboard handlers were explicitly rejected
+as more code than Recharts' own primitive and less "boring/well-supported"
+(Constitution Principle IV). Building custom keyboard interaction for ~10 D3 charts is a
+materially larger scope than this spec's stated purpose (automation/quality-gate
+infrastructure, not a chart-library migration or bespoke a11y engineering pass).
+Recording this here per spec 006 T064's instruction to log known exceptions rather than
+silently disable a check — `@axe-core/react`/`vitest-axe` won't catch this class of gap
+(missing keyboard equivalents for a mouse-only interaction isn't a DOM-structure
+violation axe-core flags), so it's an intentionally accepted gap, not a passing check
+with hidden scope.
+
+**Revisit if**: the app's D3 charts are ever replaced with Recharts (or another
+keyboard-accessible charting lib) for other reasons, or a future spec is explicitly
+scoped to chart keyboard accessibility.
+
 ## Spec 005 US6: Pre-publish checklist — injection/XSS/dependency vectors (2026-08-10)
 
 **T037 — `dangerouslySetInnerHTML` grep**: `grep -rn "dangerouslySetInnerHTML" src/`

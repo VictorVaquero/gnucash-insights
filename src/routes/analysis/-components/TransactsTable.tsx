@@ -66,6 +66,7 @@ const columns = [
       <div className="flex flex-col gap-y-4">
         <span>Toggle</span>
         <Checkbox
+          aria-label="Select all rows"
           checked={table.getIsAllRowsSelected()}
           indeterminate={table.getIsSomeRowsSelected()}
           onChange={table.getToggleAllRowsSelectedHandler()} //or getToggleAllPageRowsSelectedHandler
@@ -74,6 +75,7 @@ const columns = [
     ),
     cell: ({ row }) => (
       <Checkbox
+        aria-label={`Select row: ${row.original.description}`}
         checked={row.getIsSelected()}
         disabled={!row.getCanSelect()}
         onChange={row.getToggleSelectedHandler()}
@@ -163,11 +165,6 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr>
-              <th></th>
-            </tr>
-          </tfoot>
         </table>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-white">
@@ -208,8 +205,11 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           <span>{table.getPageCount().toLocaleString()}</span>
         </span>
         <span className="flex items-center gap-1">
-          <span className="text-gray-400">| Go to page:</span>
+          <label htmlFor="go-to-page" className="text-gray-400">
+            | Go to page:
+          </label>
           <input
+            id="go-to-page"
             type="number"
             min="1"
             defaultValue={table.getState().pagination.pageIndex + 1}
@@ -221,6 +221,7 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           />
         </span>
         <select
+          aria-label="Rows per page"
           className="p-2 rounded bg-shark-800"
           value={table.getState().pagination.pageSize}
           onChange={(e) => {

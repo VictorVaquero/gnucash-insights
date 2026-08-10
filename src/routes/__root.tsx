@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AccountMenu } from "@/components/AccountMenu.tsx";
 import { Footer } from "@/components/Footer.tsx";
@@ -49,6 +49,7 @@ const RootComponent = () => {
   const matches = useRouterState({ select: (s) => s.matches });
   const selected = useRouterState({ select: (state) => state.location.href });
   const [isCollapsed, setCollapse] = useState(true);
+  const mainRef = useRef<HTMLElement>(null);
   const { auth, db, bookId } = useRouteContext({ from: "__root__" });
 
   const matchWithTitle = [...matches].reverse().find((d) => d.context.title);
@@ -61,6 +62,7 @@ const RootComponent = () => {
   // The drawer now overlays content on every viewport, so close it whenever navigation happens
   useEffect(() => {
     setCollapse(true);
+    mainRef.current?.focus({ preventScroll: true });
   }, [selected]);
 
   // Once signed in, account config/db/book loading is async (Turso token fetch, default book
@@ -72,7 +74,11 @@ const RootComponent = () => {
     <>
       <SideBar isCollapsed={isCollapsed} toggleSidebar={() => setCollapse((val) => !val)} />
       <AccountMenu />
-      <main className="min-h-full w-full pl-14 lg:min-h-[calc(100vh-2rem)]">
+      <main
+        ref={mainRef}
+        tabIndex={-1}
+        className="min-h-full w-full pl-14 outline-none lg:min-h-[calc(100vh-2rem)]"
+      >
         {isAppDataReady ? (
           <Outlet />
         ) : (

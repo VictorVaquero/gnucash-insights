@@ -466,48 +466,99 @@ exist on the highest-traffic components.
 
 ### Implementation for User Story 4
 
-- [ ] T051 [P] [US4] Add `@axe-core/react`, `vitest-axe` to `package.json`
+- [x] T051 [P] [US4] Add `@axe-core/react`, `vitest-axe` to `package.json`
       devDependencies; run `pnpm install` (research.md items 22-23).
-- [ ] T052 [US4] Wire `@axe-core/react` into `src/main.tsx`: dynamically import and call
+      Note: `vitest-axe@0.1.0` has a packaging bug — its root `matchers`/`extend-expect`
+      subpath shims don't resolve correctly for Vitest 4 (see T053, T062 notes).
+- [x] T052 [US4] Wire `@axe-core/react` into `src/main.tsx`: dynamically import and call
       `axe(React, ReactDOM, 1000)`, guarded by `if (import.meta.env.DEV)`, before
       `ReactDOM.createRoot(...).render()` (research.md item 22, depends on T051).
-- [ ] T053 [US4] Add the `vitest-axe` `toHaveNoViolations` matcher via
+- [x] T053 [US4] Add the `vitest-axe` `toHaveNoViolations` matcher via
       `expect.extend(matchers)` in `src/test/setup.ts` (research.md item 23, depends on
       US2's T019, T051).
-- [ ] T054 [US4] Fix nav collapsed-state accessible name: in
+      Note: worked around two upstream `vitest-axe@0.1.0` issues: (1) its root
+      `matchers` subpath (`vitest-axe/matchers`) re-exports via `export type *`, making
+      the runtime value type-only there — imported the real value from
+      `vitest-axe/dist/matchers` instead; (2) its `extend-expect` subpath augments the
+      old `Vi.Assertion` namespace, which no longer merges under Vitest 4's
+      `@vitest/expect`-based matcher typing — added `src/test/vitest-axe.d.ts`, a local
+      `declare module "vitest"` augmentation (mirroring the working pattern
+      `@testing-library/jest-dom/types/vitest.d.ts` already uses) to restore
+      `toHaveNoViolations()` on `expect(...)` under `tsc --noEmit`.
+- [x] T054 [US4] Fix nav collapsed-state accessible name: in
       `src/components/SideBar.tsx`'s `ItemLinkComponent`, add
       `aria-label={isCollapsed ? text : undefined}` to the rendered `<a>` (research.md
       item 24).
-- [ ] T055 [US4] Fix `shark-*` contrast in `src/components/Footer.tsx`: swap
+- [x] T055 [US4] Fix `shark-*` contrast in `src/components/Footer.tsx`: swap
       `text-shark-400` (body text) and both `text-shark-600` (separator dots) usages to
       `text-shark-50` (research.md item 25).
-- [ ] T056 [US4] Fix `shark-*` contrast in `src/components/SideBar.tsx`: swap the
+- [x] T056 [US4] Fix `shark-*` contrast in `src/components/SideBar.tsx`: swap the
       inactive-state icon class `text-shark-300` and inactive-state label class
       `text-shark-100` to `text-shark-50` (research.md item 25).
-- [ ] T057 [P] [US4] Add the `accessibilityLayer` prop to `RechartsBarChart` in
+- [x] T057 [P] [US4] Add the `accessibilityLayer` prop to `RechartsBarChart` in
       `src/components/charts/BarPlot.tsx` (research.md item 26).
-- [ ] T058 [P] [US4] Add the `accessibilityLayer` prop to each top-level chart component
+- [x] T058 [P] [US4] Add the `accessibilityLayer` prop to each top-level chart component
       under `src/routes/summary/-plots/*.tsx` (research.md item 26).
-- [ ] T059 [P] [US4] Add the `accessibilityLayer` prop to each top-level chart component
+      Note: research.md item 26 assumed these were Recharts components; in reality only
+      `src/components/charts/BarPlot.tsx` (T057's target, consumed by
+      `DetailedIncomeBarPlot.tsx`/`DetailedExpensesBarPlot.tsx`) uses Recharts. Every
+      other chart under this path is a hand-rolled D3 SVG chart with no
+      `accessibilityLayer`-equivalent primitive to opt into — see T059's note and the new
+      `docs/decisions.md` entry for the resulting scope decision.
+- [x] T059 [P] [US4] Add the `accessibilityLayer` prop to each top-level chart component
       under `src/routes/travels/-components/*.tsx` and to
       `src/routes/analysis/-components/TransactsPlot.tsx` (research.md item 26).
-- [ ] T060 [US4] Add visually-hidden (`sr-only`) `<label htmlFor="user">Email</label>` /
+      Note: same discrepancy as T058 — confirmed via `grep -rln "from \"recharts\"" src/`
+      that none of these files import Recharts; they're hand-rolled D3 SVG charts with
+      hover-only interactivity (`src/routes/summary/-plots/Tooltip.tsx`'s
+      `pointermove`/`pointerleave`/`click` pattern). Per Constitution Principle IV
+      (prefer boring/well-supported) and research.md's own "alternatives considered"
+      (bespoke per-chart keyboard handlers rejected), building custom keyboard a11y for
+      ~10 D3 charts was judged out of scope for this automation/quality-gates spec and
+      recorded as an accepted known exception in `docs/decisions.md` instead of silently
+      skipped.
+- [x] T060 [US4] Add visually-hidden (`sr-only`) `<label htmlFor="user">Email</label>` /
       `<label htmlFor="password">Password</label>` immediately before the corresponding
       inputs in `src/routes/login/index.tsx`, preserving the current placeholder-driven
       visual design (research.md item 27).
-- [ ] T061 [US4] Add post-navigation focus management in `src/routes/__root.tsx`: add
+- [x] T061 [US4] Add post-navigation focus management in `src/routes/__root.tsx`: add
       `tabIndex={-1}` plus a `ref` to the existing `<main>` landmark in `RootComponent`,
       and call `mainRef.current?.focus({ preventScroll: true })` inside the existing
       `selected`-dependent `useEffect` (research.md item 28).
-- [ ] T062 [P] [US4] Add a `vitest-axe` assertion
+- [x] T062 [P] [US4] Add a `vitest-axe` assertion
       (`expect(await axe(container)).toHaveNoViolations()`) to
       `src/components/SideBar.test.tsx`, `src/components/AccountMenu.test.tsx`,
       `src/components/TreeList.test.tsx`, and
       `src/routes/analysis/-components/TransactsTable.test.tsx` (depends on US2's T027,
       T029-T031, and T053).
-- [ ] T063 [US4] Create `src/routes/login/index.test.tsx` with a `vitest-axe` assertion
+      Note: SideBar's new assertion required fixing a pre-existing test ("keeps the
+      aside fixed-positioned when collapsed") that assumed a single "Home" link — T054's
+      aria-label now gives the collapsed nav item its own accessible "Home" name too,
+      so it was updated to `findAllByRole` like its sibling "when expanded" test already
+      did. TransactsTable's new assertion surfaced four real, previously-unknown
+      violations in its pagination controls: an unlabeled page-size-jump number input, an
+      unlabeled page-size `<select>`, an empty dead `<th>` in an otherwise-unused
+      `<tfoot>`, and an unlabeled row-selection checkbox — not anticipated by
+      research.md items 24-28. Fixed for real rather than documented as an exception:
+      added a `<label htmlFor="go-to-page">`, an `aria-label` on the page-size
+      `<select>`, `aria-label`s on both the header "select all" and per-row `Checkbox`,
+      and removed the empty, content-free `<tfoot>`.
+- [x] T063 [US4] Create `src/routes/login/index.test.tsx` with a `vitest-axe` assertion
       on the rendered login form (depends on T053, T060).
-- [ ] T064 [US4] Manually validate `quickstart.md`'s US4 steps: dev-console
+      Note: file lives at `src/routes/login/-index.test.tsx` (dash-prefixed, matching
+      the existing `-loginPage.stories.tsx` convention in that folder) so TanStack
+      Router's file-based-route generator doesn't warn about a non-route file inside a
+      routes directory. `vitest.config.ts` doesn't run the `tanstackRouter()` codegen
+      plugin (unlike `vite.config.ts`), so the login route's raw `createFileRoute(...)`
+      export hasn't had its parent-route wiring injected under Vitest; hand-building a
+      minimal root+child route tree hit a "Duplicate routes found with id: `__root__`"
+      invariant error. Fixed by importing the real, already-generated `routeTree` from
+      `@/routeTree.gen` and mounting the full app router at `/login/` via
+      `createMemoryHistory`, mirroring `src/main.tsx`'s real router construction —
+      the axe scan therefore also covers the surrounding `__root.tsx` chrome
+      (SideBar/AccountMenu/Footer), which is a superset of, not a conflict with, their
+      own dedicated axe tests.
+- [x] T064 [US4] Manually validate `quickstart.md`'s US4 steps: dev-console
       `@axe-core/react` reports zero violations on nav and login; keyboard-only Tab
       reaches every collapsed nav item with an announced label; Footer/inactive-nav
       contrast measures ≥ 4.5:1; login inputs show an associated label (not
@@ -515,6 +566,22 @@ exist on the highest-traffic components.
       focus to `<main>`; Tab-to-chart + arrow keys trigger the tooltip; `pnpm test` passes
       with the new `vitest-axe` assertions; record any remaining known exception in
       `docs/decisions.md` rather than silently disabling a check (depends on T052-T063).
+      Note: this environment has no interactive browser/devtools access, so steps 1-6
+      (which quickstart.md itself specifies as devtools/browser inspection) could only be
+      verified by proxy: `pnpm test` (step 7) passes with all new `vitest-axe`
+      assertions, including on the nav (SideBar/AccountMenu), login, and the four named
+      components (TreeList, AccountMenu, SideBar, TransactsTable/"Analysis pagination"),
+      matching SC-005 exactly; `screen.getByLabelText(...)` in the login test only
+      succeeds for a real `<label for>` association (not placeholder text), substituting
+      for step 4; `shark-50`'s 4.70:1 contrast ratio against `shark-900` was verified
+      arithmetically in research.md item 25 (substituting for step 3); step 6 is not
+      true for the D3 charts by design (step 8 / `docs/decisions.md`) and is otherwise
+      backed by Recharts' own `accessibilityLayer` implementation for `BarPlot.tsx`,
+      not independently re-verified here. A real-browser pass (steps 1, 2, 5, 6 as
+      literally specified) is flagged as an outstanding owner/manual-QA action, in the
+      same spirit as `docs/review/19-manual-verification.md`'s Cognito test-account
+      item. Step 8 is satisfied: `docs/decisions.md` records the D3-chart known
+      exception.
 
 **Checkpoint**: All four user stories are independently functional — every quality gate
 from the spec (CI signal, test suite, performance/bundle budget, accessibility) now

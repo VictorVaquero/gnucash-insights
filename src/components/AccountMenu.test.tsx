@@ -1,10 +1,25 @@
 import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { axe } from "vitest-axe";
 import { createAuthStub, renderWithRouter } from "@/test/routerHarness";
 import { AccountMenu } from "./AccountMenu";
 
 describe("AccountMenu", () => {
+  it("has no axe violations, authenticated or not", async () => {
+    const authenticated = createAuthStub({ user: "alice", isAuthenticated: () => true });
+    const { container: authedContainer } = renderWithRouter(<AccountMenu />, {
+      auth: authenticated,
+    });
+    expect(await axe(authedContainer)).toHaveNoViolations();
+
+    const unauthenticated = createAuthStub({ isAuthenticated: () => false });
+    const { container: unauthedContainer } = renderWithRouter(<AccountMenu />, {
+      auth: unauthenticated,
+    });
+    expect(await axe(unauthedContainer)).toHaveNoViolations();
+  });
+
   it("shows the avatar for an authenticated user, and signs out via the dropdown", async () => {
     const user = userEvent.setup();
     const signOut = vi.fn();

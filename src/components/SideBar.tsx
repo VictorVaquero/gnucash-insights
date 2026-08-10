@@ -49,6 +49,7 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
       <a
         ref={ref}
         {...props}
+        aria-label={isCollapsed ? text : undefined}
         className={cn(
           "group m-1 flex items-center rounded-md p-3 transition-all duration-200",
           "hover:bg-shark-800",
@@ -60,7 +61,7 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
           icon={icon}
           className={cn(
             "h-5 w-5 shrink-0 transition-colors",
-            isActive ? "text-sky-300" : "text-shark-300 group-hover:text-white",
+            isActive ? "text-sky-300" : "text-shark-50 group-hover:text-white",
           )}
         />
         {!isCollapsed ? (
@@ -68,7 +69,7 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
             className={cn(
               "ms-3 overflow-hidden whitespace-nowrap transition-all duration-300",
               isCollapsed ? "max-w-0 opacity-0" : "max-w-xs opacity-100",
-              isActive ? "text-sky-300 font-medium" : "text-shark-100 font-light",
+              isActive ? "text-sky-300 font-medium" : "text-shark-50 font-light",
             )}
           >
             {text}
