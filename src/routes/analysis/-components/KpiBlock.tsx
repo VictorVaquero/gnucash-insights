@@ -1,5 +1,4 @@
-import * as d3 from "d3";
-
+import { groupBy, sum } from "@/common/aggregate";
 import { parseNum } from "@/common/utils.ts";
 import { KpiCard } from "@/components/KpiCard.tsx";
 import { useDomain } from "@/hooks/useDB";
@@ -11,12 +10,12 @@ export const KpiBlock = (props: { data: FullTransaction[] }) => {
   if (!latestMonth) return <></>;
 
   const xf = (d: FullTransaction) => d.datePosted;
-  const groupedData = d3
-    .groups(props.data, (d) => xf(d).toFormat("yyyy-LL"))
-    .map(([, data]) => ({
+  const groupedData = Array.from(groupBy(props.data, (d) => xf(d).toFormat("yyyy-LL"))).map(
+    ([, data]) => ({
       date: xf(data[0]),
-      value: d3.sum(data, (d) => d.value),
-    }));
+      value: sum(data, (d) => d.value),
+    }),
+  );
   const sortedData = [...groupedData].sort((a, b) => (a.date > b.date ? 1 : -1));
 
   const total_value_all_time = props.data.reduce((v, d) => v + d.value, 0);

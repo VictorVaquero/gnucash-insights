@@ -407,3 +407,23 @@ exists to keep migrations reversible and reasoned-about-in-writing without impos
 process overhead disproportionate to the project's size (see "Governance" in the
 constitution: compliance is checked informally at the end of each spec, not via a
 separate audit process).
+
+## Dependency keep: TanStack Router (spec 007, FR-010, closes spec 003 FR-004/SC-003)
+
+**Decision**: kept TanStack Router, unchanged. No concrete problem was identified with
+it during spec 007's D3→Recharts/theming work or otherwise.
+
+**Why**: file-based routing already fits the app's route structure well, the library is
+actively maintained, and there's no simpler built-in alternative that would reduce
+complexity — replacing it would be churn without a measurable win, which the
+constitution's "boring, well-supported technology" principle argues against.
+
+## Dependency keep: TanStack Query (spec 007, FR-010, closes spec 003 FR-004/SC-003)
+
+**Decision**: kept TanStack Query, unchanged, as the app's data-fetching/caching layer.
+No concrete problem was identified with it during spec 007's work.
+
+**Why**: it's already deeply integrated across every chart and data view, is actively
+maintained, and no simpler built-in alternative meets the app's server-state needs
+(caching, request dedup, background refetch) without reimplementing equivalent logic
+by hand.

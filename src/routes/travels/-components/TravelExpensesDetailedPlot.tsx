@@ -1,16 +1,21 @@
-import * as d3 from "d3";
 import { DateTime } from "luxon";
-import { MutableRefObject, useMemo, useRef } from "react";
+import { useMemo } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  TooltipContentProps,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { BarLoader } from "@/components/ui/BarLoader";
 
-import { parseNum, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
-import { XAxis } from "@/components/charts/XAxis";
-import { YAxis } from "@/components/charts/YAxis";
+import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesDetailedYearMonthOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
-import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
-import { chooseTooltipPointNode } from "@/routes/summary/-plots/tooltipFuncs.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getColor } from "./utils";
 
@@ -19,93 +24,85 @@ interface Data {
   date: string;
   value: number;
 }
+interface ChartRow {
+  date: string;
+  dateLabel: string;
+  [name: string]: string | number;
+}
 
-const marginDesktop = { t: 20, r: 20, b: 20, l: 50 };
-const marginMobile = { t: 10, r: 10, b: 20, l: 36 };
+const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
+const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const xf = (d: Data) => DateTime.fromISO(d.date);
-const yf = (d: Data) => d.value;
 const gf = (d: Data) => d.name;
-const orderxf = (a: Data, b: Data) => (xf(a) > xf(b) ? 1 : -1);
-const orderyf = (a: Data, b: Data) => (yf(a) > yf(b) ? 1 : -1);
 
-const DrawTravelExpensesPlot = (props: {
-  data: Data[];
-  domain: { startDate: DateTime; endDate: DateTime };
-}) => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const [width, height] = useWindowSize(svgRef);
+const ChartTooltipContent = ({ active, payload, label }: TooltipContentProps<number, string>) => {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      {payload.map((entry) => (
+        <span key={entry.dataKey} style={{ color: entry.color }}>
+          {entry.dataKey}: {parseNum(entry.value as number)}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
-  const range = useMemo(() => {
-    return { x: [margin.l, width - margin.r], y: [height - margin.b, margin.t] };
-  }, [width, height, margin]);
 
-  const sortedData = [...props.data].sort(orderyf).sort(orderxf);
-  const stack = d3
-    .stack<[DateTime, d3.InternMap<string, Data>], string>()
-    .keys(d3.union(sortedData.map(gf)))
-    .value(([, group], key) => group.get(key)?.value ?? 0)
-    .order(d3.stackOrderDescending);
-  const series = stack(d3.index(sortedData, xf, gf));
+  const names = useMemo(() => Array.from(new Set(props.data.map(gf))), [props.data]);
 
-  const xDomain = [props.domain.startDate.minus({ month: 4 }), props.domain.endDate];
-  const yDomain = [0, d3.max(series.map((s) => s.map((d) => d[1])).flat())];
-  const xScale = d3.scaleUtc(xDomain, range.x);
-  const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
-  const rectWidth = (width / series.length) * 1.4;
-
-  const findAccount = (s: string) => sortedData.filter((a) => a.name === s)[0];
-
-  const dataf = (id: string) => props.data.filter((d) => gf(d) + xf(d) === id)[0];
-  const choosePoint = chooseTooltipPointNode<Data>(dataf, "rect");
-  const updateTooltip = (ref: MutableRefObject<HTMLDivElement | null>, d: Data) => {
-    if (ref.current !== null) {
-      const tooltip = d3.select(ref.current);
-      tooltip.select("#title").text(d.date);
-      tooltip.select("#name").text(d.name);
-      tooltip.select("#name").style("color", getColor(d.name));
-      tooltip.select("#value").text(parseNum(d.value));
+  const chartData: ChartRow[] = useMemo(() => {
+    const byDate = new Map<string, ChartRow>();
+    for (const d of props.data) {
+      const row = byDate.get(d.date) ?? {
+        date: d.date,
+        dateLabel: xf(d).toFormat("LLL yy"),
+      };
+      row[d.name] = d.value;
+      byDate.set(d.date, row);
     }
-  };
+    return Array.from(byDate.values()).sort((a, b) => (a.date > b.date ? 1 : -1));
+  }, [props.data]);
 
   return (
     <div className="relative w-full h-full">
-      <svg className="w-full h-full" ref={svgRef}>
-        <XAxis width={width} range={range} xScale={xScale} />
-        <YAxis height={height} range={range} scale={yScale} />
-        <g className="rects">
-          {series.map((s) => (
-            <g className="serie" key={s.key}>
-              {s.map((d) => (
-                <rect
-                  fill={getColor(findAccount(s.key)?.name)}
-                  fillOpacity={0.4}
-                  key={s.key + d.data[0]}
-                  id={s.key + d.data[0]}
-                  strokeWidth="1.5"
-                  shapeRendering="geometricPrecision"
-                  stroke={getColor(findAccount(s.key)?.name)}
-                  x={xScale(d.data[0]) - rectWidth / 2}
-                  height={yScale(d[0]) - yScale(d[1])}
-                  y={yScale(d[1])}
-                  width={rectWidth}
-                />
-              ))}
-            </g>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={margin}>
+          <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          <XAxis
+            dataKey="dateLabel"
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "currentColor" }}
+            className="text-gray-500"
+            tickLine={false}
+            tickFormatter={(value: number) => parseNum(value)}
+            width={margin.left}
+          />
+          <RechartsTooltip
+            content={(p: TooltipContentProps<number, string>) => <ChartTooltipContent {...p} />}
+          />
+          {names.map((name) => (
+            <Bar
+              key={name}
+              dataKey={name}
+              stackId="travel"
+              fill={getColor(name)}
+              fillOpacity={0.4}
+              stroke={getColor(name)}
+              strokeWidth={1.5}
+              isAnimationActive={false}
+            />
           ))}
-        </g>
-      </svg>
-      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
-        <div className="flex flex-col items-center px-6 py-2">
-          <span className="text-shark-300" id="title">
-            Title
-          </span>
-          <span id="name">name</span>
-          <span id="value" className="text-gray-400">
-            Value
-          </span>
-        </div>
-      </Tooltip>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -127,5 +124,5 @@ export const TravelExpensesDetailedPlot = () => {
       </div>
     );
 
-  return <DrawTravelExpensesPlot data={data} domain={{ startDate: from, endDate: to }} />;
+  return <DrawTravelExpensesPlot data={data} />;
 };
