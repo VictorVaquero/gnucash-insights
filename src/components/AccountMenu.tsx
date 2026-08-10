@@ -22,12 +22,12 @@ export const AccountMenu = () => {
               {firstLetter}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-shark-600 border-shark-600 text-white">
+          <DropdownMenuContent align="end">
             <DropdownMenuItem onSelect={() => signOut()}>Log Out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Link className="text-white" to="/login" search={{ redirect: redirect ?? selected }}>
+        <Link className="text-foreground" to="/login" search={{ redirect: redirect ?? selected }}>
           Log In
         </Link>
       )}

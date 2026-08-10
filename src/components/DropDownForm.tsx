@@ -10,14 +10,14 @@ export const DropDownForm = (props: {
   setValue: CallableFunction;
 }) => {
   return (
-    <form className="p-4 pt-2.5 bg-shark-700 max-w-80 rounded">
-      <label htmlFor={props.id} className="block text-shark-200 mb-1">
+    <form className="p-4 pt-2.5 bg-secondary max-w-80 rounded">
+      <label htmlFor={props.id} className="block text-secondary-foreground mb-1">
         {props.label}
       </label>
       <select
         id={props.id}
         name={props.id}
-        className="w-full max-w-full p-4 bg-shark-700 text-white border-0 border-b-2 border-shark-600"
+        className="w-full max-w-full p-4 bg-secondary text-secondary-foreground border-0 border-b-2 border-border"
         value={props.value}
         onChange={(e) => props.setValue(e.target.value)}
       >

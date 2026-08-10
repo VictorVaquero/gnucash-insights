@@ -93,7 +93,7 @@ const Expenses = () => {
   if (!isSuccess || !data || !from || numMonths == null) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <BarLoader color="#36d7b7" />
+        <BarLoader />
       </div>
     );
   }
@@ -119,8 +119,8 @@ const Expenses = () => {
     <div className="w-full p-4 pt-10 lg:p-10 overflow-x-auto">
       <div className="min-w-[900px] grid grid-cols-[repeat(4,1fr)_100px_repeat(6,1fr)_20px_repeat(6,1fr)] gap-y-2 lg:gap-y-6">
         {/* Table Header */}
-        <div className="grid grid-cols-subgrid col-span-full py-4 text-white text-left border-b border-shark-500 font-bold">
-          <span className="col-start-1 sticky left-0 bg-shark-900">Category</span>
+        <div className="grid grid-cols-subgrid col-span-full py-4 text-foreground text-left border-b border-shark-500 font-bold">
+          <span className="col-start-1 sticky left-0 bg-shark-900 text-white">Category</span>
           <h4 className="col-start-6">Total</h4>
 
           {yearRange.map((year, index) => (
@@ -139,7 +139,7 @@ const Expenses = () => {
         </div>
         <TreeList
           data={[hierarchy]}
-          className="text-white w-full grid grid-cols-subgrid col-span-full"
+          className="text-foreground w-full grid grid-cols-subgrid col-span-full"
         />
       </div>
     </div>

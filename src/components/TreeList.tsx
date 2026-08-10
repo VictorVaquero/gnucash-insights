@@ -36,13 +36,13 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
   if (!item.children || item.children.length == 0)
     return (
       <li
-        className="grid grid-cols-subgrid col-span-full hover:bg-shark-700 rounded-sm"
+        className="grid grid-cols-subgrid col-span-full hover:bg-shark-700 hover:text-white rounded-sm"
         key={item.key}
       >
         <span
           className={cn(
             "col-start-" + (item.depth + 1),
-            "flex items-center text-left font-medium sticky left-0 bg-shark-900",
+            "flex items-center text-left font-medium sticky left-0 bg-shark-900 text-white",
           )}
         >
           {item.header}
@@ -53,13 +53,13 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
   return (
     <li className="grid grid-cols-subgrid col-span-full" key={item.key}>
       <button
-        className="grid grid-cols-subgrid col-span-full  hover:bg-shark-700 rounded-sm"
+        className="grid grid-cols-subgrid col-span-full  hover:bg-shark-700 hover:text-white rounded-sm"
         onClick={() => isCollapsed((prev) => !prev)}
       >
         <div
           className={cn(
             "col-start-" + (item.depth + 1),
-            "col-span-2 flex items-center sticky left-0 bg-shark-900",
+            "col-span-2 flex items-center sticky left-0 bg-shark-900 text-white",
           )}
         >
           <motion.span

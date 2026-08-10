@@ -11,7 +11,7 @@ export const PeriodicityTabs = ({
   onChange: (mode: Periodicity) => void;
 }) => {
   return (
-    <div className="flex bg-shark-900 p-1 rounded-lg w-fit">
+    <div className="flex bg-muted p-1 rounded-lg w-fit">
       {PERIODICITY_OPTIONS.map((option) => (
         <button
           key={option}
@@ -20,8 +20,8 @@ export const PeriodicityTabs = ({
           className={cn(
             "px-4 py-2 rounded capitalize font-light transition-all duration-200",
             activeMode === option
-              ? "bg-shark-600 text-white shadow-sm"
-              : "text-shark-300 hover:text-white hover:bg-shark-800",
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent",
           )}
         >
           {option}

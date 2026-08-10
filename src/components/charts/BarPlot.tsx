@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { RechartsDevtools } from "@recharts/devtools";
-import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react";
+import { IconDefinition, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import {
   Bar,
@@ -133,13 +134,12 @@ const LegendItem = ({ name, color, onClick, activeLegend }: LegendItemProps) => 
 };
 
 interface ScrollButtonProps {
-  icon: React.ElementType;
+  icon: IconDefinition;
   onClick?: () => void;
   disabled?: boolean;
 }
 
 const ScrollButton = ({ icon, onClick, disabled }: ScrollButtonProps) => {
-  const Icon = icon;
   const [isPressed, setIsPressed] = React.useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -185,7 +185,7 @@ const ScrollButton = ({ icon, onClick, disabled }: ScrollButtonProps) => {
         setIsPressed(false);
       }}
     >
-      <Icon className="size-full" aria-hidden="true" />
+      <FontAwesomeIcon icon={icon} className="size-full" aria-hidden="true" />
     </button>
   );
 };
@@ -332,7 +332,7 @@ const Legend = React.forwardRef<HTMLOListElement, LegendProps>((props, ref) => {
             )}
           >
             <ScrollButton
-              icon={RiArrowLeftSLine}
+              icon={faChevronLeft}
               onClick={() => {
                 setIsKeyDowned(null);
                 scrollToTest("left");
@@ -340,7 +340,7 @@ const Legend = React.forwardRef<HTMLOListElement, LegendProps>((props, ref) => {
               disabled={!hasScroll?.left}
             />
             <ScrollButton
-              icon={RiArrowRightSLine}
+              icon={faChevronRight}
               onClick={() => {
                 setIsKeyDowned(null);
                 scrollToTest("right");
@@ -730,7 +730,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
             wrapperStyle={{ outline: "none" }}
             isAnimationActive={true}
             animationDuration={100}
-            cursor={{ fill: "#d1d5db", opacity: "0.15" }}
+            cursor={{ fill: "var(--color-shark-400)", opacity: "0.15" }}
             offset={20}
             position={{
               y: layout === "horizontal" ? 0 : undefined,

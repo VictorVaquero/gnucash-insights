@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   IconDefinition,
   faBook,
@@ -52,8 +53,8 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
         aria-label={isCollapsed ? text : undefined}
         className={cn(
           "group m-1 flex items-center rounded-md p-3 transition-all duration-200",
-          "hover:bg-shark-800",
-          isActive ? "bg-shark-800/50" : "transparent",
+          "hover:bg-accent",
+          isActive ? "bg-accent" : "transparent",
           className,
         )}
       >
@@ -61,7 +62,7 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
           icon={icon}
           className={cn(
             "h-5 w-5 shrink-0 transition-colors",
-            isActive ? "text-sky-300" : "text-shark-50 group-hover:text-white",
+            isActive ? "text-brand" : "text-secondary-foreground",
           )}
         />
         {!isCollapsed ? (
@@ -69,7 +70,7 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
             className={cn(
               "ms-3 overflow-hidden whitespace-nowrap transition-all duration-300",
               isCollapsed ? "max-w-0 opacity-0" : "max-w-xs opacity-100",
-              isActive ? "text-sky-300 font-medium" : "text-shark-50 font-light",
+              isActive ? "text-brand font-medium" : "text-secondary-foreground font-light",
             )}
           >
             {text}
@@ -141,21 +142,21 @@ export const SideBar = ({
       {/* Single nav panel: always fixed, only its width animates, so it never affects document flow */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden bg-shark-900 transition-[width] duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-border bg-secondary transition-[width] duration-300 ease-in-out",
           isCollapsed ? "w-14" : "w-64",
         )}
       >
         <div className="flex items-center gap-2.5 p-3">
           <Link to="/home" className="flex shrink-0 items-center gap-2.5 rounded" aria-label="Home">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-400/10">
-              <FontAwesomeIcon icon={faWallet} className="h-4 w-4 text-sky-400" />
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10">
+              <FontAwesomeIcon icon={faWallet} className="h-4 w-4 text-brand" />
             </span>
             <AnimatePresence mode="sync">
               {isCollapsed ? (
                 <></>
               ) : (
                 <motion.span
-                  className="overflow-hidden whitespace-nowrap text-lg font-semibold text-white"
+                  className="overflow-hidden whitespace-nowrap text-lg font-semibold text-secondary-foreground"
                   key="cashpy-wordmark"
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: "auto", opacity: 1 }}
@@ -174,13 +175,17 @@ export const SideBar = ({
             onClick={toggleSidebar}
             aria-label={isCollapsed ? "Open menu" : "Close menu"}
             aria-expanded={!isCollapsed}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-shark-200 transition-colors hover:bg-shark-800 hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-secondary-foreground transition-colors hover:bg-accent"
           >
             <MenuIcon isOpen={!isCollapsed} />
           </button>
         </div>
 
         <NavList isCollapsed={isCollapsed} />
+
+        <div className="border-t border-border p-2">
+          <ThemeToggle isCollapsed={isCollapsed} />
+        </div>
       </aside>
     </>
   );

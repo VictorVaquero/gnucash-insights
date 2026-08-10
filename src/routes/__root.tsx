@@ -83,7 +83,7 @@ const RootComponent = () => {
           <Outlet />
         ) : (
           <div className="flex h-full w-full items-center justify-center pt-24">
-            <BarLoader color="#36d7b7" />
+            <BarLoader />
           </div>
         )}
         <Suspense>
