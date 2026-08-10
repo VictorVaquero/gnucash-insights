@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { ErrorBoundary } from "react-error-boundary";
 import "./index.css";
@@ -15,6 +14,15 @@ import { useAuthSetup } from "./hooks/useAuth.ts";
 import { useSetupDB } from "./hooks/useDB.tsx";
 import ErrorPage from "./layout/ErrorPage.tsx";
 import { DateRange } from "./types/domain.ts";
+
+const ReactQueryDevtools = import.meta.env.PROD
+  ? () => null // Render nothing in production
+  : React.lazy(() =>
+      // Lazy load in development
+      import("@tanstack/react-query-devtools").then((res) => ({
+        default: res.ReactQueryDevtools,
+      }))
+    );
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -119,7 +127,9 @@ const GlobalCOntextProvider = () => {
   return (
     <DomainContext.Provider value={{ domain: domain }}>
       <RouterProvider router={router} context={{ auth, db, bookId }} />
-      <ReactQueryDevtools />
+      <Suspense>
+        <ReactQueryDevtools />
+      </Suspense>
     </DomainContext.Provider>
   );
 };
