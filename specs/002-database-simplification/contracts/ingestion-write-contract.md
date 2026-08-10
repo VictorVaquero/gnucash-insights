@@ -60,5 +60,5 @@ partial-update path to reconcile.
 ## Non-goals
 
 - No change to the `.gnca` export step itself (still a manual GnuCash export to a local
-  file) — only what happens *after* the file exists on disk.
+  file) — only what happens _after_ the file exists on disk.
 - No incremental/partial-update logic — full rebuild each run is retained as-is.

@@ -10,7 +10,7 @@ are manual on-device/viewport validation checks — see `tasks.md` and
 
 **Input**: User description: "Mobile responsiveness: make the cashpy_v2 dashboard usable on phone-sized viewports. Replace the brittle isMobile() user-agent sniffing with a reactive viewport/pointer-based check used consistently app-wide. Fix route-level layouts that use fixed multi-column CSS grids with no responsive breakpoints (travels, analysis) so they degrade to single-column on narrow screens, matching the existing pattern already used in summary. Redesign the Expenses page's pivot-table grid for mobile, since it structurally cannot fit a phone width and needs a different presentation. Make the analysis page's transaction table usable on mobile via horizontal scroll and/or column hiding, and clean up the pagination footer's wrap behavior. Fix chart responsiveness (fixed-height containers, window-resize-only sizing, fixed pixel margins that don't scale). Verify touch/interaction details on real devices: the hover-dependent account menu, and the login page's card positioning on short-height mobile viewports."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - View the financial summary on a phone (Priority: P1)
 
@@ -84,7 +84,7 @@ A user wants to review the year-by-year expense breakdown (Expenses page) on the
 - What happens when the same device supports both touch and mouse/trackpad input (e.g., a touchscreen laptop)? Hover-only interactions must still have a working touch-equivalent, without breaking the existing mouse experience.
 - What happens when a chart or table has very little data (e.g., a new filter with zero results)? The layout must not break or leave broken/empty visual artifacts on narrow screens.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -99,7 +99,7 @@ A user wants to review the year-by-year expense breakdown (Expenses page) on the
 - **FR-009**: System MUST determine mobile/touch-specific behavior (e.g., menu auto-collapse, tooltip timing) from the actual current viewport size and/or input capability, not from a one-time browser-identity signal, so behavior stays correct across resizing, rotation, and across devices whose declared identity doesn't match their actual screen size or input method.
 - **FR-010**: The login page's form MUST remain fully visible (not clipped or pushed off-screen) on short-height mobile viewports, including landscape phone orientation.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

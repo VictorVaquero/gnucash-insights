@@ -45,24 +45,20 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
     };
   }, [width, height]);
 
-  const findAccount = (s: string | null) =>
-    props.accounts.filter((a) => a.id === s)[0];
+  const findAccount = (s: string | null) => props.accounts.filter((a) => a.id === s)[0];
   const name_f = (d: Data) => findAccount(d.account)?.name ?? defaultAccount;
   const color_f = (d: Data) =>
-    name_f(d) !== defaultAccount
-      ? getRandomColor(name_f(d))
-      : getDefaultColor();
+    name_f(d) !== defaultAccount ? getRandomColor(name_f(d)) : getDefaultColor();
 
   const hide_accounts = [""];
   const filtered_data = props.data.filter(
     (d) =>
       !hide_accounts.includes(d.account ?? "") &&
       xf(d).year === props.date.year &&
-      xf(d).month === props.date.month
+      xf(d).month === props.date.month,
   );
 
-  const radius =
-    Math.min(...[range.x[1] - range.x[0], range.y[0] - range.y[1]]) / 2;
+  const radius = Math.min(...[range.x[1] - range.x[0], range.y[0] - range.y[1]]) / 2;
   const pie_generator = d3.pie<Data>().value(yf);
   const arcGenerator = d3
     .arc<d3.PieArcDatum<Data>>()
@@ -86,9 +82,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
     <div className="relative w-full h-full">
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
         <p className="text-shark-300">{props.date.toFormat("yyyy-MM")}</p>
-        <p className="text-red-500">
-          {parseNum(d3.sum(filtered_data.map(yf)))}
-        </p>
+        <p className="text-red-500">{parseNum(d3.sum(filtered_data.map(yf)))}</p>
       </div>
       <svg className="w-full h-full" ref={svgRef}>
         <g
@@ -97,11 +91,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
         >
           {pie_generator(filtered_data).map((d) => (
             <path
-              fill={
-                props.hideAccounts.includes(d.data.account ?? "")
-                  ? gray
-                  : color_f(d.data)
-              }
+              fill={props.hideAccounts.includes(d.data.account ?? "") ? gray : color_f(d.data)}
               key={gf(d.data)}
               id={gf(d.data)}
               strokeWidth="1.5"
@@ -136,16 +126,13 @@ export const MonthDetailedExpensesPiePlot = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const { user } = useAuth();
-  const { hideAccounts, toggleHideAccount, detailedDate } =
-    useSummaryPageContext();
+  const { hideAccounts, toggleHideAccount, detailedDate } = useSummaryPageContext();
 
   const dbconf = getConfig(user);
   const { data: accounts, isSuccess: isSuccessAccounts } = useQuery(
-    accountsOptions({ db, bookId, accountIds: [dbconf.expenses] })
+    accountsOptions({ db, bookId, accountIds: [dbconf.expenses] }),
   );
-  const { data, isSuccess } = useQuery(
-    netCostsYearMonthOptions({ db, user, bookId })
-  );
+  const { data, isSuccess } = useQuery(netCostsYearMonthOptions({ db, user, bookId }));
 
   if (!isSuccessAccounts || !isSuccess)
     return (

@@ -4,8 +4,8 @@
 
 ## Why this matters, and the framing the owner asked for specifically
 
-The explicit ask was: *"The performance analysis should be scripted/automated, not just
-a one off, same with most checks — they should be repeatable easily."* This reframes the
+The explicit ask was: _"The performance analysis should be scripted/automated, not just
+a one off, same with most checks — they should be repeatable easily."_ This reframes the
 whole doc: the deliverable isn't "a performance report," it's "a command (and a CI job)
 that produces a fresh performance report on demand, forever." The same principle is
 echoed back into several other docs in this folder (dependency hygiene via `knip`,
@@ -52,14 +52,14 @@ instead of requiring someone to notice.
 
 **The general "make checks repeatable" pattern**, applied across the folder:
 
-| Concern | One-off way (what was done for this review) | Scripted/repeatable way |
-|---|---|---|
-| Unused deps/dead code | manual grep sweep | `knip` (see [01](01-dependencies-and-config-hygiene.md)) |
-| Outdated/vulnerable deps | manual `pnpm outdated` | Dependabot/Renovate (see [09](09-developer-automation.md)) |
-| Performance | manual Lighthouse run | Lighthouse CI + budgets (this doc) |
-| Bundle size | manual bundle-visualizer look | `size-limit` in CI (this doc) |
-| Accessibility | manual inspection | `axe-core` in the component test suite (see [07](07-accessibility.md)) |
-| Lint/type errors | manual `pnpm lint`/`tsc` run | pre-commit hook + CI job (see [09](09-developer-automation.md)) |
+| Concern                  | One-off way (what was done for this review) | Scripted/repeatable way                                                |
+| ------------------------ | ------------------------------------------- | ---------------------------------------------------------------------- |
+| Unused deps/dead code    | manual grep sweep                           | `knip` (see [01](01-dependencies-and-config-hygiene.md))               |
+| Outdated/vulnerable deps | manual `pnpm outdated`                      | Dependabot/Renovate (see [09](09-developer-automation.md))             |
+| Performance              | manual Lighthouse run                       | Lighthouse CI + budgets (this doc)                                     |
+| Bundle size              | manual bundle-visualizer look               | `size-limit` in CI (this doc)                                          |
+| Accessibility            | manual inspection                           | `axe-core` in the component test suite (see [07](07-accessibility.md)) |
+| Lint/type errors         | manual `pnpm lint`/`tsc` run                | pre-commit hook + CI job (see [09](09-developer-automation.md))        |
 
 A single `pnpm run audit:all` meta-script chaining lint + typecheck + `knip` +
 `pnpm audit` + Lighthouse CI is the end state worth aiming for — one command (and one CI

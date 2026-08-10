@@ -1,7 +1,5 @@
 ---
-
 description: "Task list for spec 004: Mobile Responsiveness"
-
 ---
 
 # Tasks: Mobile Responsiveness
@@ -30,7 +28,7 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 **Purpose**: Establish a pre-change baseline so regressions are attributable to this feature
 
-- [X] T001 Manually verify the existing golden path (login → Summary loads → charts render, plus the guest login path) at a standard desktop width (~1440px), per constitution Principle III, before making any change — this is the regression baseline for the Polish-phase re-check.
+- [x] T001 Manually verify the existing golden path (login → Summary loads → charts render, plus the guest login path) at a standard desktop width (~1440px), per constitution Principle III, before making any change — this is the regression baseline for the Polish-phase re-check.
 
 ---
 
@@ -40,7 +38,7 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 **⚠️ CRITICAL**: T003 (US1) and T014 (US3) require T002 to exist first
 
-- [X] T002 Add `useIsTouchDevice()` (backed by `window.matchMedia('(pointer: coarse)')`) and `useIsNarrowViewport()` (backed by `window.matchMedia` at the same width used by Tailwind's `md:` breakpoint) reactive hooks to `src/common/utils.ts`, alongside — not yet replacing — the existing `isMobile()` function.
+- [x] T002 Add `useIsTouchDevice()` (backed by `window.matchMedia('(pointer: coarse)')`) and `useIsNarrowViewport()` (backed by `window.matchMedia` at the same width used by Tailwind's `md:` breakpoint) reactive hooks to `src/common/utils.ts`, alongside — not yet replacing — the existing `isMobile()` function.
 
 **Checkpoint**: New detection hooks exist; user story implementation can begin.
 
@@ -54,9 +52,9 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 ### Implementation for User Story 1
 
-- [X] T003 [US1] Update `src/routes/__root.tsx`'s auto-collapse-sidebar-on-navigation effect to use `useIsNarrowViewport()` instead of `isMobile()`.
-- [X] T004 [US1] Migrate `src/components/Header.tsx`'s account menu from custom `:hover`/`group-hover` CSS plus `isMobile()`-gated click handling to `@radix-ui/react-dropdown-menu` (via the existing `src/components/ui/dropdown-menu.tsx` wrapper), removing its `isMobile()` call site.
-- [X] T005 [US1] Manually validate the US1 section of `quickstart.md` at 320/375/428px: Summary renders single-column and fully legible; nav menu opens, reaches every page, and closes via tap only; account menu opens/closes via tap only.
+- [x] T003 [US1] Update `src/routes/__root.tsx`'s auto-collapse-sidebar-on-navigation effect to use `useIsNarrowViewport()` instead of `isMobile()`.
+- [x] T004 [US1] Migrate `src/components/Header.tsx`'s account menu from custom `:hover`/`group-hover` CSS plus `isMobile()`-gated click handling to `@radix-ui/react-dropdown-menu` (via the existing `src/components/ui/dropdown-menu.tsx` wrapper), removing its `isMobile()` call site.
+- [x] T005 [US1] Manually validate the US1 section of `quickstart.md` at 320/375/428px: Summary renders single-column and fully legible; nav menu opens, reaches every page, and closes via tap only; account menu opens/closes via tap only.
       **Done**: automated via a Puppeteer script (touch-emulated viewports, guest login) since no real device was
       available in this environment; found and fixed a genuine overflow at 320/375px — `SettingsBlock.tsx`'s
       `MultiSelectTree` (fixed `w-56`) + `PeriodicityTabs` sat in a non-wrapping flex row that didn't fit narrow
@@ -78,9 +76,9 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 ### Implementation for User Story 2
 
-- [X] T006 [P] [US2] Wrap `src/routes/analysis/-components/TransactsTable.tsx`'s `<table>` in an `overflow-x-auto` scroll container so every column stays reachable without being hidden.
-- [X] T007 [US2] Reflow `TransactsTable.tsx`'s pagination footer into wrapped, grouped control clusters (prev/next as one group; page-size select and page-jump input as another) using `flex-wrap`, so no control overlaps at narrow widths.
-- [X] T008 [P] [US2] Convert `src/routes/analysis/index.tsx`'s route-level grid from its fixed `grid-cols-[1fr_max-content]` layout to `flex flex-col` by default, applying the existing grid only at `md:` and above — matching the pattern already used in `src/routes/summary/index.tsx`.
+- [x] T006 [P] [US2] Wrap `src/routes/analysis/-components/TransactsTable.tsx`'s `<table>` in an `overflow-x-auto` scroll container so every column stays reachable without being hidden.
+- [x] T007 [US2] Reflow `TransactsTable.tsx`'s pagination footer into wrapped, grouped control clusters (prev/next as one group; page-size select and page-jump input as another) using `flex-wrap`, so no control overlaps at narrow widths.
+- [x] T008 [P] [US2] Convert `src/routes/analysis/index.tsx`'s route-level grid from its fixed `grid-cols-[1fr_max-content]` layout to `flex flex-col` by default, applying the existing grid only at `md:` and above — matching the pattern already used in `src/routes/summary/index.tsx`.
 - [ ] T009 [US2] Manually validate the US2 section of `quickstart.md` at 320/375/428px: table scrolls to reveal every column, pagination controls remain individually tappable without overlap, and selecting a saved filter (e.g. "Trips") keeps both chart and table within the viewport.
 
 **Checkpoint**: User Stories 1 and 2 are both complete and independently testable.
@@ -95,12 +93,12 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 ### Implementation for User Story 3
 
-- [X] T010 [US3] Replace `useWindowSize()`'s `window`-resize listener with a `ResizeObserver` observing the chart's own container element, in `src/common/utils.ts`, keeping the existing hook signature/return shape so call sites don't need structural changes.
-- [X] T011 [US3] Add tiered chart margins (a smaller margin set below the `md:` width threshold) to `src/routes/summary/-plots/IncomeExpensesPlot.tsx`.
-- [X] T012 [P] [US3] Apply the same tiered-margin treatment to the remaining D3 chart files under `src/routes/summary/-plots/` (`DetailedExpensesBarPlot.tsx`, `DetailedIncomeBarPlot.tsx`, `MonthDetailedExpensesPiePlot .tsx`, `AssetAccountsPlot.tsx`, and any other sibling chart files in that directory using fixed pixel margins). Note: `DetailedExpensesBarPlot.tsx`/`DetailedIncomeBarPlot.tsx` render via the Recharts-based `BarChart` (see T015), not raw D3 with fixed margins, so no change was needed there; `MonthDetailedExpensesPiePlot .tsx`'s margin is already a negligible 5px and its radius is already computed from live container size, so tiering it further wasn't meaningful — only `AssetAccountsPlot.tsx` needed the treatment and got it.
-- [X] T013 [P] [US3] Apply the same tiered-margin treatment to the D3 chart files under `src/routes/travels/-components/` (`TravelExpensesMonthlyPlot.tsx`, `TravelExpensesDetailedPlot.tsx`, `TravelExpensesPlot.tsx`, `TravelExpensesPiePlot .tsx`). Note: `TravelExpensesPiePlot .tsx` also has a negligible 5px margin with an already-responsive radius, same reasoning as its summary-page counterpart, so it was left unchanged.
-- [X] T014 [US3] Update `src/routes/summary/-plots/Tooltip.tsx` to use `useIsTouchDevice()` instead of `isMobile()` for its hide-delay timing.
-- [X] T015 [US3] Review `src/components/charts/BarPlot.tsx`'s fixed `h-80` container height at narrow viewports (visually, during T016) and reduce it responsively if it's disproportionate on a 320-375px screen.
+- [x] T010 [US3] Replace `useWindowSize()`'s `window`-resize listener with a `ResizeObserver` observing the chart's own container element, in `src/common/utils.ts`, keeping the existing hook signature/return shape so call sites don't need structural changes.
+- [x] T011 [US3] Add tiered chart margins (a smaller margin set below the `md:` width threshold) to `src/routes/summary/-plots/IncomeExpensesPlot.tsx`.
+- [x] T012 [P] [US3] Apply the same tiered-margin treatment to the remaining D3 chart files under `src/routes/summary/-plots/` (`DetailedExpensesBarPlot.tsx`, `DetailedIncomeBarPlot.tsx`, `MonthDetailedExpensesPiePlot .tsx`, `AssetAccountsPlot.tsx`, and any other sibling chart files in that directory using fixed pixel margins). Note: `DetailedExpensesBarPlot.tsx`/`DetailedIncomeBarPlot.tsx` render via the Recharts-based `BarChart` (see T015), not raw D3 with fixed margins, so no change was needed there; `MonthDetailedExpensesPiePlot .tsx`'s margin is already a negligible 5px and its radius is already computed from live container size, so tiering it further wasn't meaningful — only `AssetAccountsPlot.tsx` needed the treatment and got it.
+- [x] T013 [P] [US3] Apply the same tiered-margin treatment to the D3 chart files under `src/routes/travels/-components/` (`TravelExpensesMonthlyPlot.tsx`, `TravelExpensesDetailedPlot.tsx`, `TravelExpensesPlot.tsx`, `TravelExpensesPiePlot .tsx`). Note: `TravelExpensesPiePlot .tsx` also has a negligible 5px margin with an already-responsive radius, same reasoning as its summary-page counterpart, so it was left unchanged.
+- [x] T014 [US3] Update `src/routes/summary/-plots/Tooltip.tsx` to use `useIsTouchDevice()` instead of `isMobile()` for its hide-delay timing.
+- [x] T015 [US3] Review `src/components/charts/BarPlot.tsx`'s fixed `h-80` container height at narrow viewports (visually, during T016) and reduce it responsively if it's disproportionate on a 320-375px screen.
 - [ ] T016 [US3] Manually validate the US3 section of `quickstart.md` at 320/375/428px plus landscape rotation, on both a Summary chart and a Travels chart: chart resizes on rotation, resizes on nav-menu toggle without a window resize event, and tooltip appears/is readable/dismisses via tap.
 
 **Checkpoint**: User Stories 1, 2, and 3 are all complete and independently testable.
@@ -115,8 +113,8 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 ### Implementation for User Story 4
 
-- [X] T017 [P] [US4] Wrap `src/routes/expenses/index.tsx`'s pivot grid in an `overflow-x-auto` container.
-- [X] T018 [US4] Make the category-name column `sticky left-0` (with matching background color, to avoid visual bleed-through while scrolling) in `src/components/TreeList.tsx` / `expenses/index.tsx`'s subgrid, so it stays visible while the yearly figures scroll horizontally underneath.
+- [x] T017 [P] [US4] Wrap `src/routes/expenses/index.tsx`'s pivot grid in an `overflow-x-auto` container.
+- [x] T018 [US4] Make the category-name column `sticky left-0` (with matching background color, to avoid visual bleed-through while scrolling) in `src/components/TreeList.tsx` / `expenses/index.tsx`'s subgrid, so it stays visible while the yearly figures scroll horizontally underneath.
 - [ ] T019 [US4] Manually validate the US4 section of `quickstart.md` at 320/375px: category labels and expand/collapse controls reachable without horizontal scroll; expand/collapse works via tap without needing to zoom.
 
 **Checkpoint**: All four user stories are complete and independently functional.
@@ -127,10 +125,10 @@ Single existing project — all paths under `src/` at repository root (see `plan
 
 **Purpose**: Close remaining FR-003/FR-010 gaps not covered by a specific user story, and finish the `isMobile()` removal
 
-- [X] T020 [P] Convert `src/routes/travels/index.tsx`'s route-level grid to the same `flex-col`/`md:grid` pattern used in T008 (FR-003 coverage for the Travels page's own layout, distinct from its chart-resize fixes in US3).
-- [X] T021 [P] Fix `src/routes/login/index.tsx`'s card positioning — replace `absolute -translate-y-32` with flow-based centering that doesn't clip on short-height viewports (FR-010).
-- [X] T022 [P] Spot-check `src/routes/metadata.tsx` at 320-428px and fix any wrapping/spacing issues found (FR-003 coverage). Fixed `p-10` (40px fixed padding, eating a large fraction of a 320px viewport) to `p-4 md:p-10`; `DropDownForm`/`KpiCard` were already flexible (`max-w-80`/`w-full`, `flex-wrap`) and needed no change.
-- [X] T023 Remove the now-unused `isMobile()` function and its import from `src/common/utils.ts`, once T003, T004, and T014 have all migrated off it. Confirmed via `grep -rn "isMobile" src` that only the definition/doc-comments remained; removed both. This also eliminates the pre-existing `no-useless-escape` ESLint baseline noise from its UA-sniffing regex.
+- [x] T020 [P] Convert `src/routes/travels/index.tsx`'s route-level grid to the same `flex-col`/`md:grid` pattern used in T008 (FR-003 coverage for the Travels page's own layout, distinct from its chart-resize fixes in US3).
+- [x] T021 [P] Fix `src/routes/login/index.tsx`'s card positioning — replace `absolute -translate-y-32` with flow-based centering that doesn't clip on short-height viewports (FR-010).
+- [x] T022 [P] Spot-check `src/routes/metadata.tsx` at 320-428px and fix any wrapping/spacing issues found (FR-003 coverage). Fixed `p-10` (40px fixed padding, eating a large fraction of a 320px viewport) to `p-4 md:p-10`; `DropDownForm`/`KpiCard` were already flexible (`max-w-80`/`w-full`, `flex-wrap`) and needed no change.
+- [x] T023 Remove the now-unused `isMobile()` function and its import from `src/common/utils.ts`, once T003, T004, and T014 have all migrated off it. Confirmed via `grep -rn "isMobile" src` that only the definition/doc-comments remained; removed both. This also eliminates the pre-existing `no-useless-escape` ESLint baseline noise from its UA-sniffing regex.
 - [ ] T024 Run the full `quickstart.md` validation matrix end-to-end (all 4 user stories + edge cases + the desktop regression re-check against the T001 baseline) across 320/375/428px and landscape, plus at least one real phone, before marking this feature done per constitution Principle III.
 
 ---

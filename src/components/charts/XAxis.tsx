@@ -5,9 +5,7 @@ export const XAxis = (props: {
   range: { x: number[]; y: number[] };
   xScale: d3.ScaleTime<number, number>;
 }) => {
-  const pathDef = ["M", props.range.x[0], ",", 0, "H", props.range.x[1]].join(
-    ""
-  );
+  const pathDef = ["M", props.range.x[0], ",", 0, "H", props.range.x[1]].join("");
 
   return (
     <g

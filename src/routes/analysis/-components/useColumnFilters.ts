@@ -2,16 +2,12 @@ import { getRouteApi } from "@tanstack/react-router";
 import { ColumnFiltersState, Updater } from "@tanstack/react-table";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const deserialize = (
-  searchParams: Record<string, unknown> = {}
-): ColumnFiltersState => {
+const deserialize = (searchParams: Record<string, unknown> = {}): ColumnFiltersState => {
   return Object.entries(searchParams).map(([k, v]) => ({ id: k, value: v }));
 };
 
 const serialize = (filters: ColumnFiltersState): Record<string, string> => {
-  return Object.fromEntries(
-    filters.map((x) => [String(x.id), String(x.value)])
-  );
+  return Object.fromEntries(filters.map((x) => [String(x.id), String(x.value)]));
 };
 
 export function useColumnFilters(delay = 400) {
@@ -20,14 +16,10 @@ export function useColumnFilters(delay = 400) {
   const navigate = routeApi.useNavigate();
 
   // 1. URL state (The ultimate truth)
-  const urlFilters = useMemo(
-    () => deserialize(query as Record<string, unknown>),
-    [query]
-  );
+  const urlFilters = useMemo(() => deserialize(query as Record<string, unknown>), [query]);
 
   // 2. Local state (The "snappy" truth for immediate rendering)
-  const [localFilters, setLocalFilters] =
-    useState<ColumnFiltersState>(urlFilters);
+  const [localFilters, setLocalFilters] = useState<ColumnFiltersState>(urlFilters);
 
   // 3. Sync Local state if URL changes (e.g., browser back button or reset)
   useEffect(() => {
@@ -53,14 +45,9 @@ export function useColumnFilters(delay = 400) {
   }, [localFilters, navigate, delay, urlFilters]);
 
   // 5. Intercept the Table's setColumnFilters
-  const setColumnFilters = useCallback(
-    (updater: Updater<ColumnFiltersState>) => {
-      setLocalFilters((prev) =>
-        typeof updater === "function" ? updater(prev) : updater
-      );
-    },
-    []
-  );
+  const setColumnFilters = useCallback((updater: Updater<ColumnFiltersState>) => {
+    setLocalFilters((prev) => (typeof updater === "function" ? updater(prev) : updater));
+  }, []);
 
   return {
     columnFilters: localFilters, // Table sees local state for 0ms lag

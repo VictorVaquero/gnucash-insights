@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from "@storybook/react";
 
-import { KpiCard } from './KpiCard';
+import { KpiCard } from "./KpiCard";
 
 const meta: Meta<typeof KpiCard> = {
   component: KpiCard,
@@ -14,7 +14,7 @@ export const ShortKpi: Story = {
     name: "Short Kpi",
     value: 100,
     title: "My kpi",
-    color: "text-green-600"
+    color: "text-green-600",
   },
 };
 
@@ -23,6 +23,6 @@ export const LongKpiName: Story = {
     name: "Really loooong KPI With lots of data",
     value: "100%",
     title: "",
-    color: "text-green-600"
-  }
+    color: "text-green-600",
+  },
 };

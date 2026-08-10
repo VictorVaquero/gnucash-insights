@@ -22,7 +22,7 @@ Drizzle query builders (`src/db/queries/summary.ts`, `travel.ts`, and several
 against Turso via `@libsql/client` over HTTP — there is no server-side query proxy (the
 existing `turso-token-endpoint.md` contract's "Non-goals" section is explicit: this
 endpoint issues a token only, it never executes SQL). That means the mapping must reach
-the browser at runtime regardless of where it's *stored* — moving it "server-side" can
+the browser at runtime regardless of where it's _stored_ — moving it "server-side" can
 only mean "not committed to git / not baked into the static JS bundle at build time," not
 "the browser never sees it." Piggybacking on the already-authenticated `turso-token`
 call means no new endpoint, no new auth boundary, and the value is fetched once per
@@ -30,15 +30,16 @@ session rather than shipped in every JS bundle indexed by search engines/GitHub 
 search once the repo is public.
 
 **Alternatives considered**:
-- *New dedicated `api/account-config.ts` endpoint*: rejected — would duplicate the same
+
+- _New dedicated `api/account-config.ts` endpoint_: rejected — would duplicate the same
   Cognito/guest branching `turso-token.ts` already does, for no real benefit over
   extending one response shape.
-- *Vite build-time env var (`import.meta.env.VITE_ACCOUNT_CONFIG_VICTOR`)*: rejected —
+- _Vite build-time env var (`import.meta.env.VITE_ACCOUNT_CONFIG_VICTOR`)_: rejected —
   build-time env vars still get inlined into the static JS bundle at build time, which is
   exactly what SC-001 says must not happen (a public repo's build output would still leak
   it, even if the source no longer does).
-- *Keep it in `src/config.json` but `.gitignore` it, generating it from an env var during
-  `vercel build`*: rejected as more moving parts than extending an endpoint that's
+- _Keep it in `src/config.json` but `.gitignore` it, generating it from an env var during
+  `vercel build`_: rejected as more moving parts than extending an endpoint that's
   already called on every login, for no added benefit.
 
 ## 2. `src/config.json` zod schema shape (post-move)
@@ -79,10 +80,11 @@ Vercel Marketplace integration, and no schema/infra to provision — appropriate
 single-real-user app under constitution Principle II (cost-consciousness).
 
 **Alternatives considered**:
-- *Vercel Marketplace Redis/Upstash-backed counter*: rejected as unnecessary weight for
+
+- _Vercel Marketplace Redis/Upstash-backed counter_: rejected as unnecessary weight for
   current traffic (one real user + guest demo); revisit only if evidence of real abuse
   appears (mirrors the spec's own BotID deferral reasoning).
-- *Vercel Edge Config*: rejected — Edge Config is optimized for infrequent-write/frequent
+- _Vercel Edge Config_: rejected — Edge Config is optimized for infrequent-write/frequent
   read config data, not a fast-changing per-request counter; would need external writes
   from the function anyway, adding latency for no benefit over an in-memory counter at
   this scale.
@@ -98,12 +100,13 @@ correct. Document the trace formally (a written trace note in this spec's tasks/
 a small regression test) rather than changing `api/turso-token.ts`'s branching logic.
 
 **Rationale** (full trace, read directly from the current code):
+
 - `src/services/tursoService.ts`'s `fetchTursoToken` converts the client's synthetic
   `idToken: 'guest'` marker into an `X-Guest-Request: true` header and sends **no**
   `Authorization` header at all in that case; for any other `idToken`, it sends
   `Authorization: Bearer <idToken>` and no guest header.
 - `api/turso-token.ts` branches purely on which headers are present: `Authorization:
-  Bearer ...` → always calls `verifyCognitoIdToken` (`api/_lib/verifyCognitoToken.ts`,
+Bearer ...` → always calls `verifyCognitoIdToken` (`api/_lib/verifyCognitoToken.ts`,
   real Cognito JWKS signature/issuer/audience check) before minting a token scoped to
   `prodDatabaseName`; otherwise, if `X-Guest-Request: true` → mints a token scoped to
   `guestDatabaseName` with **no** verification call at all; otherwise → `401`.
@@ -132,6 +135,7 @@ task rather than a design decision.
 left the bundle. The spec's User Story 5 / FR-010 description (written from
 `docs/review/04-security.md`, which predates that cleanup) is stale on this point. Only
 two things remain genuinely open for this spec:
+
 1. A nonce/hash investigation for dropping `script-src`/`style-src`'s remaining
    `'unsafe-inline'`.
 2. The CSP-drift CI guardrail against `resumeweb`.
@@ -228,7 +232,7 @@ grep is "bad at" catching unused-exports-within-used-files).
 
 **Decision**: Keep `eslint.config.mjs` (the flat config — ESLint 9's default and the only
 one `eslint .` actually loads today; `.eslintrc.cjs` is dead weight, silently not
-executed). Delete `.eslintrc.cjs`. Port over the rule coverage it *was* providing that
+executed). Delete `.eslintrc.cjs`. Port over the rule coverage it _was_ providing that
 `eslint.config.mjs` currently lacks: `eslint-plugin-react-hooks`'s recommended rules,
 `eslint-plugin-react-refresh`'s `only-export-components` rule, and
 `eslint-plugin-storybook`'s recommended rules — all three plugins are already

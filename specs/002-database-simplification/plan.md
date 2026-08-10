@@ -72,7 +72,7 @@ to keep working unchanged.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design._
 
 - **I. Incremental, Reversible Migration**: PASS. The plan below keeps the S3/Cognito
   read path intact until the Turso path is verified in production (feature-flag-style
@@ -95,7 +95,7 @@ to keep working unchanged.
 - **V. Data Privacy on a Public Surface**: **Needs a concrete answer, resolved in Phase 0
   below.** Turso credentials must not reach unauthenticated requests or the repo. The
   existing design has no server-side component at all (pure static SPA + direct
-  Cognito-scoped S3 credentials), so introducing *any* database credential into the
+  Cognito-scoped S3 credentials), so introducing _any_ database credential into the
   browser is new territory that must be designed carefully, not copy-pasted from the S3
   pattern.
 
@@ -121,12 +121,13 @@ by target (single database vs. group), and by lifetime (`--expiration`), e.g.:
 turso db tokens create <db> --read-only --expiration 7d
 ```
 
-A read-only token cannot write, but a *static* read-only token baked into the client
+A read-only token cannot write, but a _static_ read-only token baked into the client
 bundle would still be fetchable by anyone who loads the page — unauthenticated — which
 fails FR-006 and constitution Principle V just as surely as shipping a write token would.
 Turso's docs don't claim static client-embedded tokens are a supported pattern.
 
 **Decision**: Add one Vercel Serverless Function (e.g. `api/turso-token.ts`) that:
+
 1. Accepts the caller's existing Cognito ID token (the same one already produced by
    today's `authService.tsx` sign-in flow) and verifies it server-side (Cognito's JWKS
    endpoint — no new identity system introduced).
@@ -149,14 +150,15 @@ Cognito token before any Turso credential is issued), and keeping the write cred
 off the browser and off Vercel's runtime entirely.
 
 **Alternatives considered**:
-- *Static read-only token shipped in the client bundle*: rejected — readable by anyone
+
+- _Static read-only token shipped in the client bundle_: rejected — readable by anyone
   who loads the page without logging in, a direct FR-006/Principle V violation.
-- *Full server-side query proxy (every query goes through Vercel functions, no client-side
-  DB access)*: rejected — this is what pushed Option B (Neon/Postgres) into "adds a
+- _Full server-side query proxy (every query goes through Vercel functions, no client-side
+  DB access)_: rejected — this is what pushed Option B (Neon/Postgres) into "adds a
   required API layer," the exact architectural growth this spec exists to avoid for the
   chosen option; a token-issuance-only endpoint is far smaller than a full query-proxy
   API.
-- *Turso "embedded replica" / sync to the browser*: not applicable — embedded replicas are
+- _Turso "embedded replica" / sync to the browser_: not applicable — embedded replicas are
   a server/edge-runtime feature (libSQL local file + sync), not a browser-WASM pattern;
   out of scope at this app's scale.
 
@@ -198,9 +200,9 @@ II's spirit: don't build for hypothetical scale this app doesn't have).
 
 The financial dataset's shape is unchanged from `src/db/schema.ts` (meta, books,
 accounts, commodities, prices, transactions, splits, timetable, accountsClosure,
-summary_monthly/quarterly/yearly, fullTransactions) — Turso is SQLite-wire-compatible, so
+summary*monthly/quarterly/yearly, fullTransactions) — Turso is SQLite-wire-compatible, so
 the existing Drizzle schema carries over as-is (research.md's Query-layer finding). The
-only structural change is dropping the "book/snapshot" concept's *storage* representation
+only structural change is dropping the "book/snapshot" concept's \_storage* representation
 (no more one-S3-folder-per-export); `booksTable` itself is unaffected since it already
 models one row per GnuCash "book," not per export folder. See `data-model.md` for the
 full entity list carried over verbatim, called out explicitly rather than silently
@@ -292,7 +294,7 @@ path in a distinct, separate change."
 
 ## Complexity Tracking
 
-*No entries — the one addition beyond a pure driver swap (the `/api/turso-token`
+_No entries — the one addition beyond a pure driver swap (the `/api/turso-token`
 function) is justified directly by constitution Principle V and FR-006, not incidental
 complexity, and is the minimum-sized component that satisfies them (a token-issuer, not a
-full query proxy).*
+full query proxy)._

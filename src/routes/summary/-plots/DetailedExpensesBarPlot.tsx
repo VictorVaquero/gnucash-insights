@@ -26,7 +26,7 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
   const totalByAccount = d3.rollup(
     data,
     (v) => d3.sum(v, (d) => d.value),
-    (d) => d.accountId
+    (d) => d.accountId,
   );
 
   // 2. Identify Top Accounts
@@ -34,7 +34,7 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
     Array.from(totalByAccount.entries())
       .sort(([, sumA], [, sumB]) => sumB - sumA)
       .slice(0, limit)
-      .map(([accountId]) => accountId)
+      .map(([accountId]) => accountId),
   );
 
   // 3. Roll up data.
@@ -45,13 +45,11 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
       // Take metadata from the first entry in the group
       dateLabel: v[0].dateLabel,
       // If it's a top account, keep the name; otherwise, call it "Others"
-      accountName: topAccounts.has(v[0].accountId)
-        ? v[0].accountName
-        : DEFAULT_ACCOUNT_NAME,
+      accountName: topAccounts.has(v[0].accountId) ? v[0].accountName : DEFAULT_ACCOUNT_NAME,
       value: d3.sum(v, (d) => d.value),
     }),
     (d) => d.date,
-    (d) => (topAccounts.has(d.accountId) ? d.accountId : DEFAULT_ACCOUNT_NAME)
+    (d) => (topAccounts.has(d.accountId) ? d.accountId : DEFAULT_ACCOUNT_NAME),
   );
 
   // 4. Map back to your Data structure
@@ -78,11 +76,11 @@ function pivotData(data: Data[]) {
   const idTotals = d3.rollup(
     data,
     (v) => d3.sum(v, (d) => d.value),
-    (d) => d.accountId
+    (d) => d.accountId,
   );
 
   const accountIds = Array.from(idTotals.keys()).sort(
-    (a, b) => (idTotals.get(b) || 0) - (idTotals.get(a) || 0)
+    (a, b) => (idTotals.get(b) || 0) - (idTotals.get(a) || 0),
   );
 
   const groupedByDate = d3.group(data, (d) => d.date);
@@ -118,8 +116,7 @@ export const DetailedExpensesBarPlot = () => {
   const { bookId } = useBook();
   const { user } = useAuth();
   const dbconfig = getConfig(user);
-  const { hideAccounts, setDetailedDate, dateRange, chartPeriodicity } =
-    useSummaryPageContext();
+  const { hideAccounts, setDetailedDate, dateRange, chartPeriodicity } = useSummaryPageContext();
 
   const { data: transactData } = useQuery(
     transactByAccountOptions({
@@ -135,16 +132,16 @@ export const DetailedExpensesBarPlot = () => {
                 rawData
                   .filter((d) => d.date >= dateRange.from.toString())
                   .filter((d) => d.date <= dateRange.to.toString()),
-                14
-              )
+                14,
+              ),
             );
             return { data, keys };
           }
           return { data: undefined, keys: undefined };
         },
-        [dateRange]
+        [dateRange],
       ),
-    })
+    }),
   );
 
   const { data, keys } = transactData ?? { data: undefined, keys: undefined };
@@ -159,16 +156,13 @@ export const DetailedExpensesBarPlot = () => {
           if (keys) {
             const keyNames = keys
               .filter((k) => !hideAccounts.includes(k))
-              .map(
-                (k) =>
-                  accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
-              );
+              .map((k) => accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME);
             return keyNames;
           }
         },
-        [keys, hideAccounts]
+        [keys, hideAccounts],
       ),
-    })
+    }),
   );
 
   if (!data || !dateRange || !keyNames) {
@@ -189,9 +183,7 @@ export const DetailedExpensesBarPlot = () => {
         categories={keyNames}
         showLegend={false}
         valueFormatter={(number: number) => parseNum(number, { digits: 0 })}
-        onValueChange={(v) =>
-          setDetailedDate(DateTime.fromFormat(v?.date as string, "yyyy-LL-dd"))
-        }
+        onValueChange={(v) => setDetailedDate(DateTime.fromFormat(v?.date as string, "yyyy-LL-dd"))}
       />
     </div>
   );

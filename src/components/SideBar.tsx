@@ -53,14 +53,14 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
           "group m-1 flex items-center rounded-md p-3 transition-all duration-200",
           "hover:bg-shark-800",
           isActive ? "bg-shark-800/50" : "transparent",
-          className
+          className,
         )}
       >
         <FontAwesomeIcon
           icon={icon}
           className={cn(
             "h-5 w-5 shrink-0 transition-colors",
-            isActive ? "text-sky-300" : "text-shark-300 group-hover:text-white"
+            isActive ? "text-sky-300" : "text-shark-300 group-hover:text-white",
           )}
         />
         {!isCollapsed ? (
@@ -68,9 +68,7 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
             className={cn(
               "ms-3 overflow-hidden whitespace-nowrap transition-all duration-300",
               isCollapsed ? "max-w-0 opacity-0" : "max-w-xs opacity-100",
-              isActive
-                ? "text-sky-300 font-medium"
-                : "text-shark-100 font-light"
+              isActive ? "text-sky-300 font-medium" : "text-shark-100 font-light",
             )}
           >
             {text}
@@ -80,7 +78,7 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
         )}
       </a>
     );
-  }
+  },
 );
 
 const CreatedLink = createLink(ItemLinkComponent);
@@ -143,7 +141,7 @@ export const SideBar = ({
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden bg-shark-900 transition-[width] duration-300 ease-in-out",
-          isCollapsed ? "w-14" : "w-64"
+          isCollapsed ? "w-14" : "w-64",
         )}
       >
         <div className="flex items-center gap-2.5 p-3">

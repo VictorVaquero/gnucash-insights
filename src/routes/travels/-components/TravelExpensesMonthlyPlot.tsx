@@ -4,19 +4,11 @@ import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { MutableRefObject, useMemo, useRef } from "react";
 
-import {
-  parseNum,
-  twStyles,
-  useIsNarrowViewport,
-  useWindowSize,
-} from "@/common/utils.ts";
+import { parseNum, twStyles, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
-import {
-  travelExpensesYearMonthOptions,
-  travelExpensesYearOptions,
-} from "@/db/queries/travel";
+import { travelExpensesYearMonthOptions, travelExpensesYearOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { Tooltip } from "@/routes/summary/-plots/Tooltip.tsx";
 import { chooseTooltipPointLine } from "@/routes/summary/-plots/tooltipFuncs.tsx";
@@ -55,29 +47,16 @@ const DrawTravelExpensesMonthlyPlot = (props: {
   const sortedData = [...props.data].sort(orderyf).sort(orderxf);
   const sortedDataYearly = [...props.dataYearly].sort(orderyf).sort(orderxf);
 
-  const xDomain = [
-    props.domain.startDate.minus({ month: 4 }),
-    props.domain.endDate,
-  ];
+  const xDomain = [props.domain.startDate.minus({ month: 4 }), props.domain.endDate];
   const yDomain = [0, Math.max(...sortedDataYearly.map(yf))];
   const xScale = d3.scaleUtc(xDomain, range.x);
   const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
   const rectWidth = (width / sortedData.length) * 0.6 * 0.7;
   const rectWidthYearly =
-    xScale(props.domain.startDate.plus({ year: 1 })) -
-    xScale(props.domain.startDate);
+    xScale(props.domain.startDate.plus({ year: 1 })) - xScale(props.domain.startDate);
 
-  const choosePoint = chooseTooltipPointLine(
-    sortedData,
-    xf,
-    yf,
-    xScale,
-    yScale
-  );
-  const updateTooltip = (
-    ref: MutableRefObject<HTMLDivElement | null>,
-    d: Data
-  ) => {
+  const choosePoint = chooseTooltipPointLine(sortedData, xf, yf, xScale, yScale);
+  const updateTooltip = (ref: MutableRefObject<HTMLDivElement | null>, d: Data) => {
     if (ref.current !== null) {
       const tooltip = d3.select(ref.current);
       tooltip.select("#title").text(d.date);
@@ -123,11 +102,7 @@ const DrawTravelExpensesMonthlyPlot = (props: {
           ))}
         </g>
       </svg>
-      <Tooltip
-        svgRef={svgRef}
-        choosePoint={choosePoint}
-        updateTooltip={updateTooltip}
-      >
+      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
         <div className="flex flex-col items-center px-6 py-2">
           <span className="text-shark-300" id="title">
             Title
@@ -145,13 +120,11 @@ export const TravelExpensesMonthlyPlot = () => {
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
-  const {  from, to } = useDomain();
+  const { from, to } = useDomain();
 
-  const { data, isSuccess } = useQuery(
-    travelExpensesYearMonthOptions({ db, user, bookId })
-  );
+  const { data, isSuccess } = useQuery(travelExpensesYearMonthOptions({ db, user, bookId }));
   const { data: dataYearly, isSuccess: isSuccessYearly } = useQuery(
-    travelExpensesYearOptions({ db, user, bookId })
+    travelExpensesYearOptions({ db, user, bookId }),
   );
 
   if (!isSuccess || !isSuccessYearly || !from || !to)

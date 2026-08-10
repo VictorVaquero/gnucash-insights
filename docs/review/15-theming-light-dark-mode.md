@@ -4,7 +4,7 @@
 
 ## Why this matters
 
-Owner ask this round: *"light vs dark modes"* should be available. This isn't starting
+Owner ask this round: _"light vs dark modes"_ should be available. This isn't starting
 from zero — there's a half-finished attempt already in the codebase, which changes the
 right approach from "build it" to "finish it."
 
@@ -64,7 +64,7 @@ right approach from "build it" to "finish it."
    bad un-themed against a dark background), tables, forms, the login page.
 6. **`theme-color` meta tag**: once dark mode exists, the `<meta name="theme-color">` tag
    from [05-seo.md](05-seo.md) should become a light/dark-aware pair (two `<meta
-   name="theme-color" media="(prefers-color-scheme: ...)">` tags) rather than a single
+name="theme-color" media="(prefers-color-scheme: ...)">` tags) rather than a single
    static value — noted there, actioned here.
 
 ## Phased plan

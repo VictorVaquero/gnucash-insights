@@ -82,14 +82,11 @@ const columns = [
   }),
 ];
 
-export const TransactTable = (props: {
-  data: Data[];
-  setFilteredData: CallableFunction;
-}) => {
+export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFunction }) => {
   const { columnFilters, setColumnFilters } = useColumnFilters();
   const initialRowSelection = useMemo(
     () => props.data.reduce((d, row) => ({ ...d, [row.splitId]: true }), {}),
-    [props.data]
+    [props.data],
   );
 
   const table = useReactTable<Data>({
@@ -126,55 +123,52 @@ export const TransactTable = (props: {
   return (
     <div>
       <div className="overflow-x-auto">
-      <table className="border-collapse border-spacing-y-4 border-shark-600 text-white">
-        <thead>
-          {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id}>
-              {hg.headers.map((h) => (
-                <th key={h.id} colSpan={h.colSpan}>
-                  <div className="mb-2 p-1 ps-2">
-                    {h.isPlaceholder
-                      ? null
-                      : flexRender(h.column.columnDef.header, h.getContext())}
-                    {{
-                      asc: " 🔼",
-                      desc: " 🔽",
-                    }[h.column.getIsSorted() as string] ?? null}
-                    {h.column.getCanFilter() ? (
-                      <div className="mt-2">
-                        <Filter column={h.column} table={table} />
-                      </div>
-                    ) : null}
-                  </div>
-                </th>
-              ))}
+        <table className="border-collapse border-spacing-y-4 border-shark-600 text-white">
+          <thead>
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id}>
+                {hg.headers.map((h) => (
+                  <th key={h.id} colSpan={h.colSpan}>
+                    <div className="mb-2 p-1 ps-2">
+                      {h.isPlaceholder
+                        ? null
+                        : flexRender(h.column.columnDef.header, h.getContext())}
+                      {{
+                        asc: " 🔼",
+                        desc: " 🔽",
+                      }[h.column.getIsSorted() as string] ?? null}
+                      {h.column.getCanFilter() ? (
+                        <div className="mt-2">
+                          <Filter column={h.column} table={table} />
+                        </div>
+                      ) : null}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="mt-2 bg-shark-800">
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                className="hover:bg-shark-600"
+                key={row.id}
+                onClick={row.getToggleSelectedHandler()}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="border border-shark-600 p-2 ps-4 text-xs">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th></th>
             </tr>
-          ))}
-        </thead>
-        <tbody className="mt-2 bg-shark-800">
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              className="hover:bg-shark-600"
-              key={row.id}
-              onClick={row.getToggleSelectedHandler()}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className="border border-shark-600 p-2 ps-4 text-xs"
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th></th>
-          </tr>
-        </tfoot>
-      </table>
+          </tfoot>
+        </table>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-white">
         <span className="flex items-center gap-1">
@@ -251,16 +245,8 @@ export const TransactTable = (props: {
   );
 };
 
-function Filter<D>({
-  column,
-  table,
-}: {
-  column: Column<D, unknown>;
-  table: Table<D>;
-}) {
-  const firstValue = table
-    .getPreFilteredRowModel()
-    .flatRows[0]?.getValue(column.id);
+function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table<D> }) {
+  const firstValue = table.getPreFilteredRowModel().flatRows[0]?.getValue(column.id);
 
   const columnFilterValue = column.getFilterValue();
 
@@ -269,30 +255,18 @@ function Filter<D>({
       <div className="flex space-x-2 text-black dark:text-white">
         <input
           type="number"
-          value={
-            (columnFilterValue as string)
-              .split(",")
-              .map((v) => Number(v))?.[0] ?? ""
-          }
+          value={(columnFilterValue as string).split(",").map((v) => Number(v))?.[0] ?? ""}
           onChange={(e) =>
-            column.setFilterValue((old: string) =>
-              String([e.target.value, old.split(",")[1]])
-            )
+            column.setFilterValue((old: string) => String([e.target.value, old.split(",")[1]]))
           }
           placeholder={`Min`}
           className="w-16 ps-2 border shadow rounded"
         />
         <input
           type="number"
-          value={
-            (columnFilterValue as string)
-              .split(",")
-              .map((v) => Number(v))?.[1] ?? ""
-          }
+          value={(columnFilterValue as string).split(",").map((v) => Number(v))?.[1] ?? ""}
           onChange={(e) =>
-            column.setFilterValue((old: string) =>
-              String([old.split(",")[0], e.target.value])
-            )
+            column.setFilterValue((old: string) => String([old.split(",")[0], e.target.value]))
           }
           placeholder={`Max`}
           className="w-16 ps-2 border shadow rounded"
@@ -306,10 +280,7 @@ function Filter<D>({
       <div className="flex space-x-2 text-black dark:text-white">
         <input
           type="date"
-          value={
-            (columnFilterValue as [DateTime, DateTime])?.[0].toISODate() ??
-            undefined
-          }
+          value={(columnFilterValue as [DateTime, DateTime])?.[0].toISODate() ?? undefined}
           onChange={(e) =>
             column.setFilterValue((old: [DateTime, DateTime]) => [
               DateTime.fromFormat(e.target.value, "yyyy-LL-dd"),
@@ -321,10 +292,7 @@ function Filter<D>({
         />
         <input
           type="date"
-          value={
-            (columnFilterValue as [DateTime, DateTime])?.[1].toISODate() ??
-            undefined
-          }
+          value={(columnFilterValue as [DateTime, DateTime])?.[1].toISODate() ?? undefined}
           onChange={(e) =>
             column.setFilterValue((old: [DateTime, DateTime]) => [
               old?.[0],

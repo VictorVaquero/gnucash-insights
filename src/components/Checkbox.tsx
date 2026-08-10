@@ -13,12 +13,5 @@ export function Checkbox({
     }
   }, [ref, indeterminate]);
 
-  return (
-    <input
-      type="checkbox"
-      ref={ref}
-      className={className + " cursor-pointer"}
-      {...rest}
-    />
-  );
+  return <input type="checkbox" ref={ref} className={className + " cursor-pointer"} {...rest} />;
 }

@@ -4,11 +4,7 @@ import { AnyDB } from "../dbType";
 import { DateTime } from "luxon";
 import { accountsTable, timeTable } from "../schema";
 import { subqueryColumnName } from "../utils";
-import {
-  fullTransactionsQuery,
-  getAccountsClosureQuery,
-  getDomain,
-} from "./global";
+import { fullTransactionsQuery, getAccountsClosureQuery, getDomain } from "./global";
 
 const getExpensesYearlyQuery = async <TDB extends AnyDB>({
   db,
@@ -25,7 +21,7 @@ const getExpensesYearlyQuery = async <TDB extends AnyDB>({
   };
   const yearRange = Array.from(
     { length: max.diff(min, ["years"]).years + 1 },
-    (_value, index) => min.year + index
+    (_value, index) => min.year + index,
   );
 
   return db
@@ -40,7 +36,7 @@ const getExpensesYearlyQuery = async <TDB extends AnyDB>({
           ...prev,
           [y.toString()]: sql<number>`sum(CASE WHEN ${timeTable.year} = ${y} THEN ${ft.value} ELSE 0 END) `,
         }),
-        {}
+        {},
       ),
     })
     .from(accounts)
@@ -51,9 +47,7 @@ const getExpensesYearlyQuery = async <TDB extends AnyDB>({
     .groupBy(subqueryColumnName<string>(accounts, accounts.base))
     .orderBy(subqueryColumnName<string>(accounts, accounts.base));
 };
-export type ExpensesYearlyRow = Awaited<
-  ReturnType<typeof getExpensesYearlyQuery>
->[number];
+export type ExpensesYearlyRow = Awaited<ReturnType<typeof getExpensesYearlyQuery>>[number];
 
 export const yearlyExpensesOptions = <TDB extends AnyDB>({
   db,
@@ -65,9 +59,7 @@ export const yearlyExpensesOptions = <TDB extends AnyDB>({
   const enabled = !!db && !!bookId;
   return queryOptions({
     queryKey: ["expensesYearly", bookId],
-    queryFn: !enabled
-      ? skipToken
-      : async () => await getExpensesYearlyQuery({ db, bookId }),
+    queryFn: !enabled ? skipToken : async () => await getExpensesYearlyQuery({ db, bookId }),
     enabled: enabled,
   });
 };

@@ -11,7 +11,7 @@ the `SQLJsDatabase` type union member) — tracked in
 
 **Input**: User description: "Simplify how the dashboard gets its financial data. Today, a separate pipeline (cashpy-processor) parses a GnuCash export and uploads a ~4MB SQLite file to an AWS S3 bucket; the browser downloads the whole file via Cognito-authenticated S3 requests and queries it client-side with sql.js. Evaluate whether this can be simplified — e.g. loading into a small hosted database instead of a downloaded file — including whether a free/low-cost option exists, and compare alternatives before picking one."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Owner sees fresh data without a manual multi-step pipeline (Priority: P1)
 
@@ -125,7 +125,7 @@ confirm output matches the old data layer for the same underlying dataset.
 - What happens during the cutover window where old (S3 file) and new (hosted DB) paths
   might briefly coexist — is a hard cutover acceptable given this is a single-user app?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -169,7 +169,7 @@ confirm output matches the old data layer for the same underlying dataset.
   approach, a Vercel-native offering, a third-party managed database), evaluated on cost,
   limits, and migration effort.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
@@ -295,7 +295,7 @@ time this was written, misidentified in this repo's docs as `bro_cv_web`; see
 2026-08-10 consequences) via a `vercel.json` rewrite proxy to `cashpy-v2.vercel.app`,
 plus its own path-scoped
 `headers` block re-declaring a Content-Security-Policy for that path. This proxy config
-existed only in that project's *live production deployment* — it was never committed to
+existed only in that project's _live production deployment_ — it was never committed to
 `bro_cv_web`'s git history on any branch — so it silently predated this spec's Phase 6
 CSP update (T031) and kept serving the old S3/Cognito-identity/`wasm-unsafe-eval` CSP
 indefinitely, with no `connect-src` allowance for `*.turso.io`. Browsers silently block

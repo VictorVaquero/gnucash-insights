@@ -18,6 +18,7 @@ cascaded into major-version jumps for build tooling (storybook 8→10, vite 7→
 produced new unmet-peer-dependency errors — not a "safe" fix, reverted immediately.
 
 Root-caused the two production-reachable criticals by hand instead:
+
 - `drizzle-orm` (direct prod dependency, used in `src/db/*`): SQL-identifier-escaping
   vulnerability, fixed upstream in `0.45.2`. Bumped `package.json`'s
   `drizzle-orm` from `^0.36.4` to `^0.45.2` directly (a normal semver-compatible
@@ -63,6 +64,7 @@ authenticated identity (`arn:aws:iam::397704334393:user/development`) got
 grant that read permission, the owner checked the AWS Cognito console directly
 for User Pool `eu-west-3_VHPSFHPrK` (region `eu-west-3`) and confirmed all four
 settings are already in the intended safe state:
+
 - **MFA**: off/optional (not required) — consistent with the app's login UI,
   which has no MFA step.
 - **Password policy**: standard Cognito defaults — nothing weakened.
@@ -90,7 +92,7 @@ data checked into its test fixtures: `tests/data/cash/accounts.csv`,
 real third-party names (e.g. "Cesar", "Berru", "Gerardo") as GnuCash account names,
 plus real transaction descriptions, dates, and monetary amounts — the same category
 of PII this spec's US1 already removed from `cashpy_v2` itself. Notably, the same
-folder contains `tests/data/cash/anonimize` — a SQL script that *would* replace real
+folder contains `tests/data/cash/anonimize` — a SQL script that _would_ replace real
 account names/memos with synthetic ones (`Account1`, `Trip 1`, etc.) and randomize
 values — but the currently-committed fixtures show the real names, not the
 anonymized output, meaning the script exists but was never applied to what's checked
@@ -184,7 +186,7 @@ See `specs/005-repo-hygiene-security-and-public-readiness/research.md` items 3�
 `test-auth-boundary.mjs` against it (5/5 checks pass, including the 429 path). Also
 decoded a live-minted JWT: payload has `a: "ro"` (read-only), `exp - iat = 3600`
 (exactly 1h), correctly scoped to the guest database on the guest branch. One nuance
-found empirically: the 429 burst must be sent *sequentially*, not concurrently — a
+found empirically: the 429 burst must be sent _sequentially_, not concurrently — a
 concurrent burst gets load-balanced across multiple Fluid Compute warm instances, each
 with its own independent counter, so it never trips the limit even well past the
 threshold. 30 sequential requests to the same warm instance correctly returned `200` for
@@ -290,7 +292,7 @@ risk (5GB storage / 500M reads vs. a single user's actual usage), and the migrat
 mechanical — SQLite dialect carries over, so the existing ~1,150-line Drizzle query
 layer needed only its connection/driver setup changed, not a rewrite. Neon/Postgres is
 also free at this scale but requires a dialect rewrite for no corresponding benefit, and
-would *add* a required API layer rather than remove one — working against the actual
+would _add_ a required API layer rather than remove one — working against the actual
 goal (fewer moving parts).
 
 **Why not just optimize the S3+sql.js path**: kept as the explicit baseline option and
@@ -351,7 +353,7 @@ naming incident" note and `docs/review/VERCEL-HARDENING-CHECKLIST.md`.
 **Decision**: real-user login stays on AWS Cognito; guest/demo login stays a
 non-Cognito synthetic session. Neither hosting migration (to Vercel) nor the database
 migration (to Turso) touched auth — the Turso token-minting endpoint
-(`api/turso-token.ts`) verifies the *existing* Cognito ID token server-side rather than
+(`api/turso-token.ts`) verifies the _existing_ Cognito ID token server-side rather than
 replacing Cognito with anything new.
 
 **Why**: per the constitution, replacing Cognito is only in scope if it measurably

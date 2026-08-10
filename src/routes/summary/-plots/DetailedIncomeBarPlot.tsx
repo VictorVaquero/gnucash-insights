@@ -35,11 +35,11 @@ function pivotData(data: Data[]) {
   const idTotals = d3.rollup(
     data,
     (v) => d3.sum(v, (d) => d.value),
-    (d) => d.accountId
+    (d) => d.accountId,
   );
 
   const accountIds = Array.from(idTotals.keys()).sort(
-    (a, b) => (idTotals.get(b) || 0) - (idTotals.get(a) || 0)
+    (a, b) => (idTotals.get(b) || 0) - (idTotals.get(a) || 0),
   );
 
   const groupedByDate = d3.group(data, (d) => d.date);
@@ -90,15 +90,15 @@ export const DetailedIncomeBarPlot = () => {
               rawData
                 .map((d) => ({ ...d, value: -d.value }))
                 .filter((d) => d.date >= dateRange.from.toString())
-                .filter((d) => d.date <= dateRange.to.toString())
+                .filter((d) => d.date <= dateRange.to.toString()),
             );
             return { data, keys };
           }
           return { data: undefined, keys: undefined };
         },
-        [dateRange]
+        [dateRange],
       ),
-    })
+    }),
   );
 
   const { data, keys } = transactData ?? { data: undefined, keys: undefined };
@@ -112,15 +112,14 @@ export const DetailedIncomeBarPlot = () => {
         (accounts: AccountsData) => {
           if (keys) {
             const keyNames = keys.map(
-              (k) =>
-                accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME
+              (k) => accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME,
             );
             return keyNames;
           }
         },
-        [keys]
+        [keys],
       ),
-    })
+    }),
   );
 
   if (!data || !dateRange || !keyNames) {

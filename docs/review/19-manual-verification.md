@@ -12,7 +12,7 @@ retired in favor of this folder.
 
 ## Current state (confirmed findings)
 
-Not applicable in the usual sense — this doc's entire content *is* the list of
+Not applicable in the usual sense — this doc's entire content _is_ the list of
 outstanding checks, copied forward unchanged from their source specs:
 
 - **Spec 001 (Vercel migration), T021–T022**: guest/demo login re-verified against the

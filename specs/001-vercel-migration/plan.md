@@ -22,7 +22,7 @@ locally (24) since Vercel supports it and there's no reason to jump to 26 specul
 
 **Primary Dependencies**: Vite 7 (build), React 19, TanStack Router 1.x (client-side
 routing only, no SSR/prerendering), sql.js + drizzle-orm/sql-js (client-side DB,
-unchanged), @aws-sdk/* (Cognito + S3, unchanged)
+unchanged), @aws-sdk/\* (Cognito + S3, unchanged)
 
 **Storage**: N/A for this spec — SQLite file fetched from S3 client-side, unchanged from
 today. No server-side storage introduced.
@@ -49,7 +49,7 @@ coupling their deploy pipelines (per user's explicit choice — see spec Assumpt
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - **I. Incremental, Reversible Migration**: PASS. Hosting-only change; old AWS S3 +
   CloudFront stays live and functional until the new Vercel deployment is verified
@@ -72,7 +72,7 @@ No violations. Complexity Tracking section not needed.
 
 **Post-Phase 1 re-check**: Design artifacts (research.md, quickstart.md) introduce no new
 services, no new secrets, and no new data flows beyond what's described above — the CSP
-`connect-src` adjustment (research.md) only *allows* existing AWS calls this app already
+`connect-src` adjustment (research.md) only _allows_ existing AWS calls this app already
 makes, it doesn't add new ones. All five gates still PASS unchanged.
 
 ## Project Structure
@@ -116,4 +116,4 @@ keep deploy pipelines decoupled and rollback trivial.
 
 ## Complexity Tracking
 
-*No constitution violations — section not needed.*
+_No constitution violations — section not needed._

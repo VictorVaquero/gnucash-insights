@@ -80,7 +80,7 @@ curl -I https://victorvaquero.com/dashboard
 ## 8. Confirm no secrets committed
 
 ```bash
-git log --all -p -- vercel.json .nvmrc | grep -iE "secret|token|password|key" 
+git log --all -p -- vercel.json .nvmrc | grep -iE "secret|token|password|key"
 ```
 
 - **Expected**: no matches (FR-007, SC-006). (This is a coarse grep, not a substitute for

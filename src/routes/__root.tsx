@@ -1,9 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import {
-  Outlet,
-  createRootRouteWithContext,
-  useRouterState,
-} from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, useRouterState } from "@tanstack/react-router";
 import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
 import { Suspense, useEffect, useState } from "react";
@@ -40,7 +36,7 @@ const TanStackRouterDevtools = import.meta.env.PROD
         default: res.TanStackRouterDevtools,
         // For Embedded Mode
         // default: res.TanStackRouterDevtoolsPanel
-      }))
+      })),
     );
 
 const RootComponent = () => {
@@ -62,10 +58,7 @@ const RootComponent = () => {
 
   return (
     <>
-      <SideBar
-        isCollapsed={isCollapsed}
-        toggleSidebar={() => setCollapse((val) => !val)}
-      />
+      <SideBar isCollapsed={isCollapsed} toggleSidebar={() => setCollapse((val) => !val)} />
       <AccountMenu />
       <main className="min-h-full w-full pl-14 lg:min-h-[calc(100vh-2rem)]">
         <Outlet />
@@ -81,7 +74,5 @@ const RootComponent = () => {
 export const Route = createRootRouteWithContext<RootContext>()({
   component: RootComponent,
   notFoundComponent: () => <NotFoundPage />,
-  errorComponent: ({ error, reset }) => (
-    <ErrorPage error={error} resetErrorBoundary={reset} />
-  ),
+  errorComponent: ({ error, reset }) => <ErrorPage error={error} resetErrorBoundary={reset} />,
 });

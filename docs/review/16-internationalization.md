@@ -4,7 +4,7 @@
 
 ## Why this matters
 
-Owner ask this round: *"Languages should be available es/en."* This is a real toggle
+Owner ask this round: _"Languages should be available es/en."_ This is a real toggle
 request — a step up from the narrower issue previously noted (the `<html lang>`
 attribute not matching actual page content), which only fixed metadata, not what a
 user actually sees.
@@ -15,7 +15,7 @@ user actually sees.
   needs a quick audit pass (likely English, given the codebase/comments are in English,
   but the `src/config.json` finding in
   [03-secrets-and-public-repo-readiness.md](03-secrets-and-public-repo-readiness.md)
-  showed Spanish tax-category labels present in *data*, which is a separate concern from
+  showed Spanish tax-category labels present in _data_, which is a separate concern from
   UI-string language).
 - **[confirmed]** No i18n library (`react-i18next`, `next-intl`-style, `formatjs`,
   etc.) is present in `package.json` — there is currently no mechanism for
@@ -50,7 +50,7 @@ marketing site where each locale's pages should be independently indexable.
 **Note (2026-08-10)**: [05-seo.md](05-seo.md)'s indexing decision reversed since this
 section was first written — the landing page (`/dashboard`, `/dashboard/login`) is now
 decided to stay **indexed**, not excluded. That doesn't change the recommendation below:
-the *authenticated* app (everything past login) still has no SEO reason to route by
+the _authenticated_ app (everything past login) still has no SEO reason to route by
 locale, since none of it is ever crawlable regardless of the landing page's status. If
 the landing page's own copy ever needs locale-specific indexable URLs (e.g. a
 `/dashboard?lang=es` variant showing up separately in search), that would be a narrow,
@@ -77,7 +77,7 @@ hand-rolled alternative that was weighed against it would have needed to reinven
   during the audit phase — vs. hardcoded `toFixed()`/manual formatting that would need
   to become locale-aware).
 - Date formatting via `Intl.DateTimeFormat`, same consideration.
-- **Explicitly out of scope**: translating underlying *data* (transaction descriptions,
+- **Explicitly out of scope**: translating underlying _data_ (transaction descriptions,
   category names sourced from GnuCash) — that's user-entered content, not app UI, and
   translating it would misrepresent the source data.
 

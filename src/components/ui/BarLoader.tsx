@@ -33,9 +33,7 @@ export const BarLoader = ({
       >
         <div
           className="animate-bar-slide absolute h-full rounded-sm"
-          style={{ backgroundColor: color ,
-            ...syncStyle 
-          }}
+          style={{ backgroundColor: color, ...syncStyle }}
         />
       </div>
     </div>

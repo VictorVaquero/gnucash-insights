@@ -16,16 +16,18 @@ goes wrong is a one-line revert of the rewrite in resumeweb — no DNS change, n
 this repo.
 
 **Alternatives considered**:
-- *Monorepo / single Vercel project*: rejected by explicit user choice — couples
+
+- _Monorepo / single Vercel project_: rejected by explicit user choice — couples
   resumeweb's deploys to the dashboard's, more setup work, harder rollback.
-- *Subdomain (`dashboard.victorvaquero.com`)*: rejected — changes the URL from the
+- _Subdomain (`dashboard.victorvaquero.com`)_: rejected — changes the URL from the
   required `victorvaquero.com/dashboard`, not just a hosting-config change.
-- *Rewrite pointing at the per-deployment URL directly*: rejected — per-deployment URLs
+- _Rewrite pointing at the per-deployment URL directly_: rejected — per-deployment URLs
   change on every deploy; must target the stable production alias/domain Vercel assigns
   to the project (or a custom `*.vercel.app` alias), otherwise every dashboard deploy
   would require also updating resumeweb's config.
 
 **Concrete mechanism**:
+
 1. Deploy `cashpy_v2` as a new Vercel project (e.g. via `vercel link` + `vercel --prod`,
    or importing the GitHub repo through the Vercel dashboard — same one-time setup
    resumeweb already documents).
@@ -36,7 +38,10 @@ this repo.
    {
      "rewrites": [
        { "source": "/dashboard", "destination": "https://<cashpy-project>.vercel.app/dashboard" },
-       { "source": "/dashboard/:path*", "destination": "https://<cashpy-project>.vercel.app/dashboard/:path*" }
+       {
+         "source": "/dashboard/:path*",
+         "destination": "https://<cashpy-project>.vercel.app/dashboard/:path*"
+       }
      ]
    }
    ```

@@ -19,9 +19,7 @@ import path from "node:path";
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 
-const vercelConfig = JSON.parse(
-  readFileSync(path.join(repoRoot, "vercel.json"), "utf8")
-);
+const vercelConfig = JSON.parse(readFileSync(path.join(repoRoot, "vercel.json"), "utf8"));
 
 const cspEntry = vercelConfig.headers
   ?.flatMap((block) => block.headers ?? [])
@@ -35,7 +33,7 @@ if (!cspEntry) {
 const currentCsp = cspEntry.value.trim();
 const snapshot = readFileSync(
   path.join(scriptDir, "resumeweb-dashboard-csp.snapshot.txt"),
-  "utf8"
+  "utf8",
 ).trim();
 
 if (currentCsp !== snapshot) {
@@ -46,7 +44,7 @@ if (currentCsp !== snapshot) {
   console.error(
     "If this change is intentional: update resumeweb's own vercel.json /dashboard CSP\n" +
       "to match (it owns victorvaquero.com and proxies /dashboard/* to this app), then\n" +
-      "update the snapshot file here to match the new value."
+      "update the snapshot file here to match the new value.",
   );
   process.exit(1);
 }

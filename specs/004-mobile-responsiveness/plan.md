@@ -30,15 +30,15 @@ Make the existing cashpy_v2 dashboard usable on phone-sized viewports (320-480px
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-| Principle | Check | Result |
-|---|---|---|
-| I. Incremental, Reversible Migration | Pure frontend change, deployable/revertible as a normal Vercel deploy; doesn't touch the Turso/S3 migration (spec 002) or require it as a precondition. | PASS |
-| II. Cost-Consciousness | No new infrastructure, service, or paid dependency introduced. | PASS |
-| III. Continuity of the Working App | Golden path (login → data loads → charts render) plus guest path must be manually re-verified on both desktop and phone viewports before this spec is marked complete (see quickstart.md). | PASS (verification required at implementation, not a design-time blocker) |
-| IV. Boring, Well-Supported Technology | Reuses already-installed Radix UI primitives and standard browser APIs (`matchMedia`, `ResizeObserver`); no new library added. | PASS |
-| V. Data Privacy on a Public Surface | No change to auth, data fetching, or secret handling — layout/rendering only. | PASS |
+| Principle                             | Check                                                                                                                                                                                      | Result                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| I. Incremental, Reversible Migration  | Pure frontend change, deployable/revertible as a normal Vercel deploy; doesn't touch the Turso/S3 migration (spec 002) or require it as a precondition.                                    | PASS                                                                      |
+| II. Cost-Consciousness                | No new infrastructure, service, or paid dependency introduced.                                                                                                                             | PASS                                                                      |
+| III. Continuity of the Working App    | Golden path (login → data loads → charts render) plus guest path must be manually re-verified on both desktop and phone viewports before this spec is marked complete (see quickstart.md). | PASS (verification required at implementation, not a design-time blocker) |
+| IV. Boring, Well-Supported Technology | Reuses already-installed Radix UI primitives and standard browser APIs (`matchMedia`, `ResizeObserver`); no new library added.                                                             | PASS                                                                      |
+| V. Data Privacy on a Public Surface   | No change to auth, data fetching, or secret handling — layout/rendering only.                                                                                                              | PASS                                                                      |
 
 No violations; Complexity Tracking section is not needed.
 

@@ -20,12 +20,13 @@ that: it turns "grep the codebase and re-read `docs/architecture.md` each sessio
 
 - A future session (including a post-compaction continuation of this exact kind of work)
   can pick up project conventions immediately from one file, rather than re-deriving them.
-- Standing rules already being followed *by convention* in this project's sessions get
+- Standing rules already being followed _by convention_ in this project's sessions get
   written down so they're enforced regardless of which session/model is doing the work.
 
 ## Recommended approach
 
 **`CLAUDE.md` contents**:
+
 - Tech stack summary, with a link to `docs/architecture.md` rather than duplicating it.
 - The standing rule already followed this session: **guest login only** — never
   automate against the owner's real Cognito credentials in any test or script.

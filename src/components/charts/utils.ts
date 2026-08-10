@@ -63,13 +63,13 @@ export const chartColors = {
 export type AvailableChartColorsKeys = keyof typeof chartColors;
 
 export const AvailableChartColors: AvailableChartColorsKeys[] = Object.keys(
-  chartColors
+  chartColors,
 ) as AvailableChartColorsKeys[];
 
 export const constructCategoryColors = (
   categories: string[],
   colors: AvailableChartColorsKeys[],
-  seed = 42
+  seed = 42,
 ): Map<string, AvailableChartColorsKeys> => {
   const categoryColors = new Map<string, AvailableChartColorsKeys>();
 
@@ -93,10 +93,7 @@ export const constructCategoryColors = (
   return categoryColors;
 };
 
-export const getColorClassName = (
-  color: AvailableChartColorsKeys,
-  type: ColorUtility
-): string => {
+export const getColorClassName = (color: AvailableChartColorsKeys, type: ColorUtility): string => {
   const fallbackColor = {
     bg: "bg-gray-500",
     stroke: "stroke-gray-500",
@@ -111,9 +108,9 @@ export const getColorClassName = (
 export const getYAxisDomain = (
   autoMinValue: boolean,
   minValue: number | undefined,
-  maxValue: number | undefined
+  maxValue: number | undefined,
 ) => {
-  const minDomain = autoMinValue ? "auto" : minValue ?? 0;
+  const minDomain = autoMinValue ? "auto" : (minValue ?? 0);
   const maxDomain = maxValue ?? "auto";
   return [minDomain, maxDomain];
 };
@@ -121,10 +118,7 @@ export const getYAxisDomain = (
 // Tremor hasOnlyOneValueForKey [v0.1.0]
 
 /** @public Vendored Tremor helper; kept as part of the vendored utility set even though no current caller needs it. */
-export function hasOnlyOneValueForKey<T extends object>(
-  array: T[],
-  keyToCheck: keyof T
-): boolean {
+export function hasOnlyOneValueForKey<T extends object>(array: T[], keyToCheck: keyof T): boolean {
   const seenValues = new Set();
 
   for (const obj of array) {

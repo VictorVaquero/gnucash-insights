@@ -3,11 +3,7 @@ import * as d3 from "d3";
 import { DateTime } from "luxon";
 import { RefObject, useMemo, useRef } from "react";
 
-import {
-  parseNum,
-  useIsNarrowViewport,
-  useWindowSize,
-} from "@/common/utils.ts";
+import { parseNum, useIsNarrowViewport, useWindowSize } from "@/common/utils.ts";
 import { XAxis } from "@/components/charts/XAxis";
 import { YAxis } from "@/components/charts/YAxis";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -49,22 +45,13 @@ const DrawTravelExpensesPlot = (props: {
 
   const sortedData = [...props.data].sort(orderyf).sort(orderxf);
 
-  const xDomain = [
-    props.domain.startDate.minus({ month: 4 }),
-    props.domain.endDate,
-  ];
+  const xDomain = [props.domain.startDate.minus({ month: 4 }), props.domain.endDate];
   const yDomain = [0, Math.max(...sortedData.map(yf))];
   const xScale = d3.scaleUtc(xDomain, range.x);
   const yScale = d3.scaleLinear(yDomain as [number, number], range.y);
   const rectWidth = (width / sortedData.length) * 1.4;
 
-  const choosePoint = chooseTooltipPointLine(
-    sortedData,
-    xf,
-    yf,
-    xScale,
-    yScale
-  );
+  const choosePoint = chooseTooltipPointLine(sortedData, xf, yf, xScale, yScale);
   const updateTooltip = (ref: RefObject<HTMLDivElement | null>, d: Data) => {
     if (ref.current !== null) {
       const tooltip = d3.select(ref.current);
@@ -97,11 +84,7 @@ const DrawTravelExpensesPlot = (props: {
           ))}
         </g>
       </svg>
-      <Tooltip
-        svgRef={svgRef}
-        choosePoint={choosePoint}
-        updateTooltip={updateTooltip}
-      >
+      <Tooltip svgRef={svgRef} choosePoint={choosePoint} updateTooltip={updateTooltip}>
         <div className="flex flex-col items-center px-6 py-2">
           <span className="text-shark-300" id="title">
             Title
@@ -124,9 +107,7 @@ export const TravelExpensesPlot = () => {
   const { bookId } = useBook();
   const { from, to } = useDomain();
 
-  const { data, isSuccess } = useQuery(
-    travelExpensesDetailedOptions({ db, user, bookId })
-  );
+  const { data, isSuccess } = useQuery(travelExpensesDetailedOptions({ db, user, bookId }));
 
   if (!isSuccess || from == null || to == null)
     return (
@@ -135,10 +116,5 @@ export const TravelExpensesPlot = () => {
       </div>
     );
 
-  return (
-    <DrawTravelExpensesPlot
-      data={data as Data[]}
-      domain={{ startDate: from, endDate: to }}
-    />
-  );
+  return <DrawTravelExpensesPlot data={data as Data[]} domain={{ startDate: from, endDate: to }} />;
 };

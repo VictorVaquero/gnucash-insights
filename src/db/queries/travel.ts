@@ -1,24 +1,9 @@
 import { queryOptions, skipToken, useQuery } from "@tanstack/react-query";
-import {
-  and,
-  countDistinct,
-  eq,
-  gte,
-  lt,
-  max,
-  min,
-  sql,
-  sum,
-} from "drizzle-orm";
+import { and, countDistinct, eq, gte, lt, max, min, sql, sum } from "drizzle-orm";
 import { AnyDB } from "../dbType";
 
 import { DateTime } from "luxon";
-import {
-  accountsTable,
-  splitsTable,
-  timeTable,
-  transactionsTable,
-} from "../schema";
+import { accountsTable, splitsTable, timeTable, transactionsTable } from "../schema";
 import { getConfig, subqueryColumnName } from "../utils";
 import { fullTransactionsQuery, getAccountsClosureQuery } from "./global";
 
@@ -39,10 +24,7 @@ const getTravelExpensesByAccountQuery = <TDB extends AnyDB>({
   return db
     .select({
       key: ft.accountId,
-      name: subqueryColumnName<string>(
-        accountsFiltered,
-        accountsFiltered.name
-      ).as("name"),
+      name: subqueryColumnName<string>(accountsFiltered, accountsFiltered.name).as("name"),
       value: sum(ft.value).mapWith(Number),
     })
     .from(ft)
@@ -51,11 +33,8 @@ const getTravelExpensesByAccountQuery = <TDB extends AnyDB>({
     .where(
       and(
         eq(ft.bookId, bookId),
-        eq(
-          sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`,
-          dbconf.tripDesc
-        )
-      )
+        eq(sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`, dbconf.tripDesc),
+      ),
     )
     .groupBy(accountsFiltered.id);
 };
@@ -74,8 +53,7 @@ export const travelExpensesByAccountOptions = <TDB extends AnyDB>({
     queryKey: ["travelExpensesByAccount", bookId],
     queryFn: !enabled
       ? skipToken
-      : async () =>
-          getTravelExpensesByAccountQuery({ db, user, bookId }).execute(),
+      : async () => getTravelExpensesByAccountQuery({ db, user, bookId }).execute(),
     enabled: enabled,
   });
 };
@@ -105,11 +83,8 @@ const getTravelExpensesDetailedQuery = <TDB extends AnyDB>({
     .where(
       and(
         eq(ft.bookId, bookId),
-        eq(
-          sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`,
-          dbconf.tripDesc
-        )
-      )
+        eq(sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`, dbconf.tripDesc),
+      ),
     )
     .groupBy(ft.slNotes)
     .orderBy(ft.slNotes);
@@ -129,8 +104,7 @@ export const travelExpensesDetailedOptions = <TDB extends AnyDB>({
     queryKey: ["travelExpensesDetailed", user, bookId],
     queryFn: !enabled
       ? skipToken
-      : async () =>
-          getTravelExpensesDetailedQuery({ db, user, bookId }).execute(),
+      : async () => getTravelExpensesDetailedQuery({ db, user, bookId }).execute(),
     enabled: enabled,
   });
 };
@@ -159,11 +133,8 @@ const getTravelExpensesDetailedYearMonthQuery = <TDB extends AnyDB>({
     .where(
       and(
         eq(ft.bookId, bookId),
-        eq(
-          sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`,
-          dbconf.tripDesc
-        )
-      )
+        eq(sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`, dbconf.tripDesc),
+      ),
     )
     .groupBy(ft.slNotes, timeTable.yearmonth)
     .orderBy(ft.slNotes, timeTable.yearmonth);
@@ -213,18 +184,12 @@ const getTravelExpensesYearQuery = <TDB extends AnyDB>({
     })
     .from(ft)
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.datePosted}, 0, 11)`)
-    )
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.datePosted}, 0, 11)`))
     .where(
       and(
         eq(ft.bookId, bookId),
-        eq(
-          sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`,
-          dbconf.tripDesc
-        )
-      )
+        eq(sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`, dbconf.tripDesc),
+      ),
     )
     .groupBy(timeTable.year)
     .orderBy(timeTable.year);
@@ -268,18 +233,12 @@ const getTravelExpensesYearMonthQuery = <TDB extends AnyDB>({
     })
     .from(ft)
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.datePosted}, 0, 11)`)
-    )
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.datePosted}, 0, 11)`))
     .where(
       and(
         eq(ft.bookId, bookId),
-        eq(
-          sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`,
-          dbconf.tripDesc
-        )
-      )
+        eq(sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`, dbconf.tripDesc),
+      ),
     )
     .groupBy(timeTable.yearmonth)
     .orderBy(timeTable.yearmonth);
@@ -299,8 +258,7 @@ export const travelExpensesYearMonthOptions = <TDB extends AnyDB>({
     queryKey: ["travelExpensesYearMonth", user, bookId],
     queryFn: !enabled
       ? skipToken
-      : async () =>
-          getTravelExpensesYearMonthQuery({ db, user, bookId }).execute(),
+      : async () => getTravelExpensesYearMonthQuery({ db, user, bookId }).execute(),
     enabled: enabled,
   });
 };
@@ -322,40 +280,40 @@ const getTravelExpenseKPIsQuery = <TDB extends AnyDB>({
   return db
     .select({
       total_lm: sql<number>`sum(CASE WHEN ${and(
-        gte(timeTable.ymd, latestMonth)
+        gte(timeTable.ymd, latestMonth),
       )} THEN ${splitsTable.value} ELSE 0 END) `,
       expense_lm: sql<number>`sum(CASE WHEN ${and(
-        gte(timeTable.ymd, latestMonth)
+        gte(timeTable.ymd, latestMonth),
       )} AND substr(${transactionsTable.slNotes}, 0, ${
         dbconf.tripDesc.length + 1
       }) = ${dbconf.tripDesc} THEN ${splitsTable.value} ELSE 0 END) `,
       total_3m: sql<number>`sum(CASE WHEN ${and(
         gte(timeTable.ymd, latestMonth.minus({ months: 3 })),
-        lt(timeTable.ymd, latestMonth)
+        lt(timeTable.ymd, latestMonth),
       )} THEN ${splitsTable.value} ELSE 0 END) `,
       expense_3m: sql<number>`sum(CASE WHEN ${and(
         gte(timeTable.ymd, latestMonth.minus({ months: 3 })),
-        lt(timeTable.ymd, latestMonth)
+        lt(timeTable.ymd, latestMonth),
       )} AND substr(${transactionsTable.slNotes}, 0, ${
         dbconf.tripDesc.length + 1
       }) = ${dbconf.tripDesc} THEN ${splitsTable.value} ELSE 0 END) `,
       total_6m: sql<number>`sum(CASE WHEN ${and(
         gte(timeTable.ymd, latestMonth.minus({ months: 6 })),
-        lt(timeTable.ymd, latestMonth)
+        lt(timeTable.ymd, latestMonth),
       )} THEN ${splitsTable.value} ELSE 0 END) `,
       expense_6m: sql<number>`sum(CASE WHEN ${and(
         gte(timeTable.ymd, latestMonth.minus({ months: 6 })),
-        lt(timeTable.ymd, latestMonth)
+        lt(timeTable.ymd, latestMonth),
       )} AND substr(${transactionsTable.slNotes}, 0, ${
         dbconf.tripDesc.length + 1
       }) = ${dbconf.tripDesc} THEN ${splitsTable.value} ELSE 0 END) `,
       total_1y: sql<number>`sum(CASE WHEN ${and(
         gte(timeTable.ymd, latestMonth.minus({ years: 1 })),
-        lt(timeTable.ymd, latestMonth)
+        lt(timeTable.ymd, latestMonth),
       )} THEN ${splitsTable.value} ELSE 0 END) `,
       expense_1y: sql<number>`sum(CASE WHEN ${and(
         gte(timeTable.ymd, latestMonth.minus({ years: 1 })),
-        lt(timeTable.ymd, latestMonth)
+        lt(timeTable.ymd, latestMonth),
       )} AND substr(${transactionsTable.slNotes}, 0, ${
         dbconf.tripDesc.length + 1
       }) = ${dbconf.tripDesc} THEN ${splitsTable.value} ELSE 0 END) `,
@@ -370,10 +328,7 @@ const getTravelExpenseKPIsQuery = <TDB extends AnyDB>({
     .innerJoin(splitsTable, eq(transactionsTable.id, splitsTable.transactionId))
     .innerJoin(accountsTable, eq(accountsTable.id, splitsTable.account))
     .innerJoin(accounts, eq(accounts.id, splitsTable.account))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${transactionsTable.datePosted}, 0, 11)`)
-    )
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${transactionsTable.datePosted}, 0, 11)`))
     .where(eq(transactionsTable.bookId, bookId));
 };
 export const useGetTravelExpensesKPIs = <TDB extends AnyDB>({
@@ -425,18 +380,12 @@ const getUniqueTravelsQuery = <TDB extends AnyDB>({
     })
     .from(ft)
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
-    .innerJoin(
-      timeTable,
-      eq(timeTable.ymd, sql`substr(${ft.datePosted}, 0, 11)`)
-    )
+    .innerJoin(timeTable, eq(timeTable.ymd, sql`substr(${ft.datePosted}, 0, 11)`))
     .where(
       and(
         eq(ft.bookId, bookId),
-        eq(
-          sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`,
-          dbconf.tripDesc
-        )
-      )
+        eq(sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`, dbconf.tripDesc),
+      ),
     );
 };
 export const uniqueTravelsOptions = <TDB extends AnyDB>({
@@ -453,8 +402,7 @@ export const uniqueTravelsOptions = <TDB extends AnyDB>({
     queryKey: ["uniqueTravels", user, bookId],
     queryFn: !enabled
       ? skipToken
-      : async () =>
-          (await getUniqueTravelsQuery({ db, user, bookId }).execute())[0],
+      : async () => (await getUniqueTravelsQuery({ db, user, bookId }).execute())[0],
     enabled: !!db && !!bookId,
   });
 };

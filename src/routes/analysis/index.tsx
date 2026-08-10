@@ -49,11 +49,8 @@ const Analysis = () => {
   const { db } = useDB();
   const { bookId } = useBook();
 
-  const [filteredTransactions, setFilteredTransactions] = useState<
-    FullTransaction[]
-  >([]);
-  const [chartPeriodicity, setChartPeriodicity] =
-    useState<Periodicity>("monthly");
+  const [filteredTransactions, setFilteredTransactions] = useState<FullTransaction[]>([]);
+  const [chartPeriodicity, setChartPeriodicity] = useState<Periodicity>("monthly");
 
   const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
   const transactions = useMemo(() => data, [data]);
@@ -76,10 +73,7 @@ const Analysis = () => {
     >
       <div className="md:row-start-1 md:row-end-1">
         {filteredTransactions.length !== 0 ? (
-          <TransactsPlot
-            data={filteredTransactions}
-            periodicity={chartPeriodicity}
-          />
+          <TransactsPlot data={filteredTransactions} periodicity={chartPeriodicity} />
         ) : (
           <div className="h-1/2"></div>
         )}
@@ -88,16 +82,10 @@ const Analysis = () => {
         <KpiBlock data={filteredTransactions} />
       </div>
       <div className="md:row-start-2 md:col-start-1">
-        <TransactTable
-          data={transactions}
-          setFilteredData={setFilteredTransactions}
-        />
+        <TransactTable data={transactions} setFilteredData={setFilteredTransactions} />
       </div>
       <div className="md:row-start-2 md:col-start-2">
-        <PeriodicityTabs
-          activeMode={chartPeriodicity}
-          onChange={setChartPeriodicity}
-        />
+        <PeriodicityTabs activeMode={chartPeriodicity} onChange={setChartPeriodicity} />
         <h2 className="text-white">Lista de filtros</h2>
         <SearchList data={queryData} />
       </div>

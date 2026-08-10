@@ -17,10 +17,7 @@ export const Tooltip = <D,>(props: PropsWithChildren<TooltipProps<D>>) => {
       const tooltip = d3.select(tooltipRef.current);
       const { width, height } = tooltipRef.current.getBoundingClientRect();
       tooltip.style("visibility", "visible");
-      tooltip.style(
-        "transform",
-        `translate(${x - width / 2}px,${y - height - 15}px)`
-      );
+      tooltip.style("transform", `translate(${x - width / 2}px,${y - height - 15}px)`);
       props.updateTooltip(tooltipRef, d);
     } else {
       if (tooltipRef.current !== null)
@@ -31,8 +28,7 @@ export const Tooltip = <D,>(props: PropsWithChildren<TooltipProps<D>>) => {
   };
   const pointerleave = () => {
     if (tooltipRef.current !== null) {
-      if (!isTouchDevice)
-        d3.select(tooltipRef.current).style("visibility", "hidden");
+      if (!isTouchDevice) d3.select(tooltipRef.current).style("visibility", "hidden");
       else
         setTimeout(() => {
           d3.select(tooltipRef.current).style("visibility", "hidden");

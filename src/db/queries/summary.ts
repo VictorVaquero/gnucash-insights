@@ -14,19 +14,13 @@ const getNetCostsYearMonthQuery = <TDB extends AnyDB>(
   db: TDB,
   user: string,
   bookId: string,
-  isYearly = false
+  isYearly = false,
 ) => {
   const dbconf = getConfig(user);
 
   const ft = fullTransactionsQuery(db);
-  const accounts = getAccountsClosureQuery(
-    db,
-    [dbconf.expenses],
-    dbconf.taxesAll
-  );
-  const dateCol = isYearly
-    ? sql<string>`cast(${timeTable.year} as text)`
-    : timeTable.yearmonth;
+  const accounts = getAccountsClosureQuery(db, [dbconf.expenses], dbconf.taxesAll);
+  const dateCol = isYearly ? sql<string>`cast(${timeTable.year} as text)` : timeTable.yearmonth;
 
   return db
     .select({
@@ -56,8 +50,7 @@ export const netCostsYearMonthOptions = <TDB extends AnyDB>({
     queryKey: ["netCostsYearMonth", user, bookId, isYearly],
     queryFn: !enabled
       ? skipToken
-      : async () =>
-          getNetCostsYearMonthQuery(db, user, bookId, isYearly).execute(),
+      : async () => getNetCostsYearMonthQuery(db, user, bookId, isYearly).execute(),
     enabled: enabled,
   });
 };
@@ -107,8 +100,7 @@ export const assetsDebtsYearMonthOptions = <TDB extends AnyDB>({
     queryKey: ["assetsDebtsYearMonth", user, bookId],
     queryFn: !enabled
       ? skipToken
-      : async () =>
-          getAssetsDebtsYearMonthQuery({ db, user, bookId }).execute(),
+      : async () => getAssetsDebtsYearMonthQuery({ db, user, bookId }).execute(),
     enabled: enabled,
   });
 };
@@ -131,11 +123,7 @@ const getTransactSumQuery = <TDB extends AnyDB>({
     yearly: summaryYearlyTable,
   }[periodicity];
 
-  const accountsFiltered = getAccountsClosureQuery(
-    db,
-    accountIds,
-    hideAccounts
-  );
+  const accountsFiltered = getAccountsClosureQuery(db, accountIds, hideAccounts);
 
   return db
     .select({
@@ -164,13 +152,7 @@ export const transactsSumOptions = <TDB extends AnyDB>({
 }) => {
   const enabled = !!db && !!bookId && !!accountIds && !!periodicity;
   return queryOptions({
-    queryKey: [
-      "transactsSumOptions",
-      bookId,
-      accountIds,
-      periodicity,
-      hideAccounts,
-    ],
+    queryKey: ["transactsSumOptions", bookId, accountIds, periodicity, hideAccounts],
     queryFn: !enabled
       ? skipToken
       : async () =>
@@ -247,7 +229,7 @@ const getProfitLossYearMonthQuery = <TDB extends AnyDB>({
   const accountsFiltered = getAccountsClosureQuery(
     db,
     [dbconf.expenses, dbconf.income, dbconf.taxes],
-    hideAccounts
+    hideAccounts,
   );
 
   return db
@@ -313,11 +295,7 @@ const getTransactByAccountQuery = <TDB extends AnyDB>({
     yearly: summaryYearlyTable,
   }[periodicity];
 
-  const accountsFiltered = getAccountsClosureQuery(
-    db,
-    accountIds,
-    hideAccounts
-  );
+  const accountsFiltered = getAccountsClosureQuery(db, accountIds, hideAccounts);
 
   // Define the value column dynamically
   const valueColumn = accumulate

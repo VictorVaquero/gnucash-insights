@@ -1,7 +1,5 @@
 ---
-
 description: "Task list for spec 005: Repo Hygiene, Security Hardening & Public-Repo Readiness"
-
 ---
 
 # Tasks: Repo Hygiene, Security Hardening & Public-Repo Readiness
@@ -41,7 +39,7 @@ Project Structure).
 
 **Purpose**: Establish a pre-change baseline so regressions are attributable to this spec
 
-- [X] T001 Manually verify the existing golden path (login → data loads → charts render)
+- [x] T001 Manually verify the existing golden path (login → data loads → charts render)
       and the guest login path, on desktop, per constitution Principle III, before making
       any change — this is the regression baseline for the Polish-phase re-check (T046).
 
@@ -68,35 +66,35 @@ display still works identically via guest or real login.
 
 ### Implementation for User Story 1
 
-- [X] T002 [P] [US1] Add an `ACCOUNT_CONFIG_VICTOR` entry to `.env.example` (documented as
+- [x] T002 [P] [US1] Add an `ACCOUNT_CONFIG_VICTOR` entry to `.env.example` (documented as
       a JSON-encoded object matching the `AccountConfig` shape in `data-model.md` entity
       2), referencing `contracts/turso-token-endpoint-amendment.md`.
-- [X] T003 [US1] In `api/turso-token.ts`: define the hardcoded guest `AccountConfig`
+- [x] T003 [US1] In `api/turso-token.ts`: define the hardcoded guest `AccountConfig`
       constant; parse and validate `ACCOUNT_CONFIG_VICTOR` for the real-user branch
       (fail with `500 Server misconfigured` if missing/malformed, matching the existing
       Turso env var check's treatment); include `accountConfig` in both success response
       bodies, per `contracts/turso-token-endpoint-amendment.md`.
-- [X] T004 [US1] Update `TursoTokenResponse` in `src/services/tursoService.ts` to include
+- [x] T004 [US1] Update `TursoTokenResponse` in `src/services/tursoService.ts` to include
       `accountConfig: AccountConfig` and return it from `fetchTursoToken`.
-- [X] T005 [US1] Update `getConfig(user)` in `src/db/utils.ts` to read the account mapping
+- [x] T005 [US1] Update `getConfig(user)` in `src/db/utils.ts` to read the account mapping
       from the cached token-fetch response's `accountConfig` field (wherever the token
       response is already cached client-side — `src/hooks/useAuth.ts`/`useDB.tsx`)
       instead of importing `database` from `src/config.json`.
-- [X] T006 [US1] Remove the `database` key entirely from `src/config.json`, leaving only
+- [x] T006 [US1] Remove the `database` key entirely from `src/config.json`, leaving only
       `region`/`userPoolId`/`clientId`/`cognitoUrl` (depends on T005 — no code may still
       read `config.json`'s `database` key).
-- [X] T007 [US1] Set the real `ACCOUNT_CONFIG_VICTOR` value in Vercel's project
+- [x] T007 [US1] Set the real `ACCOUNT_CONFIG_VICTOR` value in Vercel's project
       environment variables (Production + Preview), using the GUID mapping removed from
       `src/config.json` in T006.
 - [~] T008 [US1] Manually validate the US1 section of `quickstart.md`: `git grep` for a
-      real GUID returns nothing (CONFIRMED); `pnpm build` + grep on `dist/` returns
-      nothing (CONFIRMED); guest branch's `/api/turso-token` `accountConfig` payload
-      verified byte-identical to the old `config.json` guest values via curl (CONFIRMED).
-      **NOT YET DONE**: actual browser confirmation that account-to-category display is
-      visually unchanged (Summary KPIs, Expenses pivot, Analysis filters, Travels) — no
-      browser tool available in this session; deferred to the final T046 sign-off, which
-      the user must do.
-- [X] T009 [US1] Record the owner's explicit decision on whether git history needs
+  real GUID returns nothing (CONFIRMED); `pnpm build` + grep on `dist/` returns
+  nothing (CONFIRMED); guest branch's `/api/turso-token` `accountConfig` payload
+  verified byte-identical to the old `config.json` guest values via curl (CONFIRMED).
+  **NOT YET DONE**: actual browser confirmation that account-to-category display is
+  visually unchanged (Summary KPIs, Expenses pivot, Analysis filters, Travels) — no
+  browser tool available in this session; deferred to the final T046 sign-off, which
+  the user must do.
+- [x] T009 [US1] Record the owner's explicit decision on whether git history needs
       scrubbing (spec Acceptance Scenario 3) in `docs/decisions.md`.
 
 **Checkpoint**: User Story 1 (MVP) is complete — no real financial-structure data reaches
@@ -115,33 +113,33 @@ ESLint config remains; `pnpm build`/`pnpm lint` succeed unchanged.
 
 ### Implementation for User Story 2
 
-- [X] T010 [P] [US2] Remove `better-sqlite3` and `@types/better-sqlite3` from
+- [x] T010 [P] [US2] Remove `better-sqlite3` and `@types/better-sqlite3` from
       `package.json`; run `pnpm install`.
-- [X] T011 [P] [US2] Remove `webpack` from `package.json` devDependencies; run
+- [x] T011 [P] [US2] Remove `webpack` from `package.json` devDependencies; run
       `pnpm install`.
-- [X] T012 [P] [US2] Delete `src/hooks/useS3.ts`.
-- [X] T013 [P] [US2] Remove the `SQLJsDatabase` union member and its
+- [x] T012 [P] [US2] Delete `src/hooks/useS3.ts`.
+- [x] T013 [P] [US2] Remove the `SQLJsDatabase` union member and its
       `drizzle-orm/sql-js` import from `src/db/dbType.ts`, collapsing `AppDatabase` to
       just `LibSQLDatabase`.
-- [X] T014 [P] [US2] Remove `VITE_DATA_SOURCE` from `src/vite-env.d.ts`'s
+- [x] T014 [P] [US2] Remove `VITE_DATA_SOURCE` from `src/vite-env.d.ts`'s
       `ImportMetaEnv` and from `.env.example`.
-- [X] T015 [P] [US2] Delete `.eslintrc.cjs`; port its `eslint-plugin-react-hooks`,
+- [x] T015 [P] [US2] Delete `.eslintrc.cjs`; port its `eslint-plugin-react-hooks`,
       `eslint-plugin-react-refresh`, and `eslint-plugin-storybook` rule coverage into
       `eslint.config.mjs` (flat config), so `pnpm lint` keeps enforcing what the dead
       legacy config used to. Also fixed a pre-existing bug found in the process: flat
       config had no `ignores`, so a local `dist/` build output was being linted
       (4416 false-positive errors) — added `ignores` for `dist/`, `dist-ssr/`,
       `storybook-static/`, `src/routeTree.gen.ts`.
-- [X] T016 [P] [US2] Fix `components.json`: `tailwind.config` → `"tailwind.config.ts"`;
+- [x] T016 [P] [US2] Fix `components.json`: `tailwind.config` → `"tailwind.config.ts"`;
       `iconLibrary` → the actual dominant icon library (cross-check
       `docs/review/13-component-library-and-design-system.md`'s FontAwesome finding).
       Confirmed by usage count: FontAwesome 29 icon instances vs. lucide-react's 3 (all
       shadcn boilerplate) and @remixicon/react's 2 — set `iconLibrary: "fontawesome"`.
-- [X] T017 [US2] Add `knip` as a devDependency; add a root `knip.json` (or
+- [x] T017 [US2] Add `knip` as a devDependency; add a root `knip.json` (or
       `knip.config.ts`) with documented `ignore`/`entry` exceptions for
       `vite.config.ts`, `tailwind.config.ts`, `.storybook/*`, `src/routeTree.gen.ts`;
       add `"knip": "knip"` to `package.json` scripts (depends on T010/T011 — same file).
-- [X] T018 [US2] Run `pnpm run knip`; fix or explicitly document every finding as a
+- [x] T018 [US2] Run `pnpm run knip`; fix or explicitly document every finding as a
       config exception in `knip.json` (per spec Edge Cases) — depends on T010-T016 so
       the report reflects the post-cleanup state. Deleted genuinely dead code (unused
       files `src/common/types.ts`/`src/db/views.ts`/`src/types/utils.ts`, unused symbols
@@ -151,11 +149,11 @@ ESLint config remains; `pnpm build`/`pnpm lint` succeed unchanged.
       tags (vendored Tremor chart utils, Drizzle schema completeness, parked Cognito
       self-signup flow) and in `knip.jsonc` (renamed from `.json` to allow comments) for
       CLI-only/CSS-only deps. `pnpm run knip` now exits 0.
-- [X] T019 [US2] Run `pnpm build && pnpm lint`; confirm both succeed with the
+- [x] T019 [US2] Run `pnpm build && pnpm lint`; confirm both succeed with the
       consolidated ESLint config and removed dependencies. `pnpm build` succeeds
       (pre-existing >500kB chunk-size warning, out of scope); `pnpm lint` exits with
       0 errors, 7 pre-existing warnings unrelated to this spec's changes.
-- [X] T020 [US2] Manually validate the US2 section of `quickstart.md` (all eight steps).
+- [x] T020 [US2] Manually validate the US2 section of `quickstart.md` (all eight steps).
       All eight steps pass: no better-sqlite3/webpack refs in package.json; useS3.ts gone;
       no SQLJsDatabase/VITE_DATA_SOURCE refs; `pnpm run knip` clean; no `.eslintrc*`;
       `pnpm build && pnpm lint` succeed; `components.json` points at `tailwind.config.ts`
@@ -177,10 +175,10 @@ burst of requests is measurably throttled.
 
 ### Implementation for User Story 4
 
-- [X] T021 [US4] Add a standalone regression-test script (e.g.
+- [x] T021 [US4] Add a standalone regression-test script (e.g.
       `scripts/test-auth-boundary.mjs`, run via a new `pnpm` script) asserting today's
       already-correct behavior: `Authorization: Bearer guest` → `401`; `X-Guest-Request:
-      true` → a token scoped to the guest database only; a forged/expired JWT → `401`.
+true` → a token scoped to the guest database only; a forged/expired JWT → `401`.
       Base assertions on the full trace in `research.md` item 4. Written, runs via
       `pnpm run test-auth-boundary` (accepts `--base-url`/`BASE_URL`, defaults to local
       `vercel dev` on :3111). Verified 4/5 checks pass against a live local `vercel dev`
@@ -188,21 +186,21 @@ burst of requests is measurably throttled.
       `.env.local`, forged-token→401, no-credentials→401); the 5th (429 burst, added by
       T022) needs a warm deployment to verify locally — confirmed 5/5 against a live
       Vercel Preview in T023.
-- [X] T022 [US4] Add per-IP in-memory rate limiting to `api/turso-token.ts` (module-scope
+- [x] T022 [US4] Add per-IP in-memory rate limiting to `api/turso-token.ts` (module-scope
       `Map<string, { count, resetAt }>`, keyed by `x-forwarded-for`/`x-real-ip`,
       returning `429` + `Retry-After` per `contracts/turso-token-endpoint-amendment.md`),
       with a threshold generous enough not to trip on normal rapid navigation; extend
       T021's test script to cover the `429` case. Fixed-window: 60s / 20 req per IP —
       generous since the client caches tokens ~55min (src/hooks/useDB.tsx), so normal
       usage is ~1 request per window. `api/tsconfig.json`-scoped `tsc --noEmit` passes.
-- [X] T023 [US4] Manually validate the US4 section of `quickstart.md`: curl-based
+- [x] T023 [US4] Manually validate the US4 section of `quickstart.md`: curl-based
       401/200/429 checks against a real deployment, and decoded-claim verification
       (scope, read-only, ~1h expiry) against an actually-minted token. Claims verified
       against local `vercel dev` (talks to the real Turso Platform API with real
       credentials): decoded JWT payload has `a: "ro"` (read-only), `exp - iat = 3600`
       (exactly 1h), and the guest path is scoped to `TURSO_GUEST_DATABASE_URL` only.
       401/200/429 checks run via `test-auth-boundary.mjs --base-url <preview-url>
-      --protection-bypass <token>` against a live Vercel Preview deploy
+--protection-bypass <token>` against a live Vercel Preview deploy
       (`vercel deploy`, bypass token from `vercel curl <url> --debug` since the preview
       sits behind Deployment Protection): 5/5 pass. Confirmed empirically that the 429
       burst must be sent sequentially, not concurrently — a concurrent burst gets
@@ -212,7 +210,7 @@ burst of requests is measurably throttled.
       `Retry-After` for the rest. Test script updated to send the burst sequentially
       and to accept `--protection-bypass`/`VERCEL_PROTECTION_BYPASS` for testing behind
       Deployment Protection.
-- [X] T024 [US4] Record the FR-008 boundary-trace confirmation and the chosen rate-limit
+- [x] T024 [US4] Record the FR-008 boundary-trace confirmation and the chosen rate-limit
       threshold/rationale in `docs/decisions.md`.
 
 **Checkpoint**: User Stories 1, 2, and 4 are all complete and independently verifiable.
@@ -231,7 +229,7 @@ snapshot without depending on that repo's live availability.
 
 ### Implementation for User Story 5
 
-- [X] T025 [US5] Investigate dropping `script-src`/`style-src`'s `'unsafe-inline'` per
+- [x] T025 [US5] Investigate dropping `script-src`/`style-src`'s `'unsafe-inline'` per
       `research.md` item 5 (test against a production `pnpm build` + `vite preview`
       first; fall back to a `style-src` hash allowlist only if something inline genuinely
       needs it); update `vercel.json`'s CSP accordingly. Decision: dropped
@@ -244,11 +242,11 @@ snapshot without depending on that repo's live availability.
       runtime pervasively; none of that is hash-coverable and a nonce architecture is
       disproportionate effort per research.md. Verified new headers apply via local
       `vercel dev` (`curl -D - localhost:3111/dashboard`).
-- [X] T026 [P] [US5] Add `Strict-Transport-Security: max-age=63072000; includeSubDomains;
-      preload` and a conservative deny-by-default `Permissions-Policy` (camera,
+- [x] T026 [P] [US5] Add `Strict-Transport-Security: max-age=63072000; includeSubDomains;
+preload` and a conservative deny-by-default `Permissions-Policy` (camera,
       microphone, geolocation, payment) to `vercel.json`'s `headers` block. Verified via
       local `vercel dev` curl.
-- [X] T027 [US5] Obtain the current value of `resumeweb`'s `/dashboard/:path*` CSP header
+- [x] T027 [US5] Obtain the current value of `resumeweb`'s `/dashboard/:path*` CSP header
       (via the owner's copy of that repo, or `vercel inspect victorvaquero.com --json`),
       and commit it as a hardcoded snapshot (e.g.
       `scripts/resumeweb-dashboard-csp.snapshot.txt`) — this repo's CI must not depend on
@@ -263,14 +261,14 @@ snapshot without depending on that repo's live availability.
       Vercel deploy confirmed via curl). Snapshot committed at
       `scripts/resumeweb-dashboard-csp.snapshot.txt` reflects the now-corrected live
       value, matching this repo's own CSP exactly.
-- [X] T028 [US5] Create `scripts/check-csp-drift.mjs` comparing this repo's `vercel.json`
+- [x] T028 [US5] Create `scripts/check-csp-drift.mjs` comparing this repo's `vercel.json`
       CSP string against T027's snapshot; wire as a `pnpm` script; add a minimal
       first-ever `.github/workflows/csp-drift.yml` running it on every push/PR (this repo
       has no CI today — keep this workflow scoped narrowly to the CSP check; general
       CI/quality-gate setup is spec 006's scope per `docs/review/09-developer-automation.md`).
       `pnpm run check-csp-drift` passes locally; workflow added at
       `.github/workflows/csp-drift.yml` (checkout + setup-node@24 + run the script).
-- [X] T029 [US5] Manually validate the US5 section of `quickstart.md`: curl header
+- [x] T029 [US5] Manually validate the US5 section of `quickstart.md`: curl header
       checks, and a deliberate local CSP-mismatch test against T028's guardrail. All 4
       steps pass: (1) no `unsafe-eval`/`wasm-unsafe-eval` in the served CSP (local
       `vercel dev` curl); (2) `check-csp-drift.mjs` passes against the committed
@@ -279,7 +277,7 @@ snapshot without depending on that repo's live availability.
       reverted cleanly (confirmed via `git diff` showing zero residual change); (4)
       `Strict-Transport-Security`/`Permissions-Policy` both present in the served
       headers.
-- [X] T030 [US5] Record the `unsafe-inline` decision and HSTS/Permissions-Policy
+- [x] T030 [US5] Record the `unsafe-inline` decision and HSTS/Permissions-Policy
       presence in `docs/decisions.md`. Also recorded the live resumeweb CSP-drift bug
       found and fixed during T027.
 
@@ -298,20 +296,20 @@ clear, specific startup error naming the missing field.
 
 ### Implementation for User Story 3
 
-- [X] T031 [P] [US3] Add `"$schema": "https://openapi.vercel.sh/vercel.json"` to
+- [x] T031 [P] [US3] Add `"$schema": "https://openapi.vercel.sh/vercel.json"` to
       `vercel.json`. Verified `check-csp-drift.mjs` still passes after the edit.
-- [X] T032 [P] [US3] Add `"$schema": "https://json.schemastore.org/tsconfig"` to
+- [x] T032 [P] [US3] Add `"$schema": "https://json.schemastore.org/tsconfig"` to
       `tsconfig.json` (and `tsconfig.paths.json` if it warrants its own). Added to both,
       plus `api/tsconfig.json` (a third, separate tsconfig in this repo) for the same
       reason. `tsc --noEmit` clean on both the root and `api/` configs after the edit.
-- [X] T033 [P] [US3] Add shadcn's current published schema URL to `components.json`'s
+- [x] T033 [P] [US3] Add shadcn's current published schema URL to `components.json`'s
       `$schema` field (confirm the exact URL against current shadcn docs). Already
       present (`https://ui.shadcn.com/schema.json`) — no change needed.
-- [X] T034 [US3] Add `zod` as a dependency; define a schema for `src/config.json`'s
+- [x] T034 [US3] Add `zod` as a dependency; define a schema for `src/config.json`'s
       post-US1 four-field shape (`region`/`userPoolId`/`clientId`/`cognitoUrl`, all
       required non-empty strings) per `data-model.md` entity 1. `zod@4.4.3` added via
       `pnpm add zod`; schema defined in `src/services/authService.tsx`.
-- [X] T035 [US3] Validate `src/config.json` against T034's schema at import time in
+- [x] T035 [US3] Validate `src/config.json` against T034's schema at import time in
       `src/services/authService.tsx`, throwing an `Error` listing every failing field
       (via `ZodError.issues`) before `cognitoClient` is constructed. `configSchema.safeParse`
       runs at module load, before `cognitoClient` is constructed; on failure throws
@@ -319,9 +317,9 @@ clear, specific startup error naming the missing field.
       not just the first. Manually verified by temporarily blanking `clientId` and
       deleting `cognitoUrl` from `src/config.json`: produced
       `Invalid src/config.json — clientId: Too small: expected string to have >=1
-      characters; cognitoUrl: Invalid input: expected string, received undefined`, then
+characters; cognitoUrl: Invalid input: expected string, received undefined`, then
       restored the file. `tsc --noEmit` clean.
-- [X] T036 [US3] Manually validate the US3 section of `quickstart.md`: editor
+- [x] T036 [US3] Manually validate the US3 section of `quickstart.md`: editor
       autocomplete/validation on all three `$schema` files; malformed-config error
       message test; confirm `engines.node` is present and accurate in `package.json`
       (already set — verification only, per `research.md` item 11). Step 1: all three
@@ -348,17 +346,17 @@ pass/fail for each.
 
 ### Implementation for User Story 6
 
-- [X] T037 [P] [US6] Grep `src/` for `dangerouslySetInnerHTML`; record the result (and
+- [x] T037 [P] [US6] Grep `src/` for `dangerouslySetInnerHTML`; record the result (and
       review any usage found for user-controllable input) in `docs/decisions.md`.
       Zero matches. Recorded in `docs/decisions.md` under "Spec 005 US6".
-- [X] T038 [US6] Check the AWS Cognito console (this app's User Pool) for MFA,
+- [x] T038 [US6] Check the AWS Cognito console (this app's User Pool) for MFA,
       password-policy, account-lockout, and self-signup settings; record findings and
       any changes made in `docs/decisions.md`. CLI identity lacked
       `cognito-idp:DescribeUserPool`, so the owner checked the console directly for
       `eu-west-3_VHPSFHPrK` and confirmed MFA off/optional, standard password policy,
       account lockout/threat-protection off (deliberate), and self-service sign-up
       **disabled**. No changes needed. See `docs/decisions.md`.
-- [X] T039 [US6] Run `pnpm audit`; fix what's safely fixable; document any
+- [x] T039 [US6] Run `pnpm audit`; fix what's safely fixable; document any
       triaged/accepted findings in `docs/decisions.md` (run after Phase 4/US2's
       dependency removals for a clean baseline). Baseline 115 findings (3 critical/61
       high/41 moderate/10 low). Rejected `pnpm audit --fix` (cascaded into breaking
@@ -374,12 +372,12 @@ pass/fail for each.
       an accepted/deferred follow-up in `docs/decisions.md`. Also fixed an unrelated
       `eslint.config.mjs` gap discovered along the way (20 `no-undef` errors on
       `scripts/*.mjs`'s Node globals) — now 0 errors.
-- [X] T040 [US6] Run `gitleaks detect --source . --log-opts="--all"` (or equivalent)
+- [x] T040 [US6] Run `gitleaks detect --source . --log-opts="--all"` (or equivalent)
       across full git history; record the result in `docs/decisions.md`. Downloaded
       the official portable `gitleaks v8.30.1` binary into the scratchpad (not
       installed system-wide, deleted after use). 63 commits scanned, no leaks found —
       confirms US1's history scrub was effective.
-- [X] T041 [US6] Spot-check the separate `cashpy-processor` repo for an equivalent
+- [x] T041 [US6] Spot-check the separate `cashpy-processor` repo for an equivalent
       PII-in-source concern; record the outcome (ruled out, or filed as its own
       follow-up) in `docs/decisions.md`. **NOT ruled out** — found real unanonymized
       third-party PII in `tests/data/cash/*.csv`, `cash.db`, and `gnucash.gnca` (real
@@ -387,10 +385,10 @@ pass/fail for each.
       the same folder but its output isn't what's committed. Repo is currently
       private on GitHub. No action taken on the other repo — filed as an explicit
       open follow-up per `docs/decisions.md`, owner to decide remediation.
-- [X] T042 [P] [US6] Add an MIT `LICENSE` file at the repo root; set `package.json`'s
+- [x] T042 [P] [US6] Add an MIT `LICENSE` file at the repo root; set `package.json`'s
       `"license": "MIT"`. `LICENSE` added (MIT, copyright Victor Vaquero 2026);
       `package.json`'s `"license"` field set to `"MIT"`.
-- [X] T043 [US6] Manually validate the US6 section of `quickstart.md` — confirm all six
+- [x] T043 [US6] Manually validate the US6 section of `quickstart.md` — confirm all six
       items have an explicit recorded outcome in `docs/decisions.md`. All six have an
       explicit outcome: (1) T037 pass — zero `dangerouslySetInnerHTML`; (2) T038
       deferred (owner chose to skip, documented as open item); (3) T039 pass —
@@ -408,17 +406,17 @@ pass/fail for each.
 
 **Purpose**: Final repo-wide validation and manual-verification bookkeeping
 
-- [X] T044 [P] Update the `**Status**` line at the top of each of
+- [x] T044 [P] Update the `**Status**` line at the top of each of
       `docs/review/01-dependencies-and-config-hygiene.md`,
       `docs/review/02-config-schemas-and-validation.md`,
       `docs/review/03-secrets-and-public-repo-readiness.md`,
       `docs/review/04-security.md`, and
       `docs/review/11-code-structure-and-patterns.md` from "Planning done" to
       "Implemented — see specs/005-...". All five updated via `sed`; verified.
-- [X] T045 Run the full `quickstart.md` validation matrix end-to-end across all six user
+- [x] T045 Run the full `quickstart.md` validation matrix end-to-end across all six user
       stories. Re-ran every CLI/grep-based check in this final pass (not just cited
       earlier per-story results): US1.1 (zero GUID matches), US2.1-.8 (zero
-      better-sqlite3/webpack/useS3.ts/SQLJsDatabase/VITE_DATA_SOURCE/.eslintrc*,
+      better-sqlite3/webpack/useS3.ts/SQLJsDatabase/VITE_DATA_SOURCE/.eslintrc\*,
       clean `knip`, clean `pnpm build && pnpm lint`, `components.json` tailwind/icon
       config correct), US3.1/.3 (`$schema` present in all three files, `engines.node`
       accurate), US5.1/.2 (no `unsafe-eval` in CSP, drift check passes). US2.2's
@@ -428,7 +426,7 @@ pass/fail for each.
       T023/T026 (5/5 and headers-present respectively) — not re-deployed again here,
       cited from those task notes. US6's 6 items per T043. All pass or have an
       explicit documented outcome.
-- [X] T046 Manually re-verify the golden path (login → data loads → charts render) and
+- [x] T046 Manually re-verify the golden path (login → data loads → charts render) and
       the guest path in a browser, desktop and at least one mobile viewport, per
       constitution Principle III, against the T001 baseline; record this pass — plus
       T024's Cognito boundary confirmation, T038's Cognito console check, T040's
@@ -465,7 +463,7 @@ pass/fail for each.
 ### Cross-Story Dependencies
 
 - **US3 depends on US1**: T034/T035's `zod` schema targets `src/config.json`'s shape
-  *after* US1's T006 removes the `database` key — validating the pre-US1 shape would be
+  _after_ US1's T006 removes the `database` key — validating the pre-US1 shape would be
   wasted work.
 - **US4 depends on US1**: T022 adds rate limiting to `api/turso-token.ts`, the same file
   US1's T003 already modifies (response shape) — sequencing avoids conflicting edits to

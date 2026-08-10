@@ -30,21 +30,12 @@ interface SummaryContextType {
 const SummaryPageContext = createContext<SummaryContextType | null>(null);
 
 // --- Reducer ---
-function hideAccountsReducer(
-  state: AccountId[],
-  account: AccountId
-): AccountId[] {
-  return state.includes(account)
-    ? state.filter((a) => a !== account)
-    : [...state, account];
+function hideAccountsReducer(state: AccountId[], account: AccountId): AccountId[] {
+  return state.includes(account) ? state.filter((a) => a !== account) : [...state, account];
 }
 
 // --- Provider ---
-export function SummaryPageContextProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function SummaryPageContextProvider({ children }: { children: ReactNode }) {
   const [hideAccounts, toggleHideAccount] = useReducer(hideAccountsReducer, [
     "8435fd4bfa974eaf89d1e91576470074", // Furgo account ID
   ]);
@@ -54,8 +45,7 @@ export function SummaryPageContextProvider({
     to: DateTime.now(),
   });
   const [isYearly, toggleYearly] = useReducer((v) => !v, false);
-  const [chartPeriodicity, setChartPeriodicity] =
-    useState<Periodicity>("monthly");
+  const [chartPeriodicity, setChartPeriodicity] = useState<Periodicity>("monthly");
 
   return (
     <SummaryPageContext
@@ -81,9 +71,7 @@ export function SummaryPageContextProvider({
 export function useSummaryPageContext() {
   const ctx = use(SummaryPageContext);
   if (!ctx) {
-    throw new Error(
-      "useSummaryPageContext must be used inside <SummaryPageContextProvider>"
-    );
+    throw new Error("useSummaryPageContext must be used inside <SummaryPageContextProvider>");
   }
   return ctx;
 }

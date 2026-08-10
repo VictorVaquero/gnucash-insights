@@ -14,7 +14,7 @@
 should be implementable with this CI/test scaffolding already in place, so new work gets
 covered by tests and automated checks as it lands rather than needing a retrofit pass.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Every push/PR gets an automatic lint/typecheck/build/test signal (Priority: P1)
 
@@ -160,7 +160,7 @@ assertions exist on the highest-traffic components.
   Cross-check with [007-design-system-theming-and-charts](../007-design-system-theming-and-charts/spec.md)
   before changing shared palette tokens, since that spec also touches the design system.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -192,7 +192,7 @@ assertions exist on the highest-traffic components.
   `src/config.json`/secrets? touches the cross-repo CSP coupling documented in
   [005-repo-hygiene-security-and-public-readiness](../005-repo-hygiene-security-and-public-readiness/spec.md)?).
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

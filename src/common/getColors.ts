@@ -26,5 +26,4 @@ export const getRandomColor = (d: string): string => {
       .reduce((p, n) => p + n, 0) % colorPalette.length;
   return colorPalette[hash];
 };
-export const getDefaultColor = (): string =>
-  twStyles.getPropertyValue("--color-gray-500");
+export const getDefaultColor = (): string => twStyles.getPropertyValue("--color-gray-500");

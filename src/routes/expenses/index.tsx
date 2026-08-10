@@ -6,10 +6,7 @@ import { toHierarchy } from "@/common/toHierarchy";
 import { parseNum } from "@/common/utils";
 import { TreeList } from "@/components/TreeList";
 import { useAuth } from "@/contexts/useAuthContext";
-import {
-  ExpensesYearlyRow,
-  yearlyExpensesOptions,
-} from "@/db/queries/expenses";
+import { ExpensesYearlyRow, yearlyExpensesOptions } from "@/db/queries/expenses";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { cn } from "@/lib/utils";
@@ -39,16 +36,11 @@ const ExpenseRow = ({
   return (
     <div className="grid grid-cols-subgrid col-start-6 col-span-full py-3 border-b border-shark-500 text-sm lg:text-base hover:bg-shark-700 transition-colors">
       {/* Total Column */}
-      <span className="col-start-1 text-left">
-        {parseNum(item.total, { digits: 0 })}
-      </span>
+      <span className="col-start-1 text-left">{parseNum(item.total, { digits: 0 })}</span>
 
       {/* Yearly Totals */}
       {yearRange.map((year, index) => (
-        <span
-          key={`val-${item.id}-${year}`}
-          className={"text-left col-start-" + (index + 2)}
-        >
+        <span key={`val-${item.id}-${year}`} className={"text-left col-start-" + (index + 2)}>
           {parseNum(item[year], { digits: 2, fixed: 3 })}
         </span>
       ))}
@@ -67,13 +59,11 @@ const ExpenseRow = ({
         return (
           <span
             key={`mean-${item.id}-${year}`}
-            title={`${parseNum(diff)} ${
-              isUnderBudget ? "less" : "more"
-            } than average`}
+            title={`${parseNum(diff)} ${isUnderBudget ? "less" : "more"} than average`}
             className={cn(
               "text-left",
               isUnderBudget ? "text-emerald-500" : "text-red-500",
-              "col-start-" + (index + 9)
+              "col-start-" + (index + 9),
             )}
           >
             {parseNum(yearMean, { digits: 2, fixed: 3 })}
@@ -121,10 +111,8 @@ const Expenses = () => {
     (d) => d.name ?? "",
     (d) => d.parentId ?? "",
     (a, b) => b.total - a.total, // Simplified sort
-    (d: ExpenseData) => (
-      <ExpenseRow item={d} yearRange={yearRange} numMonths={numMonths} />
-    ),
-    0
+    (d: ExpenseData) => <ExpenseRow item={d} yearRange={yearRange} numMonths={numMonths} />,
+    0,
   );
 
   return (
@@ -132,9 +120,7 @@ const Expenses = () => {
       <div className="min-w-[900px] grid grid-cols-[repeat(4,1fr)_100px_repeat(6,1fr)_20px_repeat(6,1fr)] gap-y-2 lg:gap-y-6">
         {/* Table Header */}
         <div className="grid grid-cols-subgrid col-span-full py-4 text-white text-left border-b border-shark-500 font-bold">
-          <span className="col-start-1 sticky left-0 bg-shark-900">
-            Category
-          </span>
+          <span className="col-start-1 sticky left-0 bg-shark-900">Category</span>
           <h4 className="col-start-6">Total</h4>
 
           {yearRange.map((year, index) => (
