@@ -1,9 +1,10 @@
 import { twStyles } from "@/common/utils";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   TooltipContentProps,
@@ -16,6 +17,7 @@ import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { renderTouchDot } from "@/components/charts/TouchDot";
+import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { Periodicity } from "@/types/domain";
 import { FullTransaction } from "..";
 
@@ -64,8 +66,15 @@ export const TransactsPlot = ({
   const color = getColor("Mixin");
   const latest = chartData[chartData.length - 1];
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeIndex } = useChartScrubber(containerRef, {
+    length: chartData.length,
+    margin: { left: margin.left, right: margin.right },
+  });
+  const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
+
   return (
-    <div className="relative w-full h-64 md:h-full">
+    <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       {latest && (
         <ChartKeyValue
           label={latest.dateLabel}
@@ -75,6 +84,14 @@ export const TransactsPlot = ({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          {scrubbedPoint && (
+            <ReferenceLine
+              x={scrubbedPoint.dateLabel}
+              stroke="var(--color-border)"
+              strokeDasharray="3 3"
+              ifOverflow="extendDomain"
+            />
+          )}
           <XAxis
             dataKey="dateLabel"
             tick={{ fontSize: 10, fill: "currentColor" }}

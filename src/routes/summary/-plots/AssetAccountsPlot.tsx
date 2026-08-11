@@ -1,10 +1,11 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   XAxis,
@@ -22,6 +23,7 @@ import { accountsOptions } from "@/db/queries/global";
 import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -87,12 +89,27 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
     return accounts.reduce((acc, a) => acc + (Number(latest[a.id]) || 0), 0);
   }, [chartData, accounts]);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeIndex } = useChartScrubber(containerRef, {
+    length: chartData.length,
+    margin: { left: margin.left, right: margin.right },
+  });
+  const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
+
   return (
-    <div className="relative w-full h-64 md:h-full">
+    <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <ChartKeyValue label="Latest total" value={parseNum(latestTotal)} />
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          {scrubbedPoint && (
+            <ReferenceLine
+              x={scrubbedPoint.dateLabel}
+              stroke="var(--color-border)"
+              strokeDasharray="3 3"
+              ifOverflow="extendDomain"
+            />
+          )}
           <XAxis
             dataKey="dateLabel"
             tick={{ fontSize: 10, fill: "currentColor" }}

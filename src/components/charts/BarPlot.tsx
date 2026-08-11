@@ -13,6 +13,7 @@ import {
   Label,
   BarChart as RechartsBarChart,
   Legend as RechartsLegend,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -23,6 +24,7 @@ import type { AxisDomain } from "recharts/types/util/types";
 import { useWindowSize } from "@/common/utils.ts";
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip as TouchChartTooltip } from "@/components/charts/ChartTooltip";
+import { useChartScrubber } from "@/hooks/useChartScrubber";
 import {
   AvailableChartColors,
   constructCategoryColors,
@@ -595,6 +597,20 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
   const prevActiveRef = React.useRef<boolean | undefined>(undefined);
   const prevLabelRef = React.useRef<string | undefined>(undefined);
 
+  // Mirrors the RechartsBarChart `margin` prop below, plus the YAxis's own width (which
+  // eats into the plot area whenever it's shown) -- the vertical `layout` variant has no
+  // live callers in this codebase (confirmed via a repo-wide grep), so only the default
+  // horizontal, category-x-axis case is wired for the drag-to-scan crosshair.
+  const { activeIndex } = useChartScrubber(containerRef, {
+    length: data.length,
+    margin: {
+      left: (yAxisLabel ? 20 : 0) + (showYAxis ? yAxisWidth : 0),
+      right: yAxisLabel ? 5 : 0,
+    },
+  });
+  const scrubbedLabel =
+    layout !== "vertical" && activeIndex != null ? data[activeIndex]?.[index] : undefined;
+
   function valueToPercent(value: number) {
     return `${(value * 100).toFixed(0)}%`;
   }
@@ -638,7 +654,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
   return (
     <div
       ref={setContainerRef}
-      className={cn("relative h-64 md:h-80 w-full", className)}
+      className={cn("relative h-64 md:h-80 w-full touch-none", className)}
       tremor-id="tremor-raw"
       {...other}
     >
@@ -679,6 +695,14 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
               vertical={layout === "vertical"}
             />
           ) : null}
+          {scrubbedLabel != null && (
+            <ReferenceLine
+              x={scrubbedLabel}
+              stroke="var(--color-border)"
+              strokeDasharray="3 3"
+              ifOverflow="extendDomain"
+            />
+          )}
           <XAxis
             hide={!showXAxis}
             tick={{

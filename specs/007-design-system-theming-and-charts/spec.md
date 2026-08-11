@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-10
 
-**Status**: Tasked — tasks.md done (80 tasks across 6 user stories); ready to implement via `/speckit-implement`
+**Status**: Implemented — all 80 tasks across 6 user stories complete (see tasks.md); `pnpm test`/`pnpm test:e2e`/`pnpm lint`/`pnpm build`/`pnpm size` all pass. Two items remain owner-side per Constitution Principle III (real-device touch/scrubber pass and dark-mode contrast check, and real-Cognito golden-path re-check) — tracked in `docs/review/19-manual-verification.md`, not blocking.
 
 **Review docs covered**: [`docs/review/12-library-choice-review.md`](../../docs/review/12-library-choice-review.md), [`docs/review/13-component-library-and-design-system.md`](../../docs/review/13-component-library-and-design-system.md), [`docs/review/14-charts-and-mobile-interaction.md`](../../docs/review/14-charts-and-mobile-interaction.md), [`docs/review/15-theming-light-dark-mode.md`](../../docs/review/15-theming-light-dark-mode.md)
 

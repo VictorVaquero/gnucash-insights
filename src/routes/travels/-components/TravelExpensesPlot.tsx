@@ -1,9 +1,10 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import {
   CartesianGrid,
   ComposedChart,
+  ReferenceLine,
   ResponsiveContainer,
   Scatter,
   Tooltip as RechartsTooltip,
@@ -19,6 +20,7 @@ import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesDetailedOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useQuery } from "@tanstack/react-query";
 import { getColor } from "./utils";
 
@@ -139,8 +141,15 @@ const DrawTravelExpensesPlot = (props: {
   const yMax = Math.max(...chartData.map((d) => d.value), 0);
   const latest = chartData[chartData.length - 1];
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeIndex } = useChartScrubber(containerRef, {
+    length: chartData.length,
+    margin: { left: margin.left, right: margin.right },
+  });
+  const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
+
   return (
-    <div className="relative w-full h-64 md:h-full">
+    <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       {latest && (
         <ChartKeyValue
           label={latest.name}
@@ -150,6 +159,14 @@ const DrawTravelExpensesPlot = (props: {
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          {scrubbedPoint && (
+            <ReferenceLine
+              x={scrubbedPoint.finMillis}
+              stroke="var(--color-border)"
+              strokeDasharray="3 3"
+              ifOverflow="extendDomain"
+            />
+          )}
           <XAxis
             type="number"
             dataKey="finMillis"

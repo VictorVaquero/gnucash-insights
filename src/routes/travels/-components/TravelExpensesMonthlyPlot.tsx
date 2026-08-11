@@ -1,12 +1,13 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useQuery } from "@tanstack/react-query";
 import { DateTime } from "luxon";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
   ReferenceArea,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   TooltipContentProps,
@@ -19,6 +20,7 @@ import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesYearMonthOptions, travelExpensesYearOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useChartScrubber } from "@/hooks/useChartScrubber";
 
 interface Data {
   date: string;
@@ -79,11 +81,26 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[]
     return bands;
   }, [props.dataYearly, chartData]);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeIndex } = useChartScrubber(containerRef, {
+    length: chartData.length,
+    margin: { left: margin.left, right: margin.right },
+  });
+  const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
+
   return (
-    <div className="relative w-full h-64 md:h-full">
+    <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
+          {scrubbedPoint && (
+            <ReferenceLine
+              x={scrubbedPoint.dateLabel}
+              stroke="var(--color-border)"
+              strokeDasharray="3 3"
+              ifOverflow="extendDomain"
+            />
+          )}
           <XAxis
             dataKey="dateLabel"
             tick={{ fontSize: 10, fill: "currentColor" }}
