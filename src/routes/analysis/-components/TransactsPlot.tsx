@@ -12,7 +12,10 @@ import {
 } from "recharts";
 
 import { groupBy, sum } from "@/common/aggregate";
-import { parseNum } from "@/common/utils.ts";
+import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
+import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
+import { renderTouchDot } from "@/components/charts/TouchDot";
 import { Periodicity } from "@/types/domain";
 import { FullTransaction } from "..";
 
@@ -24,11 +27,11 @@ interface ChartRow {
 const green = twStyles.getPropertyValue("--color-green-500");
 const red = twStyles.getPropertyValue("--color-red-500");
 
-const margin = { top: 20, right: 20, bottom: 0, left: 50 };
+const marginDesktop = { top: 20, right: 20, bottom: 0, left: 50 };
+const marginMobile = { top: 10, right: 10, bottom: 0, left: 36 };
 const getColor = (d: string) => (d === "Ingresos" ? green : red);
 
-const ChartTooltipContent = ({ active, payload }: TooltipContentProps<number, string>) => {
-  if (!active || !payload || payload.length === 0) return null;
+const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
@@ -45,6 +48,8 @@ export const TransactsPlot = ({
   data: FullTransaction[];
   periodicity: Periodicity;
 }) => {
+  const isNarrowViewport = useIsNarrowViewport();
+  const margin = isNarrowViewport ? marginMobile : marginDesktop;
   const format =
     periodicity == "yearly" ? "yyyy" : periodicity == "monthly" ? "yyyy-LL" : "yyyy-qq";
 
@@ -57,9 +62,16 @@ export const TransactsPlot = ({
   }, [data, format]);
 
   const color = getColor("Mixin");
+  const latest = chartData[chartData.length - 1];
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
+      {latest && (
+        <ChartKeyValue
+          label={latest.dateLabel}
+          value={<span style={{ color }}>{parseNum(latest.value)}</span>}
+        />
+      )}
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
@@ -78,7 +90,9 @@ export const TransactsPlot = ({
           />
           <RechartsTooltip
             content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltipContent {...props} />
+              <ChartTooltip {...props}>
+                {({ payload }) => <ChartTooltipContent payload={payload} />}
+              </ChartTooltip>
             )}
           />
           <Line
@@ -86,8 +100,8 @@ export const TransactsPlot = ({
             dataKey="value"
             stroke={color}
             strokeWidth={1.5}
-            dot={{ r: 5, fill: color, stroke: "white", strokeWidth: 1.5 }}
-            activeDot={{ r: 6 }}
+            dot={renderTouchDot(color, 5)}
+            activeDot={renderTouchDot(color, 6)}
             isAnimationActive={false}
           />
         </LineChart>

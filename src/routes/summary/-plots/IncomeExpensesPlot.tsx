@@ -14,6 +14,9 @@ import {
 } from "recharts";
 
 import { parseNum, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
+import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
+import { renderTouchDot } from "@/components/charts/TouchDot";
 import { useAuth } from "@/contexts/useAuthContext";
 import { transactsSumOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
@@ -42,8 +45,7 @@ const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const getColor = (d: colorType) => colorCodes[d];
 
-const ChartTooltipContent = ({ active, payload }: TooltipContentProps<number, string>) => {
-  if (!active || !payload || payload.length === 0) return null;
+const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
@@ -70,8 +72,20 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
     [data],
   );
 
+  const latest = chartData[chartData.length - 1];
+
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
+      {latest && (
+        <ChartKeyValue
+          label={`Net (${latest.dateLabel})`}
+          value={
+            <span style={{ color: getColor(latest.net > 0 ? "g" : "r") }}>
+              {parseNum(latest.net)}
+            </span>
+          }
+        />
+      )}
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
@@ -90,7 +104,9 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
           />
           <RechartsTooltip
             content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltipContent {...props} />
+              <ChartTooltip {...props}>
+                {({ payload }) => <ChartTooltipContent payload={payload} />}
+              </ChartTooltip>
             )}
           />
           <Bar dataKey="netAbs" fillOpacity={0.4} isAnimationActive={false}>
@@ -104,7 +120,7 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
             stroke={getColor("r")}
             strokeWidth={1.5}
             dot={false}
-            activeDot={{ r: 4 }}
+            activeDot={renderTouchDot(getColor("r"), 4)}
             isAnimationActive={false}
           />
           <Line
@@ -113,7 +129,7 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
             stroke={getColor("g")}
             strokeWidth={1.5}
             dot={false}
-            activeDot={{ r: 4 }}
+            activeDot={renderTouchDot(getColor("g"), 4)}
             isAnimationActive={false}
           />
         </ComposedChart>

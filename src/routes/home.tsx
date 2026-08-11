@@ -91,7 +91,7 @@ const Home = () => {
 
   const handleGuestSignIn = async () => {
     await signInGuest();
-    router.history.push("/summary");
+    router.navigate({ to: "/summary" });
   };
 
   return (

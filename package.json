@@ -13,6 +13,7 @@
     "dev": "vite",
     "dev:api": "bash scripts/dev-with-api.sh",
     "mint-turso-token": "bash scripts/mint-turso-token.sh",
+    "seed-guest-data": "bash scripts/seed-guest-data.sh",
     "test-auth-boundary": "node scripts/test-auth-boundary.mjs",
     "check-csp-drift": "node scripts/check-csp-drift.mjs",
     "build": "vite build && tsc",

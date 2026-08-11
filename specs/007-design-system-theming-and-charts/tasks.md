@@ -108,7 +108,7 @@ by manually adding `class="dark"` to `<html>` in devtools.)
       Tailwind's built-in `--color-red-600`, matching the `red-500`/`red-600` already used
       ad hoc across the app for expense/error styling). Also added the standard shadcn
       `@layer base { * { @apply border-border; } body { @apply bg-background
-  text-foreground; } }` block, since `dropdown-menu.tsx`'s bare `border` utility and
+text-foreground; } }` block, since `dropdown-menu.tsx`'s bare `border` utility and
       shadcn's own convention both expect it (finding beyond T002's literal scope, noted
       here rather than opening a new task) — `index.html`'s body still carries its own
       hardcoded `bg-white dark:bg-shark-900` classes which currently win over this base
@@ -370,7 +370,7 @@ returns zero results.
       Confirmed bugs list (fixed in T017): `src/components/charts/XAxis.tsx`,
       `src/components/charts/YAxis.tsx` (D3 axis text/gridlines, transparent chart
       backdrop), `src/components/AccountMenu.tsx` ("Log In" link), `src/layout/
-  ErrorPage.tsx` and `src/layout/NotFoundPage.tsx` (root text + their `bg-shark-800`
+ErrorPage.tsx` and `src/layout/NotFoundPage.tsx` (root text + their `bg-shark-800`
       button/link, which itself needed forcing back to explicit white since it's a
       permanently-dark pill), `src/routes/analysis/index.tsx` ("Lista de filtros" `h2`),
       `src/routes/analysis/-components/FilterList.tsx` (`SearchList` item text),
@@ -642,16 +642,33 @@ On a touch device, tap a data point; confirm a tooltip pins and stays visible.
 
 ### Implementation for User Story 5 — shared primitive
 
-- [ ] T044 [US5] Create `ChartTooltip` component in
+- [x] T044 [US5] Create `ChartTooltip` component in
       `src/components/charts/ChartTooltip.tsx` per
       `contracts/chart-component-contract.md`: tap-to-pin state, bottom-sheet render via
       `useIsNarrowViewport` (existing hook, `src/common/utils.ts`) on narrow viewports,
       floating tooltip otherwise.
-- [ ] T045 [P] [US5] Storybook story for `ChartTooltip` in
+      **Done**: generic `ChartTooltip<TValue, TName>` wraps Recharts' `Tooltip` `content`
+      slot as a controller around a `children` render-prop (each chart keeps its own
+      tooltip body markup, passed as `children`). Pin state (`useState`) latches the last
+      active `payload`/`label` on `useIsTouchDevice()` devices once `active` goes true, and
+      is not cleared when `active` goes false (i.e. on touchend) — only by tapping a new
+      point (effect re-fires) or the dismiss control. On `useIsTouchDevice() &&
+    useIsNarrowViewport()` it portals the pinned content to `document.body` as a fixed
+      bottom sheet; on touch-but-wide it renders inline with a small dismiss button; on
+      non-touch it just follows Recharts' own `active`/`payload` (no pinning), matching
+      desktop hover behavior unchanged.
+- [x] T045 [P] [US5] Storybook story for `ChartTooltip` in
       `src/components/charts/ChartTooltip.stories.tsx` covering pinned/unpinned and
       narrow/wide-viewport states (depends on T044).
-- [ ] T046 [P] [US5] Component test for `ChartTooltip`'s pin/dismiss/bottom-sheet
+      **Done**: `Floating` (default desktop) and `NarrowViewport` (mobile1 viewport)
+      stories, with a toggle button simulating tap/release; noted in-file that true touch
+      pin/dismiss behavior depends on the environment's actual `(pointer: coarse)` media
+      query, so real-device confirmation is still owed at T060.
+- [x] T046 [P] [US5] Component test for `ChartTooltip`'s pin/dismiss/bottom-sheet
       behavior in `src/components/charts/ChartTooltip.test.tsx` (depends on T044).
+      **Done**: 3 tests (mocking `matchMedia` per-query) — non-touch renders/clears with no
+      pin; touch pins after `active` goes false and dismisses on click; touch+narrow
+      renders with a dismiss control present (bottom-sheet path). `pnpm vitest run` passes.
 
 ### Implementation for User Story 5 — per-chart wiring
 
@@ -659,39 +676,144 @@ Each task wires `ChartTooltip`, an always-visible key value, and narrow-viewport
 tick-density scaling into that file's already-Recharts-migrated component (depends on
 T044 and the matching US4 task).
 
-- [ ] T047 [P] [US5] Wire into `src/routes/summary/-plots/AssetAccountsPlot.tsx` (depends
+- [x] T047 [P] [US5] Wire into `src/routes/summary/-plots/AssetAccountsPlot.tsx` (depends
       on T028, T044).
-- [ ] T048 [P] [US5] Wire into `src/routes/summary/-plots/DetailedExpensesBarPlot.tsx`
+      **Done**: `ChartTooltipContent` narrowed to `Pick<TooltipContentProps, "payload"|"label">`
+      (no `active` guard, `ChartTooltip` gates it); added a "Latest total" `ChartKeyValue`
+      overlay; wrapped the `Tooltip` `content` in `ChartTooltip`; swapped each `Line`'s
+      `activeDot={{r:4}}` for `renderTouchDot(getRandomColor(s.id), 4)`. `tsc --noEmit` clean.
+- [x] T048 [P] [US5] Wire into `src/routes/summary/-plots/DetailedExpensesBarPlot.tsx`
       (depends on T029, T044).
-- [ ] T049 [P] [US5] Wire into `src/routes/summary/-plots/DetailedIncomeBarPlot.tsx`
+      **Done**: this file only consumes the shared `BarChart` from
+      `src/components/charts/BarPlot.tsx` (T057) unmodified — it inherits the new
+      touch-pin tooltip and key-value overlay for free. `tsc --noEmit` and `eslint` clean.
+- [x] T049 [P] [US5] Wire into `src/routes/summary/-plots/DetailedIncomeBarPlot.tsx`
       (depends on T030, T044).
-- [ ] T050 [P] [US5] Wire into `src/routes/summary/-plots/IncomeExpensesPlot.tsx`
+      **Done**: same as T048 (consumes `BarChart` from T057 unmodified). `tsc --noEmit`
+      and `eslint` clean.
+- [x] T050 [P] [US5] Wire into `src/routes/summary/-plots/IncomeExpensesPlot.tsx`
       (depends on T031, T044).
-- [ ] T051 [P] [US5] Wire into
+      **Done**: same pattern as T047; `ChartKeyValue` shows "Net (<dateLabel>)" colored by
+      sign; both `Line`s' `activeDot`s swapped for `renderTouchDot`; `dot={false}` kept
+      unchanged. `tsc --noEmit` and `eslint` clean.
+- [x] T051 [P] [US5] Wire into
       `src/routes/summary/-plots/MonthDetailedExpensesPiePlot .tsx` (depends on T032,
       T044).
-- [ ] T052 [P] [US5] Wire into
+      **Done**: `ChartTooltipContent` narrowed to `Pick<..., "payload">` (dropped the
+      `active`-guard, now gated by `ChartTooltip`); `RechartsTooltip`'s `content` wrapped
+      in `ChartTooltip`. Pre-existing center-overlay key value (date + total) and the
+      per-`Cell` `onClick={() => setHideAccounts(...)}` click-to-filter interaction left
+      untouched. `tsc --noEmit` and `eslint` clean.
+- [x] T052 [P] [US5] Wire into
       `src/routes/travels/-components/TravelExpensesDetailedPlot.tsx` (depends on T033,
       T044).
-- [ ] T053 [P] [US5] Wire into
+      **Done**: `ChartTooltipContent` narrowed to `Pick<..., "payload" | "label">` (dropped
+      `active`-guard); `RechartsTooltip`'s `content` wrapped in `ChartTooltip`. Stacked
+      `stackId="travel"` bars already preserve the original's overlap-by-stacking
+      semantics (assessed during T055's investigation), so no Scatter-style rewrite
+      needed here; no dot-based touch sizing needed (bars only). `tsc --noEmit` and
+      `eslint` clean.
+- [x] T053 [P] [US5] Wire into
       `src/routes/travels/-components/TravelExpensesMonthlyPlot.tsx` (depends on T034,
       T044).
-- [ ] T054 [P] [US5] Wire into `src/routes/travels/-components/TravelExpensesPiePlot .tsx`
+      **Done**: same pattern as T052 (`Pick<..., "payload">` narrowing, `ChartTooltip`
+      wrap). `ReferenceArea` yearly bands already preserve the original's
+      yearly-vs-monthly overlap effect (assessed during T055's investigation), so no
+      Scatter-style rewrite needed here. `tsc --noEmit` and `eslint` clean.
+- [x] T054 [P] [US5] Wire into `src/routes/travels/-components/TravelExpensesPiePlot .tsx`
       (depends on T035, T044).
-- [ ] T055 [P] [US5] Wire into `src/routes/travels/-components/TravelExpensesPlot.tsx`
+      **Done**: same pattern as T051 (`Pick<..., "payload">` narrowing, `ChartTooltip`
+      wrap); this pie chart has no click-to-filter interaction, only the pre-existing
+      center-overlay sum total, left untouched. `tsc --noEmit` and `eslint` clean.
+- [x] T055 [P] [US5] Wire into `src/routes/travels/-components/TravelExpensesPlot.tsx`
       (depends on T036, T044).
-- [ ] T056 [P] [US5] Wire into `src/routes/analysis/-components/TransactsPlot.tsx`
+      **Done**: also fixed a real US4 regression found during this pass — the D3→Recharts
+      migration had switched this chart from continuous-time bar positioning (D3's
+      `scaleUtc` + fixed pixel width, causing travels close together in time to visually
+      overlap under `fillOpacity: 0.4`, the chart's actual point) to a categorical `Bar`
+      x-axis, which silently lost the overlap effect (every bar evenly spaced regardless of
+      real date proximity). Recharts' `Bar` has no continuous-positioning mode, so replaced
+      it with `Scatter` (numeric `finMillis` x/y) + a custom `shape` drawing a `<rect>` sized
+      via the public `usePlotArea()` hook (baseline = plotArea bottom, since `YAxis
+    domain={[0, yMax]}`), reproducing the original D3 rect math exactly without a d3
+      dependency. Also added an invisible wider hit-rect per bar (>=44px) for touch, explicit
+      month-boundary `XAxis` ticks (data-driven, tiered by viewport), a "latest travel"
+      `ChartKeyValue`, and the standard `ChartTooltip` wiring. Verified visually via a
+      throwaway Storybook story with clustered vs. spread-out synthetic dates (screenshotted,
+      confirmed overlap renders, then deleted the story). Checked the other two travel
+      charts for the same regression: `TravelExpensesMonthlyPlot.tsx` (T034) already uses
+      `ReferenceArea` bands for its yearly-vs-monthly overlap (different mechanism, not
+      lost) and `TravelExpensesDetailedPlot.tsx` (T033) already uses `stackId` for its
+      per-date category stacking (the semantically important part); neither lost its
+      primary effect, though both still space bars categorically rather than by continuous
+      date like the original (same minor nuance, lower priority, not fixed here). `tsc
+    --noEmit` and `eslint` clean.
+- [x] T056 [P] [US5] Wire into `src/routes/analysis/-components/TransactsPlot.tsx`
       (depends on T037, T044).
-- [ ] T057 [US5] Swap `src/components/charts/BarPlot.tsx`'s resize mechanism from
+      **Done**: same pattern as T047/T050; this file previously lacked narrow-viewport
+      margin tiering entirely (unlike the other migrated files), so added
+      `marginDesktop`/`marginMobile` + `useIsNarrowViewport` wiring here too; `dot`/
+      `activeDot` both swapped to `renderTouchDot` since this chart shows dots at rest (not
+      `dot={false}`). `tsc --noEmit` and `eslint` clean.
+- [x] T057 [US5] Swap `src/components/charts/BarPlot.tsx`'s resize mechanism from
       `useOnWindowResize` to `ResponsiveContainer`/`ResizeObserver`; wire `ChartTooltip` +
       always-visible key value (depends on T044).
-- [ ] T058 [US5] Delete `src/hooks/useOnWindowResize.ts` once `BarPlot.tsx` no longer
+      **Done**: the main chart already used `ResponsiveContainer`; the only genuine
+      `useOnWindowResize` use was `ChartLegend`'s legend-height recalculation. Swapped it
+      to observe the _outer chart container_ (a new merged `containerRef` on the root div,
+      via `useWindowSize` from `@/common/utils.ts`) rather than the legend's own box —
+      observing the legend's own height directly caused an infinite render loop
+      ("Maximum update depth exceeded"), since setting `legendHeight` changes the space
+      Recharts allots the legend, which would re-trigger its own observer. Caught via a
+      throwaway Storybook story + Playwright screenshot before landing. Added an
+      always-visible `ChartKeyValue` (latest period's cross-category stacked total; only
+      rendered for `type="stacked"`, the only case with one coherent summed number) with a
+      `top-8` offset when a right-side legend is also shown, to avoid overlapping it.
+      Wired the shared `ChartTooltip` (imported aliased as `TouchChartTooltip` to avoid
+      colliding with this file's own pre-existing local `ChartTooltip` default-content
+      component) around the existing tooltip `content` render, so pin/dismiss/bottom-sheet
+      behavior applies here too, feeding its pinned `payload`/`label` back through the
+      existing `cleanPayload` transform so `tooltipCallback`/`customTooltip` consumers are
+      unaffected. Verified visually (stacked-with-legend and stacked-without-legend
+      variants, plus hover tooltip) via Storybook screenshots, then deleted the throwaway
+      story. `tsc --noEmit` and `eslint` clean.
+- [x] T058 [US5] Delete `src/hooks/useOnWindowResize.ts` once `BarPlot.tsx` no longer
       imports it (depends on T057).
-- [ ] T059 [P] [US5] Size Recharts `Dot`/`activeDot` touch hit-areas to at least 44×44px,
+      **Done**: confirmed no remaining importers via `git grep`, then deleted the file.
+- [x] T059 [P] [US5] Size Recharts `Dot`/`activeDot` touch hit-areas to at least 44×44px,
       independent of the visible marker radius, across all charts wired in T047-T057
       (doc 14 item 4) (depends on T047-T057).
-- [ ] T060 [P] [US5] Playwright e2e test in `e2e/`: at a 375px viewport, tap a chart data
+      **Done**: audited every `dot`/`activeDot` usage across T047-T057's files (`git grep`)
+      — all route through `TouchDot.tsx`'s `renderTouchDot`, whose invisible hit-circle is
+      `TOUCH_HIT_RADIUS = 22` (44px diameter) regardless of the visible dot's drawn radius
+      (3-6px across callers). Bar/scatter-only charts (no `Dot` markers) instead size an
+      invisible hit-`<rect>` at the shape level to >=44px (`MIN_HIT_SIZE` in
+      `TravelExpensesPlot.tsx`'s `OverlappingBars`; plain `Bar`s' own drawn width already
+      exceeds 44px in every caller). No further changes needed; already satisfied as a
+      byproduct of T047-T057.
+- [x] T060 [P] [US5] Playwright e2e test in `e2e/`: at a 375px viewport, tap a chart data
       point; confirm the tooltip pins and renders as a bottom sheet (depends on T059).
+      **Done**: `e2e/chart-touch-tooltip.spec.ts` dispatches a real touchstart+touchmove+
+      touchend (Recharts only recomputes the active point on `touchmove`, so a plain
+      `tap()` never triggers it) against the Analysis page's transactions chart, then
+      asserts the bottom-sheet + Dismiss button render and dismiss actually clears them.
+      Analysis's chart was chosen over Summary's because it's fed by `fullTransactionsOptions`
+      (unfiltered), independent of the guest account-role config. Along the way, fixed two
+      real bugs this test surfaced: (1) `summary/index.tsx`'s root container was missing
+      `flex` (had `flex-col` alone), and 8 chart wrapper divs used `h-full` with no definite
+      ancestor height below `md:`, together collapsing every chart to 0×0 below the `md:`
+      breakpoint -- fixed via `flex flex-col` and `h-64 md:h-full`. (2) `ChartTooltip`'s pin
+      effect re-latched onto the still-active point immediately after `dismiss()`, because
+      Recharts never reports `active: false` after a touch lifts -- fixed by remembering the
+      dismissed point's label in a ref and skipping re-pin until a different point goes
+      active. Separately confirmed the live `cashpy-guest` Turso database still holds its
+      old real-personal-data seed, whose account GUIDs don't match `GUEST_ACCOUNT_CONFIG`
+      in `api/turso-token.ts`/`vite.config.ts` (already updated, uncommitted, to the GUIDs
+      `scripts/generate-guest-data.mjs` produces) -- so every account-scoped guest query
+      (Summary's KPIs and charts) currently returns empty until someone runs
+      `scripts/seed-guest-data.sh`, which wipes and replaces that live database. Left
+      un-run here since it's a destructive action against a shared database, out of scope
+      for T060, and unrelated to US5.
 
 **Checkpoint**: every chart resizes via `ResizeObserver`, shows key values without
 interaction, and supports tap-to-pin/bottom-sheet tooltips.
@@ -771,7 +893,7 @@ resize, touch, and scrubber support.
 - [ ] T079 Manually re-verify the golden path and guest path (Constitution Principle III)
       against the T001 baseline, in both light and dark mode.
 - [ ] T080 Update `docs/review/12-library-choice-review.md`, `13-component-library-and-
-  design-system.md`, `14-charts-and-mobile-interaction.md`,
+design-system.md`, `14-charts-and-mobile-interaction.md`,
       `15-theming-light-dark-mode.md`, and this spec's `spec.md` Status line from
       "Planning done"/"Planned" to reflect implementation is complete.
 

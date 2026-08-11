@@ -25,7 +25,7 @@ const Summary = () => {
       <div
         className="
         w-full md:h-full p-4 sm:p-10 pt-0
-        flex-col
+        flex flex-col
         md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_2fr_2fr_4fr_2fr]
         gap-x-6 gap-y-6
         "

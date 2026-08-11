@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { cn } from "@/lib/utils";
 import {
   IconDefinition,
   faBook,
@@ -11,7 +11,7 @@ import {
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link, createLink, useRouterState } from "@tanstack/react-router";
+import { createLink, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 
@@ -52,19 +52,22 @@ const ItemLinkComponent = React.forwardRef<HTMLAnchorElement, ItemLinkProps>(
         {...props}
         aria-label={isCollapsed ? text : undefined}
         className={cn(
-          "group m-1 flex items-center rounded-md p-3 transition-all duration-200",
+          "group m-1 flex items-center justify-center rounded-md p-3 transition-all duration-200",
+          !isCollapsed && "justify-start",
           "hover:bg-accent",
           isActive ? "bg-accent" : "transparent",
           className,
         )}
       >
-        <FontAwesomeIcon
-          icon={icon}
-          className={cn(
-            "h-5 w-5 shrink-0 transition-colors",
-            isActive ? "text-brand" : "text-secondary-foreground",
-          )}
-        />
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+          <FontAwesomeIcon
+            icon={icon}
+            className={cn(
+              "h-5 w-5 transition-colors",
+              isActive ? "text-brand" : "text-secondary-foreground",
+            )}
+          />
+        </span>
         {!isCollapsed ? (
           <span
             className={cn(
@@ -114,9 +117,9 @@ const MenuIcon = ({ isOpen }: { isOpen: boolean }) => {
     "absolute left-0 h-0.5 w-6 rounded-full bg-current transition-all duration-300 ease-in-out";
   return (
     <span className="relative block h-5 w-6">
-      <span className={cn(bar, isOpen ? "top-1/2 -translate-y-1/2 rotate-45" : "top-0")} />
+      <span className={cn(bar, isOpen ? "top-[6px] rotate-45" : "top-0")} />
       <span className={cn(bar, "top-1/2 -translate-y-1/2", isOpen ? "opacity-0" : "opacity-100")} />
-      <span className={cn(bar, isOpen ? "top-1/2 -translate-y-1/2 -rotate-45" : "top-[18px]")} />
+      <span className={cn(bar, isOpen ? "top-[10px] -rotate-45" : "top-[18px]")} />
     </span>
   );
 };
@@ -147,38 +150,30 @@ export const SideBar = ({
         )}
       >
         <div className="flex items-center gap-2.5 p-3">
-          <Link to="/home" className="flex shrink-0 items-center gap-2.5 rounded" aria-label="Home">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10">
-              <FontAwesomeIcon icon={faWallet} className="h-4 w-4 text-brand" />
-            </span>
-            <AnimatePresence mode="sync">
-              {isCollapsed ? (
-                <></>
-              ) : (
-                <motion.span
-                  className="overflow-hidden whitespace-nowrap text-lg font-semibold text-secondary-foreground"
-                  key="cashpy-wordmark"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "auto", opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.15, delay: 0, ease: "easeInOut" }}
-                >
-                  CashPy
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Link>
-        </div>
-
-        <div className="px-2">
           <button
             onClick={toggleSidebar}
             aria-label={isCollapsed ? "Open menu" : "Close menu"}
             aria-expanded={!isCollapsed}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-secondary-foreground transition-colors hover:bg-accent"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-secondary-foreground transition-colors hover:bg-accent"
           >
             <MenuIcon isOpen={!isCollapsed} />
           </button>
+          <AnimatePresence mode="sync">
+            {isCollapsed ? (
+              <></>
+            ) : (
+              <motion.span
+                className="overflow-hidden whitespace-nowrap text-lg font-semibold text-secondary-foreground"
+                key="cashpy-wordmark"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "auto", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.15, delay: 0, ease: "easeInOut" }}
+              >
+                CashPy
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
 
         <NavList isCollapsed={isCollapsed} />
