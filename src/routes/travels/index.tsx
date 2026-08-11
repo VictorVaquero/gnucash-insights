@@ -48,7 +48,7 @@ export const Route = createFileRoute("/travels/")({
         search: { redirect: location.href },
       });
     }
-    return { title: "Travels" };
+    return { title: "routes.travels.title" };
   },
   loader: ({ context: { queryClient, db, bookId, auth } }) => {
     if (db && bookId && auth?.user) {

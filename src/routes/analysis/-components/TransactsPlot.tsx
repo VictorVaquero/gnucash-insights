@@ -13,11 +13,12 @@ import {
 } from "recharts";
 
 import { groupBy, sum } from "@/common/aggregate";
-import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { renderTouchDot } from "@/components/charts/TouchDot";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 import { Periodicity } from "@/types/domain";
 import { FullTransaction } from "..";
 
@@ -35,10 +36,13 @@ const getColor = (d: string) => (d === "Ingresos" ? green : red);
 
 const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
+  const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{d.dateLabel}</span>
-      <span style={{ color: getColor("Mixin") }}>{parseNum(d.value)}</span>
+      <span style={{ color: getColor("Mixin") }}>
+        {formatCurrency(d.value, locale, { compact: true })}
+      </span>
     </div>
   );
 };
@@ -51,6 +55,7 @@ export const TransactsPlot = ({
   periodicity: Periodicity;
 }) => {
   const isNarrowViewport = useIsNarrowViewport();
+  const { locale } = useLocale();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
   const format =
     periodicity == "yearly" ? "yyyy" : periodicity == "monthly" ? "yyyy-LL" : "yyyy-qq";
@@ -64,6 +69,8 @@ export const TransactsPlot = ({
   }, [data, format]);
 
   const color = getColor("Mixin");
+  const dot = useMemo(() => renderTouchDot(color, 5), [color]);
+  const activeDot = useMemo(() => renderTouchDot(color, 6), [color]);
   const latest = chartData[chartData.length - 1];
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,7 +85,9 @@ export const TransactsPlot = ({
       {latest && (
         <ChartKeyValue
           label={latest.dateLabel}
-          value={<span style={{ color }}>{parseNum(latest.value)}</span>}
+          value={
+            <span style={{ color }}>{formatCurrency(latest.value, locale, { compact: true })}</span>
+          }
         />
       )}
       <ResponsiveContainer width="100%" height="100%">
@@ -102,7 +111,7 @@ export const TransactsPlot = ({
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => parseNum(value)}
+            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
             width={margin.left}
           />
           <RechartsTooltip
@@ -117,8 +126,8 @@ export const TransactsPlot = ({
             dataKey="value"
             stroke={color}
             strokeWidth={1.5}
-            dot={renderTouchDot(color, 5)}
-            activeDot={renderTouchDot(color, 6)}
+            dot={dot}
+            activeDot={activeDot}
             isAnimationActive={false}
           />
         </LineChart>

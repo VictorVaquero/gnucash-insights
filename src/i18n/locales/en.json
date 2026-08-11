@@ -1,0 +1,243 @@
+{
+  "nav": {
+    "home": "Home",
+    "metadata": "Metadata",
+    "summary": "Summary",
+    "expenses": "Expenses",
+    "trips": "Trips",
+    "investments": "Investments",
+    "analysis": "Analysis"
+  },
+  "routes": {
+    "home": { "title": "Home" },
+    "metadata": { "title": "Metadata" },
+    "summary": { "title": "Summary" },
+    "expenses": { "title": "Expenses" },
+    "travels": { "title": "Travels" },
+    "analysis": { "title": "Analysis" },
+    "login": { "title": "Login" },
+    "investments": { "title": "Investments" }
+  },
+  "common": {
+    "collapseSection": "Collapse {{title}}",
+    "expandSection": "Expand {{title}}",
+    "periodicity": {
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    }
+  },
+  "login": {
+    "form": {
+      "email": "Email",
+      "password": "Password"
+    },
+    "actions": {
+      "guest": "Guest",
+      "signIn": "Sign In"
+    }
+  },
+  "errorModal": {
+    "title": "Logging Failure",
+    "close": "Close"
+  },
+  "home": {
+    "hero": {
+      "titleLine1": "Your money,",
+      "titleLine2": "fully visible.",
+      "subtitle": "CashPy turns your GnuCash file into clear, interactive charts, running entirely in your browser."
+    },
+    "actions": {
+      "tryGuest": "Try as Guest",
+      "signIn": "Sign in"
+    },
+    "preview": {
+      "label": "Live preview",
+      "sampleData": "sample data",
+      "stats": {
+        "net": "Net",
+        "income": "Income",
+        "expenses": "Expenses",
+        "assets": "Assets"
+      }
+    },
+    "features": {
+      "liveSync": "Live sync with your GnuCash file",
+      "localIngestion": "All data ingestion happens locally",
+      "richCharts": "Rich, interactive charts"
+    }
+  },
+  "summary": {
+    "charts": {
+      "netWorthTrend": "Net Worth Trend",
+      "assets": "Assets",
+      "incomeVsExpenses": "Income vs Expenses",
+      "expensesByCategory": "Expenses by Category",
+      "incomeByCategory": "Income by Category",
+      "budgetVsActual": "Budget vs Actual",
+      "recurringExpenses": "Recurring Expenses"
+    },
+    "sections": {
+      "details": "Details",
+      "topMovers": "Top movers"
+    },
+    "balances": {
+      "heading": "Accounts",
+      "assets": "Assets",
+      "checking": "Checking",
+      "savings": "Savings",
+      "investment": "Investment",
+      "taxes": "Taxes"
+    },
+    "budget": {
+      "setPlaceholder": "set",
+      "empty": "No expenses recorded this month yet."
+    },
+    "dateRange": {
+      "allTime": "All time",
+      "custom": "Custom…"
+    },
+    "kpi": {
+      "deltaFlat": "flat vs last month",
+      "vsLastMonth": "vs last month",
+      "net": "Net",
+      "income": "Income",
+      "expenses": "Expenses",
+      "savingsRate": "Savings rate",
+      "netWorth": "Net worth",
+      "runway": "Runway",
+      "runwayValue": "{{value}} mo",
+      "runwayTooltip": "How many months your current assets would cover at your average monthly spend."
+    },
+    "recurring": {
+      "empty": "No recurring charges detected yet.",
+      "monthsSeen": "{{seen}}/{{total}} mo"
+    },
+    "savings": {
+      "heading": "Savings rate",
+      "meanSavings": "Mean Savings",
+      "lastMonth": "Last Month",
+      "last3": "Last 3",
+      "last6": "Last 6",
+      "lastYear": "Last Year"
+    },
+    "topMovers": {
+      "empty": "Not enough data yet.",
+      "new": "New"
+    },
+    "plots": {
+      "latestTotal": "Latest total",
+      "netWorth": "Net worth",
+      "income": "Income",
+      "expenses": "Expenses",
+      "net": "Net",
+      "netWithDate": "Net ({{date}})",
+      "others": "Others",
+      "otherAccount": "Other"
+    }
+  },
+  "expenses": {
+    "tooltip": {
+      "diffLess": "{{diff}} less than average",
+      "diffMore": "{{diff}} more than average"
+    },
+    "headers": {
+      "category": "Category",
+      "total": "Total",
+      "mean": "Mean"
+    }
+  },
+  "travel": {
+    "kpi": {
+      "tripsTotal": "Trips total",
+      "tripsPerYear": "Trips per year",
+      "meanTripCost": "Mean trip cost",
+      "meanExpenses": "Mean expenses",
+      "lastMonth": "Last month",
+      "last3": "Last 3",
+      "last6": "Last 6",
+      "lastYear": "Last year",
+      "expenseTooltip": "{{total}} (total)\n{{pct}}% (% expenses)"
+    }
+  },
+  "analysis": {
+    "filters": {
+      "title": "Filter list",
+      "expenses": "Expenses",
+      "tobacco": "Tobacco",
+      "trips": "Trips",
+      "sport": "Sport"
+    },
+    "kpi": {
+      "mean": "Mean",
+      "lastMonth": "Last month",
+      "last3": "Last 3",
+      "last6": "Last 6",
+      "lastYear": "Last year",
+      "total": "Total"
+    },
+    "table": {
+      "headers": {
+        "splitId": "Split Id",
+        "description": "Description",
+        "notes": "Notes",
+        "date": "Date",
+        "accountType": "Account Type",
+        "accountName": "Account Name",
+        "accountId": "Account Id",
+        "value": "Value"
+      },
+      "toggle": "Toggle",
+      "selectAllRows": "Select all rows",
+      "selectRow": "Select row: {{description}}",
+      "page": "Page",
+      "of": "of",
+      "goToPage": "| Go to page:",
+      "rowsPerPage": "Rows per page",
+      "showPageSize": "Show {{pageSize}}",
+      "showing": "Showing",
+      "rows": "Rows",
+      "min": "Min",
+      "max": "Max",
+      "search": "Search..."
+    }
+  },
+  "metadata": {
+    "bookId": "Book Id",
+    "accounts": "Accounts",
+    "transactions": "Transactions",
+    "currencies": "Currencies",
+    "initialDate": "Initial Date",
+    "finalDate": "Final Date"
+  },
+  "investments": {
+    "placeholder": "Investments coming soon."
+  },
+  "accountsDropdown": {
+    "selectedCount": "{{count}} selected",
+    "placeholder": "Select accounts to hide",
+    "searchPlaceholder": "Search..."
+  },
+  "footer": {
+    "madeBy": "Made by {{name}}"
+  },
+  "accountMenu": {
+    "logOut": "Log Out",
+    "logIn": "Log In"
+  },
+  "errorPages": {
+    "oops": "Oops!",
+    "notFound": "Not found!",
+    "home": "Home",
+    "goHome": "Go home",
+    "unexpectedError": "Sorry, an unexpected error has occurred.",
+    "tryAgain": "Try again"
+  },
+  "chartTooltip": {
+    "dismiss": "Dismiss"
+  },
+  "sidebar": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  }
+}

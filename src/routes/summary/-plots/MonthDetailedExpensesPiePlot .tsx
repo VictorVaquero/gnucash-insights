@@ -1,6 +1,7 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Cell,
   Pie,
@@ -12,7 +13,7 @@ import {
 
 import { sum } from "@/common/aggregate";
 import { getDefaultColor, getRandomColor } from "@/common/getColors";
-import { parseNum, twStyles } from "@/common/utils.ts";
+import { formatCurrency, twStyles } from "@/common/utils.ts";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
@@ -21,6 +22,7 @@ import { Account } from "@/db/schema";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -34,26 +36,32 @@ interface Data {
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const yf = (d: Data) => d.value;
 const gf = (d: Data) => d.account ?? "";
-const defaultAccount = "Others";
 const gray = twStyles.getPropertyValue("--color-gray-400");
 
-const nameOf = (d: Data, accounts: Account[]) =>
+const nameOf = (d: Data, accounts: Account[], defaultAccount: string) =>
   accounts.find((a) => a.id === d.account)?.name ?? defaultAccount;
-const colorOf = (d: Data, accounts: Account[]) => {
-  const name = nameOf(d, accounts);
+const colorOf = (d: Data, accounts: Account[], defaultAccount: string) => {
+  const name = nameOf(d, accounts, defaultAccount);
   return name !== defaultAccount ? getRandomColor(name) : getDefaultColor();
 };
 
 const ChartTooltipContent = ({
   payload,
   accounts,
-}: Pick<TooltipContentProps<number, string>, "payload"> & { accounts: Account[] }) => {
+  defaultAccount,
+}: Pick<TooltipContentProps<number, string>, "payload"> & {
+  accounts: Account[];
+  defaultAccount: string;
+}) => {
   const d = payload[0].payload as Data;
+  const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
-      <span className="text-muted-foreground text-xs">{nameOf(d, accounts)}</span>
+      <span className="text-muted-foreground text-xs">{nameOf(d, accounts, defaultAccount)}</span>
       <span className="text-muted-foreground text-xs">{d.date}</span>
-      <span style={{ color: colorOf(d, accounts) }}>{parseNum(d.value)}</span>
+      <span style={{ color: colorOf(d, accounts, defaultAccount) }}>
+        {formatCurrency(d.value, locale, { compact: true })}
+      </span>
     </div>
   );
 };
@@ -65,6 +73,9 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
   hideAccounts: string[];
   setHideAccounts: CallableFunction;
 }) => {
+  const { locale } = useLocale();
+  const { t } = useTranslation();
+  const defaultAccount = t("summary.plots.others");
   const filtered_data = useMemo(
     () =>
       props.data.filter((d) => xf(d).year === props.date.year && xf(d).month === props.date.month),
@@ -86,13 +97,19 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
         {scrubbed ? (
           <>
-            <p className="text-muted-foreground">{nameOf(scrubbed, props.accounts)}</p>
-            <p style={{ color: colorOf(scrubbed, props.accounts) }}>{parseNum(scrubbed.value)}</p>
+            <p className="text-muted-foreground">
+              {nameOf(scrubbed, props.accounts, defaultAccount)}
+            </p>
+            <p style={{ color: colorOf(scrubbed, props.accounts, defaultAccount) }}>
+              {formatCurrency(scrubbed.value, locale, { compact: true })}
+            </p>
           </>
         ) : (
           <>
-            <p className="text-muted-foreground">{props.date.toFormat("yyyy-MM")}</p>
-            <p className="text-red-500">{parseNum(total)}</p>
+            <p className="text-muted-foreground">
+              {props.date.setLocale(locale).toFormat("yyyy-MM")}
+            </p>
+            <p className="text-red-500">{formatCurrency(total, locale, { compact: true })}</p>
           </>
         )}
       </div>
@@ -102,7 +119,11 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
             content={(p: TooltipContentProps<number, string>) => (
               <ChartTooltip {...p}>
                 {({ payload }) => (
-                  <ChartTooltipContent payload={payload} accounts={props.accounts} />
+                  <ChartTooltipContent
+                    payload={payload}
+                    accounts={props.accounts}
+                    defaultAccount={defaultAccount}
+                  />
                 )}
               </ChartTooltip>
             )}
@@ -123,7 +144,9 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
               <Cell
                 key={gf(d)}
                 fill={
-                  props.hideAccounts.includes(d.account ?? "") ? gray : colorOf(d, props.accounts)
+                  props.hideAccounts.includes(d.account ?? "")
+                    ? gray
+                    : colorOf(d, props.accounts, defaultAccount)
                 }
                 stroke={i === activeIndex ? "var(--color-foreground)" : "white"}
                 strokeWidth={i === activeIndex ? 3 : 1.5}

@@ -1,0 +1,243 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "metadata": "Metadatos",
+    "summary": "Resumen",
+    "expenses": "Gastos",
+    "trips": "Viajes",
+    "investments": "Inversiones",
+    "analysis": "Análisis"
+  },
+  "routes": {
+    "home": { "title": "Inicio" },
+    "metadata": { "title": "Metadatos" },
+    "summary": { "title": "Resumen" },
+    "expenses": { "title": "Gastos" },
+    "travels": { "title": "Viajes" },
+    "analysis": { "title": "Análisis" },
+    "login": { "title": "Iniciar sesión" },
+    "investments": { "title": "Inversiones" }
+  },
+  "common": {
+    "collapseSection": "Contraer {{title}}",
+    "expandSection": "Expandir {{title}}",
+    "periodicity": {
+      "monthly": "Mensual",
+      "quarterly": "Trimestral",
+      "yearly": "Anual"
+    }
+  },
+  "login": {
+    "form": {
+      "email": "Correo electrónico",
+      "password": "Contraseña"
+    },
+    "actions": {
+      "guest": "Invitado",
+      "signIn": "Iniciar sesión"
+    }
+  },
+  "errorModal": {
+    "title": "Fallo de registro",
+    "close": "Cerrar"
+  },
+  "home": {
+    "hero": {
+      "titleLine1": "Tu dinero,",
+      "titleLine2": "totalmente visible.",
+      "subtitle": "CashPy convierte tu archivo de GnuCash en gráficos claros e interactivos, todo desde tu navegador."
+    },
+    "actions": {
+      "tryGuest": "Probar como invitado",
+      "signIn": "Iniciar sesión"
+    },
+    "preview": {
+      "label": "Vista previa en vivo",
+      "sampleData": "datos de ejemplo",
+      "stats": {
+        "net": "Neto",
+        "income": "Ingresos",
+        "expenses": "Gastos",
+        "assets": "Activos"
+      }
+    },
+    "features": {
+      "liveSync": "Sincronización en vivo con tu archivo de GnuCash",
+      "localIngestion": "Toda la ingesta de datos ocurre localmente",
+      "richCharts": "Gráficos ricos e interactivos"
+    }
+  },
+  "summary": {
+    "charts": {
+      "netWorthTrend": "Tendencia de patrimonio neto",
+      "assets": "Activos",
+      "incomeVsExpenses": "Ingresos vs Gastos",
+      "expensesByCategory": "Gastos por categoría",
+      "incomeByCategory": "Ingresos por categoría",
+      "budgetVsActual": "Presupuesto vs Real",
+      "recurringExpenses": "Gastos recurrentes"
+    },
+    "sections": {
+      "details": "Detalles",
+      "topMovers": "Mayores variaciones"
+    },
+    "balances": {
+      "heading": "Cuentas",
+      "assets": "Activos",
+      "checking": "Corriente",
+      "savings": "Ahorros",
+      "investment": "Inversión",
+      "taxes": "Impuestos"
+    },
+    "budget": {
+      "setPlaceholder": "definir",
+      "empty": "Aún no hay gastos registrados este mes."
+    },
+    "dateRange": {
+      "allTime": "Todo el tiempo",
+      "custom": "Personalizado…"
+    },
+    "kpi": {
+      "deltaFlat": "sin cambios vs el mes pasado",
+      "vsLastMonth": "vs el mes pasado",
+      "net": "Neto",
+      "income": "Ingresos",
+      "expenses": "Gastos",
+      "savingsRate": "Tasa de ahorro",
+      "netWorth": "Patrimonio neto",
+      "runway": "Autonomía",
+      "runwayValue": "{{value}} meses",
+      "runwayTooltip": "Cuántos meses cubrirían tus activos actuales con tu gasto mensual promedio."
+    },
+    "recurring": {
+      "empty": "Aún no se han detectado cargos recurrentes.",
+      "monthsSeen": "{{seen}}/{{total}} meses"
+    },
+    "savings": {
+      "heading": "Tasa de ahorro",
+      "meanSavings": "Ahorro medio",
+      "lastMonth": "Mes pasado",
+      "last3": "Últimos 3",
+      "last6": "Últimos 6",
+      "lastYear": "Último año"
+    },
+    "topMovers": {
+      "empty": "Aún no hay suficientes datos.",
+      "new": "Nuevo"
+    },
+    "plots": {
+      "latestTotal": "Total más reciente",
+      "netWorth": "Patrimonio neto",
+      "income": "Ingresos",
+      "expenses": "Gastos",
+      "net": "Neto",
+      "netWithDate": "Neto ({{date}})",
+      "others": "Otros",
+      "otherAccount": "Otro"
+    }
+  },
+  "expenses": {
+    "tooltip": {
+      "diffLess": "{{diff}} menos que la media",
+      "diffMore": "{{diff}} más que la media"
+    },
+    "headers": {
+      "category": "Categoría",
+      "total": "Total",
+      "mean": "Media"
+    }
+  },
+  "travel": {
+    "kpi": {
+      "tripsTotal": "Viajes totales",
+      "tripsPerYear": "Viajes por año",
+      "meanTripCost": "Coste medio por viaje",
+      "meanExpenses": "Gastos medios",
+      "lastMonth": "Mes pasado",
+      "last3": "Últimos 3",
+      "last6": "Últimos 6",
+      "lastYear": "Último año",
+      "expenseTooltip": "{{total}} (total)\n{{pct}}% (% de gastos)"
+    }
+  },
+  "analysis": {
+    "filters": {
+      "title": "Lista de filtros",
+      "expenses": "Gastos",
+      "tobacco": "Tabaco",
+      "trips": "Viajes",
+      "sport": "Deporte"
+    },
+    "kpi": {
+      "mean": "Media",
+      "lastMonth": "Mes pasado",
+      "last3": "Últimos 3",
+      "last6": "Últimos 6",
+      "lastYear": "Último año",
+      "total": "Total"
+    },
+    "table": {
+      "headers": {
+        "splitId": "Id de desglose",
+        "description": "Descripción",
+        "notes": "Notas",
+        "date": "Fecha",
+        "accountType": "Tipo de cuenta",
+        "accountName": "Nombre de cuenta",
+        "accountId": "Id de cuenta",
+        "value": "Valor"
+      },
+      "toggle": "Alternar",
+      "selectAllRows": "Seleccionar todas las filas",
+      "selectRow": "Seleccionar fila: {{description}}",
+      "page": "Página",
+      "of": "de",
+      "goToPage": "| Ir a la página:",
+      "rowsPerPage": "Filas por página",
+      "showPageSize": "Mostrar {{pageSize}}",
+      "showing": "Mostrando",
+      "rows": "Filas",
+      "min": "Mín",
+      "max": "Máx",
+      "search": "Buscar..."
+    }
+  },
+  "metadata": {
+    "bookId": "Id de libro",
+    "accounts": "Cuentas",
+    "transactions": "Transacciones",
+    "currencies": "Divisas",
+    "initialDate": "Fecha inicial",
+    "finalDate": "Fecha final"
+  },
+  "investments": {
+    "placeholder": "Inversiones próximamente."
+  },
+  "accountsDropdown": {
+    "selectedCount": "{{count}} seleccionadas",
+    "placeholder": "Seleccionar cuentas a ocultar",
+    "searchPlaceholder": "Buscar..."
+  },
+  "footer": {
+    "madeBy": "Hecho por {{name}}"
+  },
+  "accountMenu": {
+    "logOut": "Cerrar sesión",
+    "logIn": "Iniciar sesión"
+  },
+  "errorPages": {
+    "oops": "¡Vaya!",
+    "notFound": "¡No encontrado!",
+    "home": "Inicio",
+    "goHome": "Ir al inicio",
+    "unexpectedError": "Lo sentimos, ha ocurrido un error inesperado.",
+    "tryAgain": "Intentar de nuevo"
+  },
+  "chartTooltip": {
+    "dismiss": "Descartar"
+  },
+  "sidebar": {
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
+  }
+}

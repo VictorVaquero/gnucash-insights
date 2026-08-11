@@ -1,7 +1,9 @@
 import { DateTime } from "luxon";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { DateRangeSlider } from "@/components/DateSlider";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "@/types/domain";
 
@@ -15,7 +17,7 @@ const PRESETS: Preset[] = [
   { label: "6M", getRange: (_from, to) => ({ from: to.minus({ months: 6 }), to }) },
   { label: "1Y", getRange: (_from, to) => ({ from: to.minus({ years: 1 }), to }) },
   { label: "YTD", getRange: (_from, to) => ({ from: DateTime.local(to.year, 1, 1), to }) },
-  { label: "All time", getRange: (from, to) => ({ from, to }) },
+  { label: "allTime", getRange: (from, to) => ({ from, to }) },
 ];
 
 const chipClass = (active: boolean) =>
@@ -34,6 +36,8 @@ export const DateRangePresets = (props: {
   className?: string;
 }) => {
   const { domainFrom, domainTo, dateRange, onChange, className } = props;
+  const { locale } = useLocale();
+  const { t } = useTranslation();
   const [customOpen, setCustomOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +66,7 @@ export const DateRangePresets = (props: {
           onClick={() => onChange(preset.getRange(domainFrom, domainTo))}
           className={chipClass(activePreset?.label === preset.label)}
         >
-          {preset.label}
+          {preset.label === "allTime" ? t("summary.dateRange.allTime") : preset.label}
         </button>
       ))}
       <div className="relative" ref={panelRef}>
@@ -72,8 +76,8 @@ export const DateRangePresets = (props: {
           className={chipClass(!activePreset)}
         >
           {!activePreset
-            ? `${dateRange.from.toFormat("MMM yyyy")} – ${dateRange.to.toFormat("MMM yyyy")}`
-            : "Custom…"}
+            ? `${dateRange.from.setLocale(locale).toFormat("MMM yyyy")} – ${dateRange.to.setLocale(locale).toFormat("MMM yyyy")}`
+            : t("summary.dateRange.custom")}
         </button>
         {customOpen && (
           <div className="absolute z-10 top-[calc(100%+6px)] right-0 w-72 bg-popover border border-border rounded-lg shadow-lg p-3">

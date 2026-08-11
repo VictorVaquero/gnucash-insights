@@ -15,12 +15,13 @@ import {
   YAxis,
 } from "recharts";
 
-import { parseNum, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesYearMonthOptions, travelExpensesYearOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 
 interface Data {
   date: string;
@@ -45,24 +46,26 @@ const xf = (d: Data) => DateTime.fromISO(d.date);
 
 const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
+  const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{d.dateLabel}</span>
-      <span className="text-red-500">{parseNum(d.value)}</span>
+      <span className="text-red-500">{formatCurrency(d.value, locale, { compact: true })}</span>
     </div>
   );
 };
 
 const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
+  const { locale } = useLocale();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
 
   const chartData: ChartRow[] = useMemo(
     () =>
       [...props.data]
         .sort((a, b) => (xf(a) > xf(b) ? 1 : -1))
-        .map((d) => ({ ...d, dateLabel: xf(d).toFormat("LLL yy") })),
-    [props.data],
+        .map((d) => ({ ...d, dateLabel: xf(d).setLocale(locale).toFormat("LLL yy") })),
+    [props.data, locale],
   );
 
   const yearBands: YearBand[] = useMemo(() => {
@@ -111,7 +114,7 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[]
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => parseNum(value)}
+            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
             width={margin.left}
           />
           {yearBands.map((b) => (

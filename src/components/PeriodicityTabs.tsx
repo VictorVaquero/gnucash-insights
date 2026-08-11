@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { cn } from "@/lib/utils";
 import { Periodicity } from "@/types/domain";
 
@@ -10,6 +12,7 @@ export const PeriodicityTabs = ({
   activeMode: Periodicity;
   onChange: (mode: Periodicity) => void;
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex bg-muted p-1 rounded-lg w-fit">
       {PERIODICITY_OPTIONS.map((option) => (
@@ -24,7 +27,7 @@ export const PeriodicityTabs = ({
               : "text-muted-foreground hover:text-foreground hover:bg-accent",
           )}
         >
-          {option}
+          {t(`common.periodicity.${option}`)}
         </button>
       ))}
     </div>

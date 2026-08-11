@@ -1,4 +1,5 @@
 import { Slider } from "@/components/ui/slider"; // uses your custom Slider
+import { useLocale } from "@/hooks/useLocale";
 import type { DateRange } from "@/types/domain";
 import { DateTime } from "luxon";
 
@@ -10,6 +11,7 @@ interface DateRangeSliderProps {
 }
 
 export function DateRangeSlider({ min, max, value, onChange }: DateRangeSliderProps) {
+  const { locale } = useLocale();
   const minMs = DateTime.fromISO(min).startOf("day").toMillis();
   const maxMs = DateTime.fromISO(max).startOf("day").toMillis();
   const fromMs = value.from.startOf("day").toMillis();
@@ -27,8 +29,8 @@ export function DateRangeSlider({ min, max, value, onChange }: DateRangeSliderPr
         }
       />
       <div className="flex items-center justify-between text-xs text-muted-foreground tabular-nums">
-        <span>{value.from.toFormat("MMM yyyy")}</span>
-        <span>{value.to.toFormat("MMM yyyy")}</span>
+        <span>{value.from.setLocale(locale).toFormat("MMM yyyy")}</span>
+        <span>{value.to.setLocale(locale).toFormat("MMM yyyy")}</span>
       </div>
     </div>
   );

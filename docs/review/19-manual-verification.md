@@ -77,6 +77,74 @@ outstanding checks, copied forward unchanged from their source specs:
   `.github/workflows/e2e.yml`). Until both secrets exist, `real-user-login.spec.ts`
   self-skips rather than failing — this is expected, not a bug.
 
+- **Spec 008 (internationalization and SEO), T055**: icon/manifest/OG verification.
+  Automated locally via `pnpm build` + `pnpm preview` + `curl` (2026-08-11): `index.html`,
+  `site.webmanifest`, `favicon.ico`, `favicon-32x32.png`, `apple-touch-icon.png`, and
+  `og-image.png` all resolve `200` under `/dashboard/`, and the manifest's own icon
+  entries (`/dashboard/android-chrome-192x192.png`/`512x512.png`) resolve `200` too —
+  this caught and fixed a real bug: the SEO contract's literal manifest JSON used
+  root-absolute icon paths (`/android-chrome-192x192.png`) which would 404, since this
+  app's `vercel.json` only owns the `/dashboard/*` URL space (domain root belongs to the
+  separate `resumeweb` site) and Vite's `base` rewrite only applies to `index.html`, not
+  to JSON copied verbatim from `public/`; fixed by hardcoding the `/dashboard/` prefix in
+  `public/site.webmanifest`'s icon `src` values. Still outstanding (needs a real
+  device/browser, not curl): browser-tab icon crispness at actual pixel density; mobile
+  "Add to Home Screen" actually installing and launching to `/dashboard`; a real
+  link-preview tool (Slack/Discord self-message or a social-card debugger) rendering the
+  `og-image.png` card correctly once this branch is deployed to a reachable URL (a
+  `localhost` preview can't be crawled by an external link-preview tool).
+- **Spec 008, T060**: mobile OS light/dark toggle actually re-tinting the browser chrome
+  to match the `theme-color` meta pair (`#ffffff`/`#151719`) — needs a real phone, not
+  DevTools emulation (Constitution Principle III).
+- **Spec 008, T048**: full-app translation sweep (T039–T047) with the language switcher
+  set to Español, at mobile width, checking every route for overflow/clipping/broken
+  layout from longer Spanish strings. Could not be run in this environment: `e2e/`'s
+  `playwright.config.ts` boots its `webServer` via `vercel dev`, and the Vercel CLI isn't
+  installed here, so `pnpm test:e2e` (including the existing 375px-viewport check in
+  `mobile-smoke.spec.ts`) can't start. `mobile-smoke.spec.ts` already asserts
+  `scrollWidth <= 375` for every route in English; the natural automated version of this
+  check is the same assertion after switching the language selector to Español (mirroring
+  `locale-persistence.spec.ts`'s `page.getByRole("menuitemradio", { name: "Español" })`
+  pattern) — worth adding as a permanent case once the CLI is available, rather than a
+  one-off. Until then this needs an actual pass: `pnpm dev`, guest login, switch to
+  Español via the sidebar language switcher, and check `/home`, `/login`, `/summary`,
+  `/expenses`, `/travels`, `/investments`, `/analysis`, `/metadata` at 375px width for
+  clipped KPI card labels/numbers (longer Spanish KPI names like "Tasa de ahorro" and
+  "Patrimonio neto" are the most likely overflow risk), wrapped nav labels, and the
+  analysis table's translated column headers not breaking the `TransactsTable.tsx` grid.
+- **Spec 008, T065**: full manual `quickstart.md` walkthrough. Since the Vercel CLI isn't
+  installed here (see T048 above), `pnpm test:e2e` couldn't run, but `pnpm dev` (plain
+  Vite, no `vercel dev` needed — its `devGuestApiPlugin()` reimplements the guest-login
+  API branch in-process) let a real Chromium browser (driven via `@playwright/test`'s
+  `chromium` launcher, scripted ad hoc) exercise most of the walkthrough directly, done
+  2026-08-11:
+  - Guest login, then every route (`home`, `metadata`, `summary`, `expenses`, `travels`,
+    `investments`, `analysis?query={}`) swept at desktop (1440×900, `en-US` browser
+    locale) and at mobile (375×812, `es-ES` browser locale): zero horizontal overflow on
+    any route at either width (`scrollWidth <= clientWidth` held throughout, including
+    375px in Spanish — **this resolves T048's outstanding mobile-Spanish-overflow check
+    above**), zero uncaught page errors on any route in either language.
+  - Browser-language auto-detection (FR-001) confirmed live, not just unit-tested:
+    `<html lang>` read `"en"` after guest login under an `en-US` browser context and
+    `"es"` under an `es-ES` context, with no stored preference in either case.
+  - Language switcher (the actual `LanguageSwitcher.tsx` component, not just
+    auto-detection) round-tripped correctly: opening it (via keyboard activation — Radix's
+    `DropdownMenuTrigger` opens on `pointerdown`/keyboard, not a synthetic `click` event,
+    which tripped up the first two script attempts before landing on
+    `trigger.focus()` + `Enter`) lists exactly `["English", "Español"]`; selecting
+    "Español" while starting from an `en-US` context flips `<html lang>` to `"es"` and
+    visible copy to Spanish immediately (no reload needed), and the choice survives a
+    hard reload (`<html lang>` still `"es"` after reload) — confirms FR-001/FR-002's
+    persistence requirement end-to-end.
+  - Still outstanding (owner-side, real device/tool needed, not achievable from this
+    environment): real "Add to Home Screen" install + launch-to-`/dashboard` check;
+    pasting a real deployed URL into an actual link-preview tool (Slack/Discord/social-card
+    debugger) — `localhost` can't be crawled externally; the real `pnpm test:e2e` suite
+    itself (blocked on the missing Vercel CLI, same root cause as T048); and a full
+    line-by-line reading of every translated string against `quickstart.md`'s scenario
+    text beyond what the automated sweep's `textLen` checks and visible-sample spot check
+    covered.
+
 ## Goals
 
 - Each item above gets an actual pass/fail from a real device/browser session, not left

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ export const CollapsibleSection = (props: {
   className?: string;
 }) => {
   const [open, setOpen] = useState(props.defaultOpen ?? true);
+  const { t } = useTranslation();
 
   return (
     <Card className={cn(props.className)}>
@@ -19,7 +21,11 @@ export const CollapsibleSection = (props: {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          aria-label={open ? `Collapse ${props.title}` : `Expand ${props.title}`}
+          aria-label={
+            open
+              ? t("common.collapseSection", { title: props.title })
+              : t("common.expandSection", { title: props.title })
+          }
           className="text-muted-foreground hover:text-foreground"
         >
           <svg

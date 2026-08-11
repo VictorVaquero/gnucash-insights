@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency, formatNumber } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
 interface Mover {
@@ -23,6 +25,8 @@ export const TopMovers = (props: { className?: string }) => {
   const { user } = useAuth();
   const { latestMonth } = useDomain();
   const dbconf = getConfig(user);
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   const { data: rawData } = useQuery(
     transactByAccountOptions({
@@ -67,7 +71,9 @@ export const TopMovers = (props: { className?: string }) => {
 
   if (movers.length === 0) {
     return (
-      <p className={cn("text-sm text-muted-foreground", props.className)}>Not enough data yet.</p>
+      <p className={cn("text-sm text-muted-foreground", props.className)}>
+        {t("summary.topMovers.empty")}
+      </p>
     );
   }
 
@@ -80,10 +86,14 @@ export const TopMovers = (props: { className?: string }) => {
         >
           <span className="text-sm text-muted-foreground truncate">{m.accountName}</span>
           <div className="flex items-center gap-2 shrink-0 tabular-nums">
-            <span className="text-sm font-medium">{parseNum(m.current, { digits: 0 })}</span>
+            <span className="text-sm font-medium">
+              {formatCurrency(m.current, locale, { digits: 0, compact: true })}
+            </span>
             <span className={cn("text-xs", m.delta > 0 ? "text-red-600" : "text-green-600")}>
               {m.delta > 0 ? "▲" : "▼"}{" "}
-              {m.pct != null ? parseNum(Math.abs(m.pct), { digits: 0, symbol: "%" }) : "New"}
+              {m.pct != null
+                ? `${formatNumber(Math.abs(m.pct), locale, { digits: 0 })}%`
+                : t("summary.topMovers.new")}
             </span>
           </div>
         </div>

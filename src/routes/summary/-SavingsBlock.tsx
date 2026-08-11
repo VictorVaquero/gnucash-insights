@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
+import { useTranslation } from "react-i18next";
 
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency, formatNumber } from "@/common/utils.ts";
 import { KpiRow } from "@/components/KpiRow.tsx";
 import { useAuth } from "@/contexts/useAuthContext";
 import { splitSumOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
 const useSavings = (
@@ -27,15 +29,17 @@ const useSavings = (
 
   const months = startDate && endDate ? endDate.diff(startDate, ["months"]).months : 1;
 
+  const { locale } = useLocale();
   const meanSavings = -(savings ?? 0) / months;
   const netIncome = income ?? 0;
 
   return {
-    value: parseNum(meanSavings),
-    title: `${parseNum(-(savings ?? 0))}/${parseNum(netIncome)}\n${parseNum(
+    value: formatCurrency(meanSavings, locale, { compact: true }),
+    title: `${formatCurrency(-(savings ?? 0), locale, { compact: true })}/${formatCurrency(netIncome, locale, { compact: true })}\n${formatNumber(
       ((savings ?? 0) / netIncome) * 100,
-      { digits: 0, symbol: "%" },
-    )}`,
+      locale,
+      { digits: 0 },
+    )}%`,
   };
 };
 
@@ -63,16 +67,39 @@ export const SavingsBlock = (props: { className?: string }) => {
   );
   const lastYear = useSavings(db, dbconf, bookId, latestMonth?.minus({ year: 1 }), latestMonth);
   const allTime = useSavings(db, dbconf, bookId, startDate, endDate);
+  const { t } = useTranslation();
 
   return (
     <div className={cn(props.className)}>
-      <p className="text-xs font-medium text-muted-foreground mb-1">Savings rate</p>
+      <p className="text-xs font-medium text-muted-foreground mb-1">
+        {t("summary.savings.heading")}
+      </p>
       <section className="flex flex-col">
-        <KpiRow name="Mean Savings" value={allTime.value} title={allTime.title} />
-        <KpiRow name="Last Month" value={lastMonth.value} title={lastMonth.title} />
-        <KpiRow name="Last 3" value={lastThreeMonths.value} title={lastThreeMonths.title} />
-        <KpiRow name="Last 6" value={lastSixMonths.value} title={lastSixMonths.title} />
-        <KpiRow name="Last Year" value={lastYear.value} title={lastYear.title} />
+        <KpiRow
+          name={t("summary.savings.meanSavings")}
+          value={allTime.value}
+          title={allTime.title}
+        />
+        <KpiRow
+          name={t("summary.savings.lastMonth")}
+          value={lastMonth.value}
+          title={lastMonth.title}
+        />
+        <KpiRow
+          name={t("summary.savings.last3")}
+          value={lastThreeMonths.value}
+          title={lastThreeMonths.title}
+        />
+        <KpiRow
+          name={t("summary.savings.last6")}
+          value={lastSixMonths.value}
+          title={lastSixMonths.title}
+        />
+        <KpiRow
+          name={t("summary.savings.lastYear")}
+          value={lastYear.value}
+          title={lastYear.title}
+        />
       </section>
     </div>
   );

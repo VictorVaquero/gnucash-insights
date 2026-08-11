@@ -6,12 +6,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/useAuthContext";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 export const AccountMenu = () => {
   const selected = useRouterState({ select: (state) => state.location.pathname });
   const redirect = useRouterState({ select: (state) => state.location.search.redirect });
   const { user, isAuthenticated, signOut } = useAuth();
   const firstLetter = user?.toUpperCase().substring(0, 1);
+  const { t } = useTranslation();
 
   return (
     <div className="fixed top-4 right-4 z-50 cursor-pointer">
@@ -23,12 +25,14 @@ export const AccountMenu = () => {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => signOut()}>Log Out</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => signOut()}>
+              {t("accountMenu.logOut")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
         <Link className="text-foreground" to="/login" search={{ redirect: redirect ?? selected }}>
-          Log In
+          {t("accountMenu.logIn")}
         </Link>
       )}
     </div>

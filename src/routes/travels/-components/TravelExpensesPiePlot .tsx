@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Cell,
   Pie,
@@ -12,12 +13,13 @@ import { BarLoader } from "@/components/ui/BarLoader";
 
 import { sum } from "@/common/aggregate";
 import { getDefaultColor, getRandomColor } from "@/common/getColors";
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency, formatNumber } from "@/common/utils.ts";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesByAccountOptions } from "@/db/queries/travel";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 
 interface Data {
   key: string;
@@ -26,32 +28,40 @@ interface Data {
   [key: string]: unknown;
 }
 
-const defaultAccount = "Others";
-
 const yf = (d: Data) => d.value;
 const gf = (d: Data) => d.key;
 const namef = (d: Data) => d.name;
-const color_f = (d: Data) =>
+const color_f = (d: Data, defaultAccount: string) =>
   namef(d) !== defaultAccount ? getRandomColor(namef(d)) : getDefaultColor();
 const orderyf = (a: Data, b: Data) => (yf(a) > yf(b) ? 1 : -1);
 
 const ChartTooltipContent = ({
   payload,
   sumTotal,
-}: Pick<TooltipContentProps<number, string>, "payload"> & { sumTotal: number }) => {
+  defaultAccount,
+}: Pick<TooltipContentProps<number, string>, "payload"> & {
+  sumTotal: number;
+  defaultAccount: string;
+}) => {
   const d = payload[0].payload as Data;
+  const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{namef(d)}</span>
-      <span style={{ color: color_f(d) }}>{parseNum(yf(d))}</span>
+      <span style={{ color: color_f(d, defaultAccount) }}>
+        {formatCurrency(yf(d), locale, { compact: true })}
+      </span>
       <span className="text-muted-foreground text-xs">
-        {parseNum((yf(d) / sumTotal) * 100, { digits: 0, symbol: "%" })}
+        {formatNumber((yf(d) / sumTotal) * 100, locale, { digits: 0 })}%
       </span>
     </div>
   );
 };
 
 const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
+  const { locale } = useLocale();
+  const { t } = useTranslation();
+  const defaultAccount = t("summary.plots.others");
   const sortedData = [...props.data].sort(orderyf);
   const sumTotal = sum(sortedData, yf);
 
@@ -69,10 +79,12 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
         {scrubbed ? (
           <>
             <p className="text-muted-foreground text-sm">{namef(scrubbed)}</p>
-            <p style={{ color: color_f(scrubbed) }}>{parseNum(yf(scrubbed))}</p>
+            <p style={{ color: color_f(scrubbed, defaultAccount) }}>
+              {formatCurrency(yf(scrubbed), locale, { compact: true })}
+            </p>
           </>
         ) : (
-          <p className="text-red-500">{parseNum(sumTotal)}</p>
+          <p className="text-red-500">{formatCurrency(sumTotal, locale, { compact: true })}</p>
         )}
       </div>
       <ResponsiveContainer width="100%" height="100%">
@@ -80,7 +92,13 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
           <RechartsTooltip
             content={(p: TooltipContentProps<number, string>) => (
               <ChartTooltip {...p}>
-                {({ payload }) => <ChartTooltipContent payload={payload} sumTotal={sumTotal} />}
+                {({ payload }) => (
+                  <ChartTooltipContent
+                    payload={payload}
+                    sumTotal={sumTotal}
+                    defaultAccount={defaultAccount}
+                  />
+                )}
               </ChartTooltip>
             )}
           />
@@ -98,7 +116,7 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
             {sortedData.map((d, i) => (
               <Cell
                 key={gf(d)}
-                fill={color_f(d)}
+                fill={color_f(d, defaultAccount)}
                 stroke={i === activeIndex ? "var(--color-foreground)" : "white"}
                 strokeWidth={i === activeIndex ? 3 : 1.5}
               />

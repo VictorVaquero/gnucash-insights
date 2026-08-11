@@ -25,34 +25,32 @@ export const useWindowSize = (ref: MutableRefObject<Element | null>) => {
   return size;
 };
 
-export const parseNum = (
-  number: number,
-  options: { digits?: number; symbol?: string; fixed?: number } = {},
-) => {
-  const digits = options.digits ?? 2;
-  const symbol = options.symbol ?? "€";
+// Locale-aware replacement for the old hand-rolled `parseNum`: `Intl.NumberFormat`
+// handles digit grouping/decimal-separator/compact-suffix conventions per locale (e.g.
+// Spanish groups with "." and uses "," for decimals) instead of hardcoding them.
+export const formatCurrency = (
+  value: number,
+  locale: string,
+  options: { digits?: number; compact?: boolean } = {},
+) =>
+  new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "EUR",
+    notation: options.compact ? "compact" : "standard",
+    maximumFractionDigits: options.digits ?? 2,
+  }).format(value);
 
-  const mappings = new Map([
-    [1e6, "M"],
-    [1e3, "K"],
-    [1, symbol],
-  ]);
-  for (const [key, symbol] of mappings) {
-    if (Math.abs(number) >= key) {
-      const mynum = Math.round((Math.abs(number) / key) * 10 ** digits) / 10 ** digits;
-      let s = mynum.toString();
-      if (options.fixed && s.replace(".", "").length > options.fixed)
-        s = s.slice(0, s.indexOf(".") > -1 ? options.fixed + 1 : options.fixed);
-      return (s[s.length - 1] === "." ? s.slice(0, s.length - 1) : s) + symbol;
-    }
-  }
-
-  const mynum = Math.round(Math.abs(number) * 10 ** digits) / 10 ** digits;
-  let s = mynum.toString();
-  if (options.fixed && s.replace(".", "").length > options.fixed)
-    s = s.slice(0, s.indexOf(".") > -1 ? options.fixed + 1 : options.fixed);
-  return (s[s.length - 1] === "." ? s.slice(0, s.length - 1) : s) + symbol;
-};
+// For non-currency numbers (percentages, counts, durations) that still need
+// locale-aware grouping/decimal separators. Callers append their own unit suffix.
+export const formatNumber = (
+  value: number,
+  locale: string,
+  options: { digits?: number; compact?: boolean } = {},
+) =>
+  new Intl.NumberFormat(locale, {
+    notation: options.compact ? "compact" : "standard",
+    maximumFractionDigits: options.digits ?? 2,
+  }).format(value);
 
 export const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return `Type ${error.name}: ${error.message}`;

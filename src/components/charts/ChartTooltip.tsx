@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { TooltipContentProps } from "recharts";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useTranslation } from "react-i18next";
 
 import { useIsNarrowViewport, useIsTouchDevice } from "@/common/utils.ts";
 
@@ -36,6 +37,7 @@ export function ChartTooltip<TValue extends number, TName extends string>({
   label,
   children,
 }: ChartTooltipProps<TValue, TName>) {
+  const { t } = useTranslation();
   const isTouch = useIsTouchDevice();
   const isNarrow = useIsNarrowViewport();
   const [pinned, setPinned] = useState<Pinned<TValue, TName> | null>(null);
@@ -48,7 +50,10 @@ export function ChartTooltip<TValue extends number, TName extends string>({
   useEffect(() => {
     if (isTouch && hasLiveData && label !== dismissedLabelRef.current)
       setPinned({ payload, label });
-  }, [isTouch, hasLiveData, payload, label]);
+    // `payload` is a fresh array from Recharts on every render; keying off `label` (which only
+    // changes when the active point actually changes) avoids re-running this effect every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTouch, hasLiveData, label]);
 
   useEffect(() => {
     if (!isTouch) setPinned(null);
@@ -72,7 +77,7 @@ export function ChartTooltip<TValue extends number, TName extends string>({
           </div>
           <button
             type="button"
-            aria-label="Dismiss"
+            aria-label={t("chartTooltip.dismiss")}
             onClick={dismiss}
             className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
           >
@@ -91,7 +96,7 @@ export function ChartTooltip<TValue extends number, TName extends string>({
         {content}
         <button
           type="button"
-          aria-label="Dismiss"
+          aria-label={t("chartTooltip.dismiss")}
           onClick={dismiss}
           className="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full border border-border bg-popover text-muted-foreground hover:text-foreground"
         >

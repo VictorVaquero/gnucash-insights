@@ -1,6 +1,6 @@
 # Internationalization: es/en
 
-**Priority**: P1 · **Status**: Planning done — see specs/008-internationalization-and-seo
+**Priority**: P1 · **Status**: Implemented — see specs/008-internationalization-and-seo (all 65 tasks complete)
 
 ## Why this matters
 
