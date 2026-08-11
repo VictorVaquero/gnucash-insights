@@ -14,13 +14,14 @@ import {
   YAxis,
 } from "recharts";
 
-import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesDetailedOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { getColor } from "./utils";
 
@@ -45,13 +46,14 @@ const MIN_HIT_SIZE = 44;
 
 const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
+  const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span style={{ color: getColor(d.name) }}>{d.name}</span>
       <span className="text-muted-foreground text-xs">
         {d.ini} | {d.fin}
       </span>
-      <span className="text-red-500">{parseNum(d.value)}</span>
+      <span className="text-red-500">{formatCurrency(d.value, locale, { compact: true })}</span>
     </div>
   );
 };
@@ -111,14 +113,19 @@ const DrawTravelExpensesPlot = (props: {
   domain: { startDate: DateTime; endDate: DateTime };
 }) => {
   const isNarrowViewport = useIsNarrowViewport();
+  const { locale } = useLocale();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
 
   const chartData: ChartRow[] = useMemo(
     () =>
       [...props.data]
         .sort((a, b) => (xf(a) > xf(b) ? 1 : -1))
-        .map((d) => ({ ...d, finLabel: xf(d).toFormat("LLL yy"), finMillis: xf(d).toMillis() })),
-    [props.data],
+        .map((d) => ({
+          ...d,
+          finLabel: xf(d).setLocale(locale).toFormat("LLL yy"),
+          finMillis: xf(d).toMillis(),
+        })),
+    [props.data, locale],
   );
 
   const xDomain = useMemo((): [number, number] => {
@@ -153,7 +160,11 @@ const DrawTravelExpensesPlot = (props: {
       {latest && (
         <ChartKeyValue
           label={latest.name}
-          value={<span style={{ color: getColor(latest.name) }}>{parseNum(latest.value)}</span>}
+          value={
+            <span style={{ color: getColor(latest.name) }}>
+              {formatCurrency(latest.value, locale, { compact: true })}
+            </span>
+          }
         />
       )}
       <ResponsiveContainer width="100%" height="100%">
@@ -172,7 +183,9 @@ const DrawTravelExpensesPlot = (props: {
             dataKey="finMillis"
             domain={xDomain}
             ticks={xTicks}
-            tickFormatter={(ms: number) => DateTime.fromMillis(ms).toFormat("LLL yy")}
+            tickFormatter={(ms: number) =>
+              DateTime.fromMillis(ms).setLocale(locale).toFormat("LLL yy")
+            }
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
@@ -182,7 +195,7 @@ const DrawTravelExpensesPlot = (props: {
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => parseNum(value)}
+            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
             width={margin.left}
           />
           <RechartsTooltip

@@ -1,5 +1,6 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bar,
   CartesianGrid,
@@ -14,7 +15,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { parseNum, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { renderTouchDot } from "@/components/charts/TouchDot";
@@ -23,6 +24,7 @@ import { transactsSumOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -46,20 +48,33 @@ const colorCodes: Record<colorType, string> = {
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const getColor = (d: colorType) => colorCodes[d];
+const activeDotGreen = renderTouchDot(getColor("g"), 4);
+const activeDotRed = renderTouchDot(getColor("r"), 4);
 
 const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
+  const { locale } = useLocale();
+  const { t } = useTranslation();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{d.dateLabel}</span>
       <div className="text-muted-foreground text-sm">
-        Income: <span style={{ color: getColor("g") }}>{parseNum(d.income)}</span>
+        {t("summary.plots.income")}:{" "}
+        <span style={{ color: getColor("g") }}>
+          {formatCurrency(d.income, locale, { compact: true })}
+        </span>
       </div>
       <div className="text-muted-foreground text-sm">
-        Expenses: <span style={{ color: getColor("r") }}>{parseNum(d.expenses)}</span>
+        {t("summary.plots.expenses")}:{" "}
+        <span style={{ color: getColor("r") }}>
+          {formatCurrency(d.expenses, locale, { compact: true })}
+        </span>
       </div>
       <div className="text-muted-foreground text-sm">
-        Net: <span style={{ color: getColor(d.net > 0 ? "g" : "r") }}>{parseNum(d.net)}</span>
+        {t("summary.plots.net")}:{" "}
+        <span style={{ color: getColor(d.net > 0 ? "g" : "r") }}>
+          {formatCurrency(d.net, locale, { compact: true })}
+        </span>
       </div>
     </div>
   );
@@ -68,6 +83,8 @@ const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, strin
 const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   const chartData: ChartRow[] = useMemo(
     () => data.map((d) => ({ ...d, netAbs: Math.abs(d.net) })),
@@ -87,10 +104,10 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       {latest && (
         <ChartKeyValue
-          label={`Net (${latest.dateLabel})`}
+          label={t("summary.plots.netWithDate", { date: latest.dateLabel })}
           value={
             <span style={{ color: getColor(latest.net > 0 ? "g" : "r") }}>
-              {parseNum(latest.net)}
+              {formatCurrency(latest.net, locale, { compact: true })}
             </span>
           }
         />
@@ -116,7 +133,7 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => parseNum(value)}
+            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
             width={margin.left}
           />
           <RechartsTooltip
@@ -137,7 +154,7 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
             stroke={getColor("r")}
             strokeWidth={1.5}
             dot={false}
-            activeDot={renderTouchDot(getColor("r"), 4)}
+            activeDot={activeDotRed}
             isAnimationActive={false}
           />
           <Line
@@ -146,7 +163,7 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
             stroke={getColor("g")}
             strokeWidth={1.5}
             dot={false}
-            activeDot={renderTouchDot(getColor("g"), 4)}
+            activeDot={activeDotGreen}
             isAnimationActive={false}
           />
         </ComposedChart>

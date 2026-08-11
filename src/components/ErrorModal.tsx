@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 
 export const ErrorModal = ({
   msg,
@@ -10,6 +11,7 @@ export const ErrorModal = ({
   isVisible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       {isVisible &&
@@ -24,7 +26,7 @@ export const ErrorModal = ({
               exit={{ opacity: 0 }}
             >
               <div className="p-6 pb-2">
-                <h2 className="text-xl text-popover-foreground">Logging Failure</h2>
+                <h2 className="text-xl text-popover-foreground">{t("errorModal.title")}</h2>
                 <p className="pt-6 text-base text-muted-foreground">{msg}</p>
               </div>
               <div className="p-4 pt-2 flex flex-row justify-end">
@@ -32,7 +34,7 @@ export const ErrorModal = ({
                   className="p-4 text-muted-foreground hover:bg-accent rounded"
                   onClick={() => setVisible(false)}
                 >
-                  Close
+                  {t("errorModal.close")}
                 </button>
               </div>
             </motion.div>

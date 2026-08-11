@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency } from "@/common/utils.ts";
 import { KpiRow } from "@/components/KpiRow.tsx";
 import { useAuth } from "@/contexts/useAuthContext";
 import { splitSumOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
 export const BalancesBlock = (props: { className?: string }) => {
@@ -19,16 +21,36 @@ export const BalancesBlock = (props: { className?: string }) => {
   const { data: assets } = useQuery(splitSumOptions(db, bookId, [dbconf.assets]));
   const { data: investments } = useQuery(splitSumOptions(db, bookId, [dbconf.investments]));
   const { data: taxes } = useQuery(splitSumOptions(db, bookId, [dbconf.taxes]));
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   return (
     <div className={cn(props.className)}>
-      <p className="text-xs font-medium text-muted-foreground mb-1">Accounts</p>
+      <p className="text-xs font-medium text-muted-foreground mb-1">
+        {t("summary.balances.heading")}
+      </p>
       <section className="flex flex-col">
-        <KpiRow name="Assets" value={parseNum(assets ?? 0)} />
-        <KpiRow name="Checking" value={parseNum(checking ?? 0)} />
-        <KpiRow name="Savings" value={parseNum(savings ?? 0)} />
-        <KpiRow name="Investment" value={parseNum(investments ?? 0)} />
-        <KpiRow name="Taxes" value={parseNum(taxes ?? 0)} color="text-red-600" />
+        <KpiRow
+          name={t("summary.balances.assets")}
+          value={formatCurrency(assets ?? 0, locale, { compact: true })}
+        />
+        <KpiRow
+          name={t("summary.balances.checking")}
+          value={formatCurrency(checking ?? 0, locale, { compact: true })}
+        />
+        <KpiRow
+          name={t("summary.balances.savings")}
+          value={formatCurrency(savings ?? 0, locale, { compact: true })}
+        />
+        <KpiRow
+          name={t("summary.balances.investment")}
+          value={formatCurrency(investments ?? 0, locale, { compact: true })}
+        />
+        <KpiRow
+          name={t("summary.balances.taxes")}
+          value={formatCurrency(taxes ?? 0, locale, { compact: true })}
+          color="text-red-600"
+        />
       </section>
     </div>
   );

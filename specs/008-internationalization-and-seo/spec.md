@@ -4,7 +4,13 @@
 
 **Created**: 2026-08-10
 
-**Status**: Draft — ready to plan/task via `/speckit-plan`
+**Status**: Implemented — all 65 tasks across 4 user stories complete (see tasks.md);
+`pnpm test`/`pnpm lint`/`pnpm build`/`pnpm size` all pass. `pnpm test:e2e` could not run
+in this environment (Vercel CLI not installed; `playwright.config.ts`'s `webServer` needs
+`vercel dev`). Several items remain owner-side per Constitution Principle III (real-device
+icon/manifest/OG checks, mobile browser-chrome tint, full Spanish-mobile layout sweep,
+real Playwright e2e run) — tracked in `docs/review/19-manual-verification.md`, not
+blocking.
 
 **Review docs covered**: [`docs/review/05-seo.md`](../../docs/review/05-seo.md), [`docs/review/16-internationalization.md`](../../docs/review/16-internationalization.md)
 

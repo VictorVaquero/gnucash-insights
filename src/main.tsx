@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { ErrorBoundary } from "react-error-boundary";
+import "./i18n/config";
 import "./index.css";
 
 import { routeTree } from "./routeTree.gen";
@@ -65,32 +66,37 @@ const GlobalCOntextProvider = () => {
   });
 
   // On sign out reset global state & invalidate router
-  const signOut = auth.signOut;
-  const resetGlobalState = () => {
+  const resetGlobalState = useCallback(() => {
     resetSetupDB();
     setDB(undefined);
     setBookId(undefined);
     setDomain(undefined);
-    signOut();
+    auth.signOut();
     router.invalidate();
     queryClient.invalidateQueries();
-  };
-  auth.signOut = resetGlobalState;
+  }, [resetSetupDB, auth]);
 
   // On sign in also invalidate router
-  const signIn = auth.signIn;
-  auth.signIn = async (username: string, password: string) => {
-    const r = await signIn(username, password);
-    router.invalidate();
-    return r;
-  };
+  const signInAndInvalidate = useCallback(
+    async (username: string, password: string) => {
+      const r = await auth.signIn(username, password);
+      router.invalidate();
+      return r;
+    },
+    [auth],
+  );
+
+  const wrappedAuth = useMemo(
+    () => ({ ...auth, signOut: resetGlobalState, signIn: signInAndInvalidate }),
+    [auth, resetGlobalState, signInAndInvalidate],
+  );
 
   useEffect(() => {
     if (isDBError) {
       console.error("Error, reset auth & global state");
-      auth.signOut();
+      wrappedAuth.signOut();
     }
-  }, [isDBError]);
+  }, [isDBError, wrappedAuth]);
 
   useEffect(() => {
     if (!!queryDb && !db) {
@@ -112,16 +118,23 @@ const GlobalCOntextProvider = () => {
     }
   }, [queryDb, db]);
 
+  const isAuthenticated = auth.isAuthenticated();
   useEffect(() => {
     console.info("Invalidate router when context changes.");
-    if (!!auth && !!db && !!bookId && !!domain) router.invalidate();
-  }, [auth, db, bookId, domain]);
+    if (isAuthenticated && !!db && !!bookId && !!domain) router.invalidate();
+  }, [isAuthenticated, db, bookId, domain]);
 
   console.info(`Current book ${bookId} db ${!!db} user ${auth.user}`);
 
+  const domainContextValue = useMemo(() => ({ domain }), [domain]);
+  const routerContext = useMemo(
+    () => ({ auth: wrappedAuth, db, bookId }),
+    [wrappedAuth, db, bookId],
+  );
+
   return (
-    <DomainContext.Provider value={{ domain: domain }}>
-      <RouterProvider router={router} context={{ auth, db, bookId }} />
+    <DomainContext.Provider value={domainContextValue}>
+      <RouterProvider router={router} context={routerContext} />
       <Suspense>
         <ReactQueryDevtools />
       </Suspense>

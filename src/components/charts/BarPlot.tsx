@@ -788,7 +788,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
             offset={20}
             position={{
               y: layout === "horizontal" ? 0 : undefined,
-              x: layout === "horizontal" ? undefined : yAxisWidth + 20,
+              x: layout === "horizontal" ? (showYAxis ? yAxisWidth : 0) : yAxisWidth + 20,
             }}
             content={({ active, payload, label }) => {
               const toCleanPayload = (rawPayload: any): TooltipProps["payload"] =>

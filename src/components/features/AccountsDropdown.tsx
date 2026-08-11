@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSummaryPageContext } from "@/routes/summary/-summaryPageContext";
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Option {
   id: string;
@@ -23,6 +24,7 @@ interface MultiSelectTreeProps {
 export function MultiSelectTree({ options }: MultiSelectTreeProps) {
   const { hideAccounts: selected, toggleHideAccount: onToggle } = useSummaryPageContext();
   const [search, setSearch] = useState("");
+  const { t } = useTranslation();
 
   // Build a tree structure using parentId
   const tree = useMemo(() => {
@@ -75,7 +77,9 @@ export function MultiSelectTree({ options }: MultiSelectTreeProps) {
           variant="outline"
           className="w-56 justify-between dark:bg-shark-800 dark:text-gray-400"
         >
-          {selected.length > 0 ? `${selected.length} selected` : "Select accounts to hide"}
+          {selected.length > 0
+            ? t("accountsDropdown.selectedCount", { count: selected.length })
+            : t("accountsDropdown.placeholder")}
         </Button>
       </DropdownMenuTrigger>
 
@@ -84,7 +88,7 @@ export function MultiSelectTree({ options }: MultiSelectTreeProps) {
         <div className="p-2">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder={t("accountsDropdown.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-md border px-2 py-1 text-sm"

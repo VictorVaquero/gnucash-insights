@@ -1,11 +1,15 @@
 import { groupBy, sum } from "@/common/aggregate";
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency } from "@/common/utils.ts";
 import { KpiCard } from "@/components/KpiCard.tsx";
 import { useDomain } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
+import { useTranslation } from "react-i18next";
 import { FullTransaction } from "..";
 
 export const KpiBlock = (props: { data: FullTransaction[] }) => {
   const { numMonths, latestMonth } = useDomain();
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   if (!latestMonth) return <></>;
 
@@ -40,15 +44,35 @@ export const KpiBlock = (props: { data: FullTransaction[] }) => {
     <section
       className={"grid grid-cols-2 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2"}
     >
-      <KpiCard name="Mean" value={parseNum(meanAllTime)} title={parseNum(meanAllTime)} />
-      <KpiCard name="Last month" value={parseNum(meanLastMonth)} title={parseNum(meanLastMonth)} />
-      <KpiCard name="Last 3" value={parseNum(meanLast3Months)} title={parseNum(meanLast3Months)} />
-      <KpiCard name="Last 6" value={parseNum(meanLast6Months)} title={parseNum(meanLast6Months)} />
-      <KpiCard name="Last year" value={parseNum(meanLastYear)} title={parseNum(meanLastYear)} />
       <KpiCard
-        name="Total"
-        value={parseNum(total_value_all_time)}
-        title={parseNum(total_value_all_time)}
+        name={t("analysis.kpi.mean")}
+        value={formatCurrency(meanAllTime, locale, { compact: true })}
+        title={formatCurrency(meanAllTime, locale, { compact: true })}
+      />
+      <KpiCard
+        name={t("analysis.kpi.lastMonth")}
+        value={formatCurrency(meanLastMonth, locale, { compact: true })}
+        title={formatCurrency(meanLastMonth, locale, { compact: true })}
+      />
+      <KpiCard
+        name={t("analysis.kpi.last3")}
+        value={formatCurrency(meanLast3Months, locale, { compact: true })}
+        title={formatCurrency(meanLast3Months, locale, { compact: true })}
+      />
+      <KpiCard
+        name={t("analysis.kpi.last6")}
+        value={formatCurrency(meanLast6Months, locale, { compact: true })}
+        title={formatCurrency(meanLast6Months, locale, { compact: true })}
+      />
+      <KpiCard
+        name={t("analysis.kpi.lastYear")}
+        value={formatCurrency(meanLastYear, locale, { compact: true })}
+        title={formatCurrency(meanLastYear, locale, { compact: true })}
+      />
+      <KpiCard
+        name={t("analysis.kpi.total")}
+        value={formatCurrency(total_value_all_time, locale, { compact: true })}
+        title={formatCurrency(total_value_all_time, locale, { compact: true })}
       />
     </section>
   );

@@ -427,3 +427,20 @@ No concrete problem was identified with it during spec 007's work.
 maintained, and no simpler built-in alternative meets the app's server-state needs
 (caching, request dedup, background refetch) without reimplementing equivalent logic
 by hand.
+
+## Follow-up (out of scope): `resumeweb` needs its own `robots.txt` allow-list entry for `/dashboard` (spec 008, FR-008, SC-004)
+
+**Decision**: spec 008 deliberately does not add a `robots.txt` or `sitemap.xml` to this
+repo (`cashpy_v2`) — this app owns only the `/dashboard/*` URL space at
+`victorvaquero.com`, and any `robots.txt` governing the whole domain (including whether
+`/dashboard` is crawlable) belongs to `resumeweb`, the separate repo that owns
+`victorvaquero.com`'s root-level static files and proxies `/dashboard` to this app via
+its own rewrite config. Whoever maintains `resumeweb` should confirm its `robots.txt`
+(if one exists, or when one is added) explicitly allow-lists `/dashboard` rather than
+disallowing it by omission or default.
+
+**Why**: adding a `robots.txt` here would be scoped to the wrong repo — it would only
+ever be served in isolation if this app were somehow deployed standalone, not through the
+`resumeweb` mount, and could silently diverge from whatever `resumeweb`'s own
+`robots.txt` says. Keeping crawl-directive ownership in the repo that owns the domain
+root avoids two files disagreeing about the same URL space.

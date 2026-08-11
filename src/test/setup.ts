@@ -6,6 +6,9 @@ import "@testing-library/jest-dom/vitest";
 import { toHaveNoViolations } from "vitest-axe/dist/matchers";
 import { afterAll, afterEach, beforeAll, expect } from "vitest";
 import { server } from "@/mocks/server";
+// Components call useTranslation() unconditionally (e.g. SideBar, login), so it must be
+// initialized before any test renders them, same as it's imported in main.tsx.
+import "@/i18n/config";
 
 expect.extend({ toHaveNoViolations });
 

@@ -8,6 +8,7 @@ import {
 import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { AccountMenu } from "@/components/AccountMenu.tsx";
 import { Footer } from "@/components/Footer.tsx";
@@ -51,13 +52,15 @@ const RootComponent = () => {
   const [isCollapsed, setCollapse] = useState(true);
   const mainRef = useRef<HTMLElement>(null);
   const { auth, db, bookId } = useRouteContext({ from: "__root__" });
+  const { t, i18n } = useTranslation();
 
   const matchWithTitle = [...matches].reverse().find((d) => d.context.title);
-  const title = matchWithTitle?.context.title || "My App";
-  // Update document title with context
+  const titleKey = matchWithTitle?.context.title;
+  // Route beforeLoad context stores a translation key, not the resolved string, so a
+  // same-page language switch (no navigation) still updates the tab title.
   useEffect(() => {
-    document.title = title;
-  }, [title]);
+    document.title = titleKey ? t(titleKey) : "CashPy";
+  }, [titleKey, t, i18n.language]);
 
   // The drawer now overlays content on every viewport, so close it whenever navigation happens
   useEffect(() => {

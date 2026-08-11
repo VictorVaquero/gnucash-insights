@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { DateTime } from "luxon";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PeriodicityTabs } from "@/components/PeriodicityTabs";
 import { fullTransactionsOptions } from "@/db/queries/global";
@@ -27,20 +28,20 @@ export interface FullTransaction {
 }
 
 const queryData: SearchQuery[] = [
-  { name: "Expenses", query: { accountType: "EXPENSE" } },
+  { nameKey: "analysis.filters.expenses", query: { accountType: "EXPENSE" } },
   {
-    name: "Tobaco",
+    nameKey: "analysis.filters.tobacco",
     query: {
       accountType: "EXPENSE",
       description: "Tabaco",
     },
   },
   {
-    name: "Trips",
+    nameKey: "analysis.filters.trips",
     query: { accountType: "EXPENSE", slNotes: "Viaje" },
   },
   {
-    name: "Sport",
+    nameKey: "analysis.filters.sport",
     query: { accountType: "EXPENSE", accountName: "Escalada" },
   },
 ];
@@ -48,6 +49,7 @@ const queryData: SearchQuery[] = [
 const Analysis = () => {
   const { db } = useDB();
   const { bookId } = useBook();
+  const { t } = useTranslation();
 
   const [filteredTransactions, setFilteredTransactions] = useState<FullTransaction[]>([]);
   const [chartPeriodicity, setChartPeriodicity] = useState<Periodicity>("monthly");
@@ -86,7 +88,7 @@ const Analysis = () => {
       </div>
       <div className="md:row-start-2 md:col-start-2">
         <PeriodicityTabs activeMode={chartPeriodicity} onChange={setChartPeriodicity} />
-        <h2 className="text-foreground">Lista de filtros</h2>
+        <h2 className="text-foreground">{t("analysis.filters.title")}</h2>
         <SearchList data={queryData} />
       </div>
     </div>
@@ -106,7 +108,7 @@ export const Route = createFileRoute("/analysis/")({
         search: { redirect: location.href },
       });
     }
-    return { title: "Analysis" };
+    return { title: "routes.analysis.title" };
   },
   validateSearch: (search: Record<string, unknown>): AnalysisSearch => {
     return {

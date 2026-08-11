@@ -11,51 +11,52 @@ import {
 } from "@tanstack/react-table";
 import { DateTime } from "luxon";
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Checkbox } from "@/components/Checkbox";
 import { FullTransaction as Data } from "..";
 import { useColumnFilters } from "./useColumnFilters";
 
 const columnHelper = createColumnHelper<Data>();
-const columns = [
+const buildColumns = (t: (key: string, opts?: Record<string, unknown>) => string) => [
   columnHelper.accessor("splitId", {
-    header: "Id Split",
+    header: t("analysis.table.headers.splitId"),
     cell: (info) => info.getValue(),
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("description", {
-    header: "Descripcion",
+    header: t("analysis.table.headers.description"),
     cell: (info) => info.getValue(),
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("slNotes", {
-    header: "Notas",
+    header: t("analysis.table.headers.notes"),
     cell: (info) => (info.getValue() !== "None" ? info.getValue() : ""),
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("datePosted", {
-    header: "Fecha",
+    header: t("analysis.table.headers.date"),
     cell: (info) => info.getValue().toISODate(),
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("accountType", {
-    header: "Tipo de cuenta",
+    header: t("analysis.table.headers.accountType"),
     cell: (info) => info.getValue(),
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("accountName", {
-    header: "Nombre de cuenta",
+    header: t("analysis.table.headers.accountName"),
     cell: (info) => info.getValue(),
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("accountId", {
     id: "idAccount",
-    header: "Id Cuenta",
+    header: t("analysis.table.headers.accountId"),
     cell: (info) => info.getValue(),
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("value", {
-    header: "Valor",
+    header: t("analysis.table.headers.value"),
     cell: (info) => info.getValue(),
     footer: (info) => info.column.id,
     enableColumnFilter: false,
@@ -64,9 +65,9 @@ const columns = [
     id: "select-col",
     header: ({ table }) => (
       <div className="flex flex-col gap-y-4">
-        <span>Toggle</span>
+        <span>{t("analysis.table.toggle")}</span>
         <Checkbox
-          aria-label="Select all rows"
+          aria-label={t("analysis.table.selectAllRows")}
           checked={table.getIsAllRowsSelected()}
           indeterminate={table.getIsSomeRowsSelected()}
           onChange={table.getToggleAllRowsSelectedHandler()} //or getToggleAllPageRowsSelectedHandler
@@ -75,7 +76,7 @@ const columns = [
     ),
     cell: ({ row }) => (
       <Checkbox
-        aria-label={`Select row: ${row.original.description}`}
+        aria-label={t("analysis.table.selectRow", { description: row.original.description })}
         checked={row.getIsSelected()}
         disabled={!row.getCanSelect()}
         onChange={row.getToggleSelectedHandler()}
@@ -85,7 +86,9 @@ const columns = [
 ];
 
 export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFunction }) => {
+  const { t } = useTranslation();
   const { columnFilters, setColumnFilters } = useColumnFilters();
+  const columns = useMemo(() => buildColumns(t), [t]);
   const initialRowSelection = useMemo(
     () => props.data.reduce((d, row) => ({ ...d, [row.splitId]: true }), {}),
     [props.data],
@@ -199,14 +202,14 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           </button>
         </span>
         <span className="flex items-center gap-1">
-          <div className="text-foreground">Page</div>
+          <div className="text-foreground">{t("analysis.table.page")}</div>
           <span>{table.getState().pagination.pageIndex + 1}</span>
-          <div className="text-foreground">of</div>
+          <div className="text-foreground">{t("analysis.table.of")}</div>
           <span>{table.getPageCount().toLocaleString()}</span>
         </span>
         <span className="flex items-center gap-1">
           <label htmlFor="go-to-page" className="text-foreground">
-            | Go to page:
+            {t("analysis.table.goToPage")}
           </label>
           <input
             id="go-to-page"
@@ -221,7 +224,7 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           />
         </span>
         <select
-          aria-label="Rows per page"
+          aria-label={t("analysis.table.rowsPerPage")}
           className="p-2 rounded bg-shark-800 text-white"
           value={table.getState().pagination.pageSize}
           onChange={(e) => {
@@ -230,16 +233,16 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
         >
           {[10, 20, 30, 40, 50].map((pageSize) => (
             <option key={pageSize} value={pageSize}>
-              Show {pageSize}
+              {t("analysis.table.showPageSize", { pageSize })}
             </option>
           ))}
         </select>
         <p>
-          <span className="text-foreground">Showing </span>
+          <span className="text-foreground">{t("analysis.table.showing")} </span>
           {table.getRowModel().rows.length.toLocaleString()}
-          <span className="text-foreground"> of </span>
+          <span className="text-foreground"> {t("analysis.table.of")} </span>
           {table.getRowCount().toLocaleString()}
-          <span className="text-foreground"> Rows</span>
+          <span className="text-foreground"> {t("analysis.table.rows")}</span>
         </p>
       </div>
     </div>
@@ -247,6 +250,7 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
 };
 
 function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table<D> }) {
+  const { t } = useTranslation();
   const firstValue = table.getPreFilteredRowModel().flatRows[0]?.getValue(column.id);
 
   const columnFilterValue = column.getFilterValue();
@@ -260,7 +264,7 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
           onChange={(e) =>
             column.setFilterValue((old: string) => String([e.target.value, old.split(",")[1]]))
           }
-          placeholder={`Min`}
+          placeholder={t("analysis.table.min")}
           className="w-16 ps-2 border shadow rounded"
         />
         <input
@@ -269,7 +273,7 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
           onChange={(e) =>
             column.setFilterValue((old: string) => String([old.split(",")[0], e.target.value]))
           }
-          placeholder={`Max`}
+          placeholder={t("analysis.table.max")}
           className="w-16 ps-2 border shadow rounded"
         />
       </div>
@@ -288,7 +292,7 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
               old?.[1],
             ])
           }
-          placeholder={`Min`}
+          placeholder={t("analysis.table.min")}
           className="w-16 ps-2 border shadow rounded"
         />
         <input
@@ -300,7 +304,7 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
               DateTime.fromFormat(e.target.value, "yyyy-LL-dd"),
             ])
           }
-          placeholder={`Max`}
+          placeholder={t("analysis.table.max")}
           className="w-16 ps-2 border shadow rounded"
         />
       </div>
@@ -312,7 +316,7 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
       type="text"
       value={(columnFilterValue ?? "") as string}
       onChange={(e) => column.setFilterValue(e.target.value)}
-      placeholder={`Search...`}
+      placeholder={t("analysis.table.search")}
       className="w-24 ps-2 border shadow rounded text-black dark:text-white"
     />
   );

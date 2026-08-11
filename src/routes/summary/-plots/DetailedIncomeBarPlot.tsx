@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { groupBy, rollup, sum } from "@/common/aggregate";
-import { parseNum } from "@/common/utils";
+import { formatCurrency } from "@/common/utils";
 import { BarChart } from "@/components/charts/BarPlot";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -10,9 +11,8 @@ import { AccountsData, accountsOptions } from "@/db/queries/global";
 import { TransactData, transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { useSummaryPageContext } from "../-summaryPageContext";
-
-const DEFAULT_ACCOUNT_NAME = "Other";
 
 export interface Data {
   accountId: string;
@@ -76,6 +76,9 @@ export const DetailedIncomeBarPlot = () => {
   const { user } = useAuth();
   const dbconfig = getConfig(user);
   const { dateRange, chartPeriodicity } = useSummaryPageContext();
+  const { locale } = useLocale();
+  const { t } = useTranslation();
+  const otherAccountLabel = t("summary.plots.otherAccount");
 
   const { data: transactData } = useQuery(
     transactByAccountOptions({
@@ -112,12 +115,12 @@ export const DetailedIncomeBarPlot = () => {
         (accounts: AccountsData) => {
           if (keys) {
             const keyNames = keys.map(
-              (k) => accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME,
+              (k) => accounts.find((a) => a.id == k)?.name ?? otherAccountLabel,
             );
             return keyNames;
           }
         },
-        [keys],
+        [keys, otherAccountLabel],
       ),
     }),
   );
@@ -139,7 +142,9 @@ export const DetailedIncomeBarPlot = () => {
         categories={keyNames}
         showLegend={false}
         showXAxis={false}
-        valueFormatter={(number: number) => parseNum(number, { digits: 0 })}
+        valueFormatter={(number: number) =>
+          formatCurrency(number, locale, { digits: 0, compact: true })
+        }
       />
     </div>
   );

@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "cashpy.budgets.v1";
@@ -28,6 +30,8 @@ interface Row {
 
 const BudgetRow = (props: { row: Row; onChangeTarget: (value: number) => void }) => {
   const { row, onChangeTarget } = props;
+  const { locale } = useLocale();
+  const { t } = useTranslation();
   const pct = row.target > 0 ? (row.spent / row.target) * 100 : 0;
   const barColor = pct > 100 ? "bg-red-500" : pct > 80 ? "bg-amber-500" : "bg-emerald-500";
 
@@ -36,13 +40,15 @@ const BudgetRow = (props: { row: Row; onChangeTarget: (value: number) => void })
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-muted-foreground truncate">{row.accountName}</span>
         <div className="flex items-center gap-1 shrink-0 tabular-nums">
-          <span className="text-sm font-medium">{parseNum(row.spent, { digits: 0 })}</span>
+          <span className="text-sm font-medium">
+            {formatCurrency(row.spent, locale, { digits: 0, compact: true })}
+          </span>
           <span className="text-xs text-muted-foreground">/</span>
           <input
             type="number"
             min={0}
             value={row.target || ""}
-            placeholder="set"
+            placeholder={t("summary.budget.setPlaceholder")}
             onChange={(e) => onChangeTarget(Number(e.target.value) || 0)}
             className="w-14 bg-transparent border border-border rounded px-1 py-0.5 text-right text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
           />
@@ -59,6 +65,7 @@ const BudgetRow = (props: { row: Row; onChangeTarget: (value: number) => void })
 };
 
 export const BudgetVsActual = (props: { className?: string }) => {
+  const { t } = useTranslation();
   const { db } = useDB();
   const { bookId } = useBook();
   const { user } = useAuth();
@@ -107,7 +114,7 @@ export const BudgetVsActual = (props: { className?: string }) => {
   if (rows.length === 0) {
     return (
       <p className={cn("text-sm text-muted-foreground", props.className)}>
-        No expenses recorded this month yet.
+        {t("summary.budget.empty")}
       </p>
     );
   }

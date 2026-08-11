@@ -1,29 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency, formatNumber } from "@/common/utils.ts";
 import { KpiCard } from "@/components/KpiCard.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/useAuthContext";
 import { splitSumOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
 const DeltaChip = (props: { current: number; previous: number; positiveIsGood?: boolean }) => {
   const { current, previous, positiveIsGood = true } = props;
+  const { locale } = useLocale();
+  const { t } = useTranslation();
   if (!previous) return null;
 
   const diff = current - previous;
   const pct = (diff / Math.abs(previous)) * 100;
   if (Math.abs(pct) < 0.5) {
-    return <span className="text-xs text-muted-foreground">flat vs last month</span>;
+    return <span className="text-xs text-muted-foreground">{t("summary.kpi.deltaFlat")}</span>;
   }
 
   const isUp = diff > 0;
   const isGood = isUp === positiveIsGood;
   return (
     <span className={cn("text-xs font-medium", isGood ? "text-green-600" : "text-red-600")}>
-      {isUp ? "▲" : "▼"} {parseNum(Math.abs(pct), { digits: 0, symbol: "%" })} vs last month
+      {isUp ? "▲" : "▼"} {formatNumber(Math.abs(pct), locale, { digits: 0 })}%{" "}
+      {t("summary.kpi.vsLastMonth")}
     </span>
   );
 };
@@ -34,6 +39,8 @@ export const KpiBlock = (props: { className?: string }) => {
   const { user } = useAuth();
   const { latestMonth } = useDomain();
   const dbconf = getConfig(user);
+  const { locale } = useLocale();
+  const { t } = useTranslation();
   const prevMonth = latestMonth?.minus({ months: 1 });
 
   const { data: netGain } = useQuery(
@@ -92,21 +99,21 @@ export const KpiBlock = (props: { className?: string }) => {
       <CardContent className="pt-4">
         <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
           <KpiCard
-            name="Net"
-            value={parseNum(netGain ?? 0)}
+            name={t("summary.kpi.net")}
+            value={formatCurrency(netGain ?? 0, locale, { compact: true })}
             delta={<DeltaChip current={-(netGain ?? 0)} previous={-(prevNetGain ?? 0)} />}
           />
           <KpiCard
-            name="Income"
-            value={parseNum(earnings ?? 0)}
+            name={t("summary.kpi.income")}
+            value={formatCurrency(earnings ?? 0, locale, { compact: true })}
             color="text-green-600"
             delta={
               <DeltaChip current={Math.abs(earnings ?? 0)} previous={Math.abs(prevEarnings ?? 0)} />
             }
           />
           <KpiCard
-            name="Expenses"
-            value={parseNum(costs ?? 0)}
+            name={t("summary.kpi.expenses")}
+            value={formatCurrency(costs ?? 0, locale, { compact: true })}
             color="text-red-600"
             delta={
               <DeltaChip
@@ -117,21 +124,25 @@ export const KpiBlock = (props: { className?: string }) => {
             }
           />
           <KpiCard
-            name="Savings rate"
-            value={parseNum(savingsRate, { digits: 0, symbol: "%" })}
+            name={t("summary.kpi.savingsRate")}
+            value={`${formatNumber(savingsRate, locale, { digits: 0 })}%`}
             delta={<DeltaChip current={savingsRate} previous={prevSavingsRate} />}
           />
           <KpiCard
-            name="Net worth"
-            value={parseNum(netWorth)}
+            name={t("summary.kpi.netWorth")}
+            value={formatCurrency(netWorth, locale, { compact: true })}
             delta={<DeltaChip current={netWorth} previous={prevNetWorth} />}
           />
           <KpiCard
-            name="Runway"
+            name={t("summary.kpi.runway")}
             value={
-              runwayMonths != null ? parseNum(runwayMonths, { digits: 1, symbol: " mo" }) : "—"
+              runwayMonths != null
+                ? t("summary.kpi.runwayValue", {
+                    value: formatNumber(runwayMonths, locale, { digits: 1 }),
+                  })
+                : "—"
             }
-            title="Checking + savings ÷ average monthly expenses (last 3 months)"
+            title={t("summary.kpi.runwayTooltip")}
           />
         </section>
       </CardContent>

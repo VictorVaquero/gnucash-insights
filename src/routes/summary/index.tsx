@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { accountsOptions } from "@/db/queries/global";
 import { netCostsYearMonthOptions, transactsSumOptions } from "@/db/queries/summary";
@@ -27,34 +28,40 @@ import { SummaryPageContextProvider } from "./-summaryPageContext";
 import { DetailedIncomeBarPlot } from "./-plots/DetailedIncomeBarPlot";
 
 const Summary = () => {
+  const { t } = useTranslation();
   return (
     <SummaryPageContextProvider>
       <div className="w-full md:h-full p-4 sm:p-10 pt-6 flex flex-col gap-y-6">
-        <h1 className="text-xl font-semibold tracking-tight">Summary</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t("routes.summary.title")}</h1>
         <SettingsBlock />
         <KpiBlock />
         <div className="h-72 md:h-80 shrink-0">
-          <ChartCard title="Net worth trend">
+          <ChartCard title={t("summary.charts.netWorthTrend")}>
             <NetWorthTrendPlot />
           </ChartCard>
         </div>
         <div className="flex flex-col md:flex-row gap-6 md:flex-1 md:min-h-0">
-          <CollapsibleSection title="Details" className="md:w-72 md:shrink-0 md:self-start">
+          <CollapsibleSection
+            title={t("summary.sections.details")}
+            className="md:w-72 md:shrink-0 md:self-start"
+          >
             <BalancesBlock />
             <SavingsBlock />
             <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2">Top movers</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                {t("summary.sections.topMovers")}
+              </p>
               <TopMovers />
             </div>
           </CollapsibleSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:grid-rows-2 md:flex-1 md:min-w-0 md:min-h-0">
-            <ChartCard title="Assets">
+            <ChartCard title={t("summary.charts.assets")}>
               <AssetAccountsPlot />
             </ChartCard>
-            <ChartCard title="Income vs expenses">
+            <ChartCard title={t("summary.charts.incomeVsExpenses")}>
               <IncomeExpensesPlot />
             </ChartCard>
-            <ChartCard title="Expenses by category">
+            <ChartCard title={t("summary.charts.expensesByCategory")}>
               <div className="flex flex-col md:flex-row gap-4 md:h-full">
                 <div className="flex-1 min-w-0 h-64 md:h-full">
                   <DetailedExpensesBarPlot />
@@ -64,16 +71,16 @@ const Summary = () => {
                 </div>
               </div>
             </ChartCard>
-            <ChartCard title="Income by category">
+            <ChartCard title={t("summary.charts.incomeByCategory")}>
               <DetailedIncomeBarPlot />
             </ChartCard>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ChartCard title="Budget vs actual">
+          <ChartCard title={t("summary.charts.budgetVsActual")}>
             <BudgetVsActual />
           </ChartCard>
-          <ChartCard title="Recurring expenses">
+          <ChartCard title={t("summary.charts.recurringExpenses")}>
             <RecurringExpenses />
           </ChartCard>
         </div>
@@ -91,7 +98,7 @@ export const Route = createFileRoute("/summary/")({
         search: { redirect: location.href },
       });
     }
-    return { title: "Summary" };
+    return { title: "routes.summary.title" };
   },
   loader: ({ context: { queryClient, db, bookId, auth } }) => {
     if (db && bookId && auth?.user) {

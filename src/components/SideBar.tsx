@@ -1,3 +1,4 @@
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import {
@@ -14,25 +15,26 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { createLink, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface NavItem {
   to: string;
   icon: IconDefinition;
-  text: string;
+  labelKey: string;
   search?: Record<string, unknown>;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: "/home", icon: faWallet, text: "Home" },
-  { to: "/metadata", icon: faBook, text: "Metadata" },
-  { to: "/summary", icon: faChartPie, text: "Summary" },
-  { to: "/expenses", icon: faCoins, text: "Expenses" },
-  { to: "/travels", icon: faPlane, text: "Trips" },
-  { to: "/investments", icon: faPiggyBank, text: "Investments" },
+  { to: "/home", icon: faWallet, labelKey: "nav.home" },
+  { to: "/metadata", icon: faBook, labelKey: "nav.metadata" },
+  { to: "/summary", icon: faChartPie, labelKey: "nav.summary" },
+  { to: "/expenses", icon: faCoins, labelKey: "nav.expenses" },
+  { to: "/travels", icon: faPlane, labelKey: "nav.trips" },
+  { to: "/investments", icon: faPiggyBank, labelKey: "nav.investments" },
   {
     to: "/analysis",
     icon: faMagnifyingGlass,
-    text: "Analysis",
+    labelKey: "nav.analysis",
     search: { query: {} },
   },
 ];
@@ -90,6 +92,7 @@ const CreatedLink = createLink(ItemLinkComponent);
 
 const NavList = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const currentHref = useRouterState({ select: (s) => s.location.href });
+  const { t } = useTranslation();
 
   return (
     <nav className="flex-1 px-2 py-4">
@@ -100,7 +103,7 @@ const NavList = ({ isCollapsed }: { isCollapsed: boolean }) => {
               to={item.to}
               search={item.search}
               icon={item.icon}
-              text={item.text}
+              text={t(item.labelKey)}
               isCollapsed={isCollapsed}
               isActive={currentHref.startsWith(item.to)}
               preload="render"
@@ -131,6 +134,7 @@ export const SideBar = ({
   isCollapsed: boolean;
   toggleSidebar: () => void;
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       {/* Backdrop: dims the rest of the page while the nav is expanded, on every viewport */}
@@ -152,7 +156,7 @@ export const SideBar = ({
         <div className="flex items-center gap-2.5 p-3">
           <button
             onClick={toggleSidebar}
-            aria-label={isCollapsed ? "Open menu" : "Close menu"}
+            aria-label={isCollapsed ? t("sidebar.openMenu") : t("sidebar.closeMenu")}
             aria-expanded={!isCollapsed}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-secondary-foreground transition-colors hover:bg-accent"
           >
@@ -178,8 +182,14 @@ export const SideBar = ({
 
         <NavList isCollapsed={isCollapsed} />
 
-        <div className="border-t border-border p-2">
+        <div
+          className={cn(
+            "flex border-t border-border p-2",
+            isCollapsed ? "flex-col gap-1" : "gap-1",
+          )}
+        >
           <ThemeToggle isCollapsed={isCollapsed} />
+          <LanguageSwitcher isCollapsed={isCollapsed} />
         </div>
       </aside>
     </>

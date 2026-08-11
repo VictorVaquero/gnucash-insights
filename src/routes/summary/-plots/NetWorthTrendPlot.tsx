@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
   Line,
@@ -12,7 +13,7 @@ import {
 } from "recharts";
 import type { TooltipContentProps } from "recharts";
 
-import { parseNum, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { renderTouchDot } from "@/components/charts/TouchDot";
@@ -22,6 +23,7 @@ import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
 interface Data {
@@ -39,20 +41,28 @@ interface ChartRow {
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const lineColor = twStyles.getPropertyValue("--color-blue-500");
+const activeDot = renderTouchDot(lineColor, 4);
 
 const ChartTooltipContent = ({
   payload,
   label,
-}: Pick<TooltipContentProps<number, string>, "payload" | "label">) => (
-  <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center gap-0.5">
-    <span className="text-muted-foreground text-xs">{label}</span>
-    <span style={{ color: lineColor }}>{parseNum((payload[0]?.value as number) ?? 0)}</span>
-  </div>
-);
+}: Pick<TooltipContentProps<number, string>, "payload" | "label">) => {
+  const { locale } = useLocale();
+  return (
+    <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center gap-0.5">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <span style={{ color: lineColor }}>
+        {formatCurrency((payload[0]?.value as number) ?? 0, locale, { compact: true })}
+      </span>
+    </div>
+  );
+};
 
 const DrawNetWorthTrendPlot = ({ data }: { data: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   const chartData = useMemo(() => {
     const byDate = new Map<string, ChartRow>();
@@ -77,7 +87,10 @@ const DrawNetWorthTrendPlot = ({ data }: { data: Data[] }) => {
 
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
-      <ChartKeyValue label="Latest total" value={parseNum(latestTotal)} />
+      <ChartKeyValue
+        label={t("summary.plots.latestTotal")}
+        value={formatCurrency(latestTotal, locale, { compact: true })}
+      />
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
@@ -99,7 +112,7 @@ const DrawNetWorthTrendPlot = ({ data }: { data: Data[] }) => {
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => parseNum(value)}
+            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
             width={margin.left}
           />
           <RechartsTooltip
@@ -112,11 +125,11 @@ const DrawNetWorthTrendPlot = ({ data }: { data: Data[] }) => {
           <Line
             type="linear"
             dataKey="total"
-            name="Net worth"
+            name={t("summary.plots.netWorth")}
             stroke={lineColor}
             strokeWidth={2}
             dot={false}
-            activeDot={renderTouchDot(lineColor, 4)}
+            activeDot={activeDot}
             connectNulls
             isAnimationActive={false}
           />

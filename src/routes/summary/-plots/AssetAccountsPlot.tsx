@@ -1,6 +1,7 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
   Line,
@@ -14,7 +15,7 @@ import {
 import type { TooltipContentProps } from "recharts";
 
 import { getRandomColor } from "@/common/getColors";
-import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { renderTouchDot } from "@/components/charts/TouchDot";
@@ -24,6 +25,7 @@ import { transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -52,6 +54,7 @@ const ChartTooltipContent = ({
   label,
   accounts,
 }: Pick<TooltipContentProps<number, string>, "payload" | "label"> & { accounts: Account[] }) => {
+  const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center gap-0.5">
       <span className="text-muted-foreground text-xs">{label}</span>
@@ -59,7 +62,7 @@ const ChartTooltipContent = ({
         const account = accounts.find((a) => a.id === entry.dataKey);
         return (
           <span key={entry.dataKey} style={{ color: entry.color }}>
-            {account?.name}: {parseNum(entry.value as number)}
+            {account?.name}: {formatCurrency(entry.value as number, locale, { compact: true })}
           </span>
         );
       })}
@@ -70,6 +73,8 @@ const ChartTooltipContent = ({
 const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: Account[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   const chartData = useMemo(() => {
     const byDate = new Map<string, ChartRow>();
@@ -96,9 +101,17 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  const activeDots = useMemo(
+    () => new Map(accounts.map((s) => [s.id, renderTouchDot(getRandomColor(s.id), 4)])),
+    [accounts],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
-      <ChartKeyValue label="Latest total" value={parseNum(latestTotal)} />
+      <ChartKeyValue
+        label={t("summary.plots.latestTotal")}
+        value={formatCurrency(latestTotal, locale, { compact: true })}
+      />
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
@@ -120,7 +133,7 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => parseNum(value)}
+            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
             width={margin.left}
           />
           <RechartsTooltip
@@ -141,7 +154,7 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
               stroke={getRandomColor(s.id)}
               strokeWidth={1.5}
               dot={false}
-              activeDot={renderTouchDot(getRandomColor(s.id), 4)}
+              activeDot={activeDots.get(s.id)}
               connectNulls
               isAnimationActive={false}
             />

@@ -1,7 +1,16 @@
 import { useDomain } from "@/hooks/useDB";
 import type { DateRange, Periodicity } from "@/types/domain";
 import { DateTime } from "luxon";
-import { ReactNode, createContext, use, useEffect, useReducer, useRef, useState } from "react";
+import {
+  ReactNode,
+  createContext,
+  use,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 // --- Types ---
 type AccountId = string;
@@ -58,24 +67,23 @@ export function SummaryPageContextProvider({ children }: { children: ReactNode }
     setDateRange({ from: domainFrom, to: domainTo });
   }, [domainFrom, domainTo]);
 
-  return (
-    <SummaryPageContext
-      value={{
-        hideAccounts,
-        toggleHideAccount,
-        detailedDate,
-        setDetailedDate,
-        dateRange,
-        setDateRange,
-        isYearly,
-        toggleYearly,
-        chartPeriodicity,
-        setChartPeriodicity,
-      }}
-    >
-      {children}
-    </SummaryPageContext>
+  const value = useMemo(
+    () => ({
+      hideAccounts,
+      toggleHideAccount,
+      detailedDate,
+      setDetailedDate,
+      dateRange,
+      setDateRange,
+      isYearly,
+      toggleYearly,
+      chartPeriodicity,
+      setChartPeriodicity,
+    }),
+    [hideAccounts, detailedDate, dateRange, isYearly, chartPeriodicity],
   );
+
+  return <SummaryPageContext value={value}>{children}</SummaryPageContext>;
 }
 
 // --- Hook ---

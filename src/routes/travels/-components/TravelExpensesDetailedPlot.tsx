@@ -13,12 +13,13 @@ import {
 } from "recharts";
 import { BarLoader } from "@/components/ui/BarLoader";
 
-import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesDetailedYearMonthOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { getColor } from "./utils";
 
@@ -42,12 +43,13 @@ const ChartTooltipContent = ({
   payload,
   label,
 }: Pick<TooltipContentProps<number, string>, "payload" | "label">) => {
+  const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{label}</span>
       {payload.map((entry) => (
         <span key={entry.dataKey} style={{ color: entry.color }}>
-          {entry.dataKey}: {parseNum(entry.value as number)}
+          {entry.dataKey}: {formatCurrency(entry.value as number, locale, { compact: true })}
         </span>
       ))}
     </div>
@@ -56,6 +58,7 @@ const ChartTooltipContent = ({
 
 const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
+  const { locale } = useLocale();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
 
   const names = useMemo(() => Array.from(new Set(props.data.map(gf))), [props.data]);
@@ -65,13 +68,13 @@ const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
     for (const d of props.data) {
       const row = byDate.get(d.date) ?? {
         date: d.date,
-        dateLabel: xf(d).toFormat("LLL yy"),
+        dateLabel: xf(d).setLocale(locale).toFormat("LLL yy"),
       };
       row[d.name] = d.value;
       byDate.set(d.date, row);
     }
     return Array.from(byDate.values()).sort((a, b) => (a.date > b.date ? 1 : -1));
-  }, [props.data]);
+  }, [props.data, locale]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const { activeIndex } = useChartScrubber(containerRef, {
@@ -103,7 +106,7 @@ const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
             tick={{ fontSize: 10, fill: "currentColor" }}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => parseNum(value)}
+            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
             width={margin.left}
           />
           <RechartsTooltip

@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { getErrorMessage } from "@/common/utils";
 import { ErrorModal } from "@/components/ErrorModal";
@@ -10,6 +11,7 @@ interface LoginSearch {
 }
 
 export const LoginPage = () => {
+  const { t } = useTranslation();
   const { isAuthenticated, signIn, signInGuest } = useAuth();
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +47,7 @@ export const LoginPage = () => {
         <form className="pt-4" onSubmit={handleSignIn}>
           <div>
             <label htmlFor="user" className="sr-only">
-              Email
+              {t("login.form.email")}
             </label>
             <input
               className="p-4 bg-background text-foreground focus-visible:outline focus-visible:outline-ring focus-visible:outline-1"
@@ -54,14 +56,14 @@ export const LoginPage = () => {
               type="user"
               value={user}
               onChange={(e) => setUser(e.target.value)}
-              placeholder="Email"
+              placeholder={t("login.form.email")}
               autoComplete="off"
               required
             />
           </div>
           <div className="mt-2">
             <label htmlFor="password" className="sr-only">
-              Password
+              {t("login.form.password")}
             </label>
             <input
               className="inputText p-4 bg-background text-foreground focus-visible:outline focus-visible:outline-ring focus-visible:outline-1"
@@ -70,7 +72,7 @@ export const LoginPage = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder={t("login.form.password")}
               autoComplete="off"
               required
             />
@@ -81,13 +83,13 @@ export const LoginPage = () => {
               type="button"
               onClick={handleGuestSignIn}
             >
-              {"Guest"}
+              {t("login.actions.guest")}
             </button>
             <button
               className="p-3 px-4 rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
               type="submit"
             >
-              {"Sign In"}
+              {t("login.actions.signIn")}
             </button>
           </div>
         </form>
@@ -103,6 +105,6 @@ export const Route = createFileRoute("/login/")({
     return { redirect: (search.redirect as string) || "/summary" };
   },
   beforeLoad: async () => {
-    return { title: "Login" };
+    return { title: "routes.login.title" };
   },
 });

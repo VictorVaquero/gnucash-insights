@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { flatRollup, groupBy, rollup, sum } from "@/common/aggregate";
-import { parseNum } from "@/common/utils";
+import { formatCurrency } from "@/common/utils";
 import { BarChart } from "@/components/charts/BarPlot";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -10,6 +11,7 @@ import { AccountsData, accountsOptions } from "@/db/queries/global";
 import { TransactData, transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { DateTime } from "luxon";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -21,7 +23,7 @@ export interface Data {
   value: number;
 }
 
-function collapseMinorAccounts(data: Data[], limit: number): Data[] {
+function collapseMinorAccounts(data: Data[], limit: number, othersLabel: string): Data[] {
   // 1. Calculate totals per account to find the "Heavy Hitters"
   const totalByAccount = rollup(
     data,
@@ -44,12 +46,12 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
     (v) => ({
       // Take metadata from the first entry in the group
       dateLabel: v[0].dateLabel,
-      // If it's a top account, keep the name; otherwise, call it "Others"
-      accountName: topAccounts.has(v[0].accountId) ? v[0].accountName : DEFAULT_ACCOUNT_NAME,
+      // If it's a top account, keep the name; otherwise, bucket it under the "Others" label
+      accountName: topAccounts.has(v[0].accountId) ? v[0].accountName : othersLabel,
       value: sum(v, (d) => d.value),
     }),
     (d) => d.date,
-    (d) => (topAccounts.has(d.accountId) ? d.accountId : DEFAULT_ACCOUNT_NAME),
+    (d) => (topAccounts.has(d.accountId) ? d.accountId : othersLabel),
   );
 
   // 4. Map back to your Data structure
@@ -60,8 +62,6 @@ function collapseMinorAccounts(data: Data[], limit: number): Data[] {
     ...details,
   }));
 }
-
-const DEFAULT_ACCOUNT_NAME = "Others";
 
 type PivotedRow = {
   date: string;
@@ -117,6 +117,9 @@ export const DetailedExpensesBarPlot = () => {
   const { user } = useAuth();
   const dbconfig = getConfig(user);
   const { hideAccounts, setDetailedDate, dateRange, chartPeriodicity } = useSummaryPageContext();
+  const { locale } = useLocale();
+  const { t } = useTranslation();
+  const othersLabel = t("summary.plots.others");
 
   const { data: transactData } = useQuery(
     transactByAccountOptions({
@@ -133,13 +136,14 @@ export const DetailedExpensesBarPlot = () => {
                   .filter((d) => d.date >= dateRange.from.toString())
                   .filter((d) => d.date <= dateRange.to.toString()),
                 14,
+                othersLabel,
               ),
             );
             return { data, keys };
           }
           return { data: undefined, keys: undefined };
         },
-        [dateRange],
+        [dateRange, othersLabel],
       ),
     }),
   );
@@ -156,11 +160,11 @@ export const DetailedExpensesBarPlot = () => {
           if (keys) {
             const keyNames = keys
               .filter((k) => !hideAccounts.includes(k))
-              .map((k) => accounts.find((a) => a.id == k)?.name ?? DEFAULT_ACCOUNT_NAME);
+              .map((k) => accounts.find((a) => a.id == k)?.name ?? othersLabel);
             return keyNames;
           }
         },
-        [keys, hideAccounts],
+        [keys, hideAccounts, othersLabel],
       ),
     }),
   );
@@ -181,7 +185,9 @@ export const DetailedExpensesBarPlot = () => {
         index="dateLabel"
         categories={keyNames}
         showLegend={false}
-        valueFormatter={(number: number) => parseNum(number, { digits: 0 })}
+        valueFormatter={(number: number) =>
+          formatCurrency(number, locale, { digits: 0, compact: true })
+        }
         onValueChange={(v) => setDetailedDate(DateTime.fromFormat(v?.date as string, "yyyy-LL-dd"))}
       />
     </div>

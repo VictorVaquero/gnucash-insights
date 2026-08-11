@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
-import { parseNum } from "@/common/utils.ts";
+import { formatCurrency } from "@/common/utils.ts";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions, fullTransactionsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
 const WINDOW_MONTHS = 6;
@@ -27,6 +29,8 @@ export const RecurringExpenses = (props: { className?: string }) => {
   const { user } = useAuth();
   const { latestMonth } = useDomain();
   const dbconf = getConfig(user);
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   const { data: expenseAccounts } = useQuery(
     accountsOptions({ db, bookId, accountIds: [dbconf.expenses] }),
@@ -100,7 +104,7 @@ export const RecurringExpenses = (props: { className?: string }) => {
   if (recurring.length === 0) {
     return (
       <p className={cn("text-sm text-muted-foreground", props.className)}>
-        No recurring charges detected yet.
+        {t("summary.recurring.empty")}
       </p>
     );
   }
@@ -117,9 +121,11 @@ export const RecurringExpenses = (props: { className?: string }) => {
             <p className="text-xs text-muted-foreground/70 truncate">{r.accountName}</p>
           </div>
           <div className="flex flex-col items-end shrink-0 tabular-nums">
-            <span className="text-sm font-medium">{parseNum(r.avgAmount, { digits: 0 })}</span>
+            <span className="text-sm font-medium">
+              {formatCurrency(r.avgAmount, locale, { digits: 0, compact: true })}
+            </span>
             <span className="text-xs text-muted-foreground">
-              {r.monthsSeen}/{WINDOW_MONTHS} mo
+              {t("summary.recurring.monthsSeen", { seen: r.monthsSeen, total: WINDOW_MONTHS })}
             </span>
           </div>
         </div>

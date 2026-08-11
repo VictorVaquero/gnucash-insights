@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { DropDownForm } from "@/components/DropDownForm.tsx";
 import { KpiCard } from "@/components/KpiCard.tsx";
@@ -9,6 +10,7 @@ import { useBook, useDB } from "@/hooks/useDB";
 const Metadata = () => {
   const { bookId } = useBook();
   const { db } = useDB();
+  const { t } = useTranslation();
 
   const { data: books = [] } = useQuery(booksOptions(db));
   const { data: domainDates } = useQuery(domainOptions(db));
@@ -39,18 +41,18 @@ const Metadata = () => {
     <div className="p-4 md:p-10 flex flex-col gap-y-4">
       <DropDownForm
         id="books"
-        label="Book Id"
+        label={t("metadata.bookId")}
         list={bookOptions}
         value={bookId}
         //setValue={setBookId}
         setValue={() => undefined}
       />
       <div className="mt-6 flex flex-row flex-wrap gap-x-6 gap-y-4">
-        <KpiCard name="Accounts" value={book.countAccount} />
-        <KpiCard name="Transactions" value={book.countTransaction} />
-        <KpiCard name="Currencies" value={book.countPrice} />
-        <KpiCard name="Initial Date" value={domain.min} />
-        <KpiCard name="Final Date" value={domain.max} />
+        <KpiCard name={t("metadata.accounts")} value={book.countAccount} />
+        <KpiCard name={t("metadata.transactions")} value={book.countTransaction} />
+        <KpiCard name={t("metadata.currencies")} value={book.countPrice} />
+        <KpiCard name={t("metadata.initialDate")} value={domain.min} />
+        <KpiCard name={t("metadata.finalDate")} value={domain.max} />
       </div>
     </div>
   );
@@ -59,7 +61,7 @@ const Metadata = () => {
 export const Route = createFileRoute("/metadata")({
   component: Metadata,
   beforeLoad: async () => {
-    return { title: "Metadata" };
+    return { title: "routes.metadata.title" };
   },
   loader: async ({ location, context: { auth } }) => {
     if (auth && !auth.isAuthenticated()) {
