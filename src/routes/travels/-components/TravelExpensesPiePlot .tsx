@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useRef } from "react";
 import {
   Cell,
   Pie,
@@ -16,6 +17,7 @@ import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesByAccountOptions } from "@/db/queries/travel";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useChartScrubber } from "@/hooks/useChartScrubber";
 
 interface Data {
   key: string;
@@ -53,10 +55,25 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
   const sortedData = [...props.data].sort(orderyf);
   const sumTotal = sum(sortedData, yf);
 
+  // Same scrubber-adjacent deviation as MonthDetailedExpensesPiePlot: a horizontal drag
+  // cycles through wedges by draw-order index rather than tracking a literal x position,
+  // since a pie has no linear axis (see chart-component-contract.md's non-goal on
+  // pixel-identical behavior).
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeIndex } = useChartScrubber(containerRef, { length: sortedData.length });
+  const scrubbed = activeIndex != null ? sortedData[activeIndex] : undefined;
+
   return (
-    <div className="relative w-full h-64 md:h-full">
+    <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
-        <p className="text-red-500">{parseNum(sumTotal)}</p>
+        {scrubbed ? (
+          <>
+            <p className="text-muted-foreground text-sm">{namef(scrubbed)}</p>
+            <p style={{ color: color_f(scrubbed) }}>{parseNum(yf(scrubbed))}</p>
+          </>
+        ) : (
+          <p className="text-red-500">{parseNum(sumTotal)}</p>
+        )}
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
@@ -78,8 +95,13 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
             strokeWidth={1.5}
             isAnimationActive={false}
           >
-            {sortedData.map((d) => (
-              <Cell key={gf(d)} fill={color_f(d)} />
+            {sortedData.map((d, i) => (
+              <Cell
+                key={gf(d)}
+                fill={color_f(d)}
+                stroke={i === activeIndex ? "var(--color-foreground)" : "white"}
+                strokeWidth={i === activeIndex ? 3 : 1.5}
+              />
             ))}
           </Pie>
         </PieChart>

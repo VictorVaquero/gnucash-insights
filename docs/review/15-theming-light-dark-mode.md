@@ -1,6 +1,6 @@
 # Theming: light/dark mode
 
-**Priority**: P1 · **Status**: Planning done — see specs/007-design-system-theming-and-charts
+**Priority**: P1 · **Status**: Implemented — see specs/007-design-system-theming-and-charts (all 80 tasks complete)
 
 ## Why this matters
 

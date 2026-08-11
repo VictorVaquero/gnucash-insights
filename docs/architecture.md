@@ -45,6 +45,41 @@ full-width header bar:
   `min-h-full` (not `height`) on the content wrapper above it so it never gets stranded
   mid-page on tall content.
 
+## Theming
+
+- **Token layers** (`src/index.css`): a `@theme` block defines the raw `shark-*` palette
+  (a slate-like gray scale, `shark-50`…`shark-950`) as Tailwind color tokens. A second
+  `@theme inline` block maps semantic names (`--color-background`, `--color-foreground`,
+  `--color-primary`, `--color-border`, etc.) to CSS custom properties of the same name
+  without the `--color-` prefix (`var(--background)`, `var(--foreground)`, ...) — the
+  `inline` keyword is required so generated utilities (`bg-background`, `text-border`,
+  ...) reference the custom property directly instead of Tailwind pre-resolving it once
+  against `:root`, which would make `.dark`'s overrides invisible.
+- **Two value sets, one property list**: `:root` and `.dark` each assign concrete values
+  (drawn from `shark-*`/Tailwind's stock palette) to that same set of semantic custom
+  properties. Toggling dark mode is exactly toggling the `.dark` class on
+  `document.documentElement` — every `bg-*`/`text-*`/`border-*` utility repaints for free,
+  no per-component `dark:` variant needed for colors already expressed as a semantic
+  token. `dark:` variants (via `@custom-variant dark (&:where(.dark, .dark *))`) are only
+  needed for one-off, non-token styling (shadows, opacity tweaks, etc.).
+  - Chart code follows the same pattern: colors read via `twStyles.getPropertyValue`
+    (`src/common/utils.ts`) or hardcoded as `var(--color-border)` etc. in Recharts
+    `stroke`/`fill` props resolve through the same custom-property chain, so charts
+    repaint on theme toggle without any chart-specific dark-mode code.
+- **`useTheme` hook** (`src/hooks/useTheme.ts`): the pattern to mirror for any future
+  hook needing a persisted, tri-state (`"light" | "dark" | "system"`) user preference
+  with a live OS-level fallback — e.g. spec 008's `useLocale`:
+  - Preference itself persists via `usePersistentState` (localStorage-backed, same
+    hook used for other durable client state like the auth session).
+  - `"system"` is resolved live against `window.matchMedia("(prefers-color-scheme:
+dark)")`, re-subscribing via a `change` listener only while `preference === "system"`
+    (torn down otherwise, so an explicit choice doesn't keep listening to OS changes).
+  - A single `resolved` value (`"light" | "dark"`, `preference` collapsed through the
+    system fallback) is the one thing consumers act on — a `useEffect` toggles the `.dark`
+    class on `document.documentElement` whenever `resolved` changes, and that's the only
+    DOM side effect the hook performs. `preference`, `resolved`, and `setPreference` are
+    all it returns.
+
 ## Data layer
 
 - **ORM**: Drizzle, schema in `src/db/schema.ts`, hand-written query builders per domain

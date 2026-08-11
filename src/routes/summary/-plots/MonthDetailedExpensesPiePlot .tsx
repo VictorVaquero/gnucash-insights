@@ -1,6 +1,6 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import {
   Cell,
   Pie,
@@ -20,6 +20,7 @@ import { netCostsYearMonthOptions } from "@/db/queries/summary";
 import { Account } from "@/db/schema";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
 
@@ -71,11 +72,29 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
   );
   const total = sum(filtered_data, yf);
 
+  // Pie charts have no linear x-axis to drag along, so the scrubber here maps a
+  // horizontal drag position to segment *index* (in draw order) instead of a data
+  // point in space -- cycling through wedges left-to-right rather than tracking a
+  // literal cursor position, per chart-component-contract.md's non-goal on
+  // pixel-identical scrubbing behavior across chart types.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeIndex } = useChartScrubber(containerRef, { length: filtered_data.length });
+  const scrubbed = activeIndex != null ? filtered_data[activeIndex] : undefined;
+
   return (
-    <div className="relative w-full h-64 md:h-full">
+    <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
-        <p className="text-muted-foreground">{props.date.toFormat("yyyy-MM")}</p>
-        <p className="text-red-500">{parseNum(total)}</p>
+        {scrubbed ? (
+          <>
+            <p className="text-muted-foreground">{nameOf(scrubbed, props.accounts)}</p>
+            <p style={{ color: colorOf(scrubbed, props.accounts) }}>{parseNum(scrubbed.value)}</p>
+          </>
+        ) : (
+          <>
+            <p className="text-muted-foreground">{props.date.toFormat("yyyy-MM")}</p>
+            <p className="text-red-500">{parseNum(total)}</p>
+          </>
+        )}
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
@@ -100,12 +119,14 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
             isAnimationActive={false}
             className="cursor-pointer"
           >
-            {filtered_data.map((d) => (
+            {filtered_data.map((d, i) => (
               <Cell
                 key={gf(d)}
                 fill={
                   props.hideAccounts.includes(d.account ?? "") ? gray : colorOf(d, props.accounts)
                 }
+                stroke={i === activeIndex ? "var(--color-foreground)" : "white"}
+                strokeWidth={i === activeIndex ? 3 : 1.5}
                 onClick={() => props.setHideAccounts(d.account)}
               />
             ))}

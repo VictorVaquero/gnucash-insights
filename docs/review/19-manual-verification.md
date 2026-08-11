@@ -52,6 +52,20 @@ outstanding checks, copied forward unchanged from their source specs:
   covering: SideBar nav (default + active + hover), login submit button, `Button`
   destructive/link variants, PeriodicityTabs inactive tab, dropdown-menu hover/focus
   state.
+- **Spec 007, US5 step 6 (chart resize + touch usability)**: repeat quickstart.md US5
+  steps 2 (375px-viewport axis-label legibility, tightened margins, `BarPlot.tsx`'s
+  height no longer clipping/leaving excess space) and 4 (tap-to-pin tooltip, bottom-sheet
+  variant on narrow viewports) on an actual phone, not just DevTools device-toolbar
+  emulation — DevTools touch/media emulation does not always match real OS/browser
+  behavior 1:1 (Constitution Principle III; spec 007's Assumptions).
+- **Spec 007, US6 (scrubber on every chart)**: on an actual touch device, finger-drag
+  across each chart's plot area and confirm a crosshair tracks the drag position with the
+  pinned tooltip value updating live, per quickstart.md US6. Automated e2e coverage
+  (`e2e/chart-scrubber.spec.ts`) exercises the underlying `useChartScrubber` hook via
+  synthetic mouse events in a desktop browser and passes, but per Constitution
+  Principle III that's not a substitute for a real-touchscreen pass — spot-check at least
+  one chart from `summary/-plots/`, one from `travels/-components/`, one from
+  `analysis/-components/`, and the shared `BarPlot.tsx`.
 - **Spec 006 (dev automation and quality gates), T041**: owner-side Cognito test-account
   provisioning for `e2e/real-user-login.spec.ts`. Create one Cognito user in pool
   `eu-west-3_VHPSFHPrK` (e.g. `playwright-test@<domain>`), set a permanent password via
