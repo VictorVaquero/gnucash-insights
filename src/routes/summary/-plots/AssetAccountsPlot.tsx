@@ -14,6 +14,9 @@ import type { TooltipContentProps } from "recharts";
 
 import { getRandomColor } from "@/common/getColors";
 import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
+import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
+import { renderTouchDot } from "@/components/charts/TouchDot";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
 import { transactByAccountOptions } from "@/db/queries/summary";
@@ -43,12 +46,10 @@ const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 
 const ChartTooltipContent = ({
-  active,
   payload,
   label,
   accounts,
-}: TooltipContentProps<number, string> & { accounts: Account[] }) => {
-  if (!active || !payload || payload.length === 0) return null;
+}: Pick<TooltipContentProps<number, string>, "payload" | "label"> & { accounts: Account[] }) => {
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center gap-0.5">
       <span className="text-muted-foreground text-xs">{label}</span>
@@ -80,8 +81,15 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
     );
   }, [data]);
 
+  const latestTotal = useMemo(() => {
+    const latest = chartData[chartData.length - 1];
+    if (!latest) return 0;
+    return accounts.reduce((acc, a) => acc + (Number(latest[a.id]) || 0), 0);
+  }, [chartData, accounts]);
+
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
+      <ChartKeyValue label="Latest total" value={parseNum(latestTotal)} />
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
@@ -100,7 +108,11 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
           />
           <RechartsTooltip
             content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltipContent {...props} accounts={accounts} />
+              <ChartTooltip {...props}>
+                {({ payload, label }) => (
+                  <ChartTooltipContent payload={payload} label={label} accounts={accounts} />
+                )}
+              </ChartTooltip>
             )}
           />
           {accounts.map((s) => (
@@ -112,7 +124,7 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
               stroke={getRandomColor(s.id)}
               strokeWidth={1.5}
               dot={false}
-              activeDot={{ r: 4 }}
+              activeDot={renderTouchDot(getRandomColor(s.id), 4)}
               connectNulls
               isAnimationActive={false}
             />

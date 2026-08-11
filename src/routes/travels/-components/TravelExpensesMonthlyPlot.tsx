@@ -15,6 +15,7 @@ import {
 } from "recharts";
 
 import { parseNum, twStyles, useIsNarrowViewport } from "@/common/utils.ts";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesYearMonthOptions, travelExpensesYearOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
@@ -40,8 +41,7 @@ const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const getColor = () => redColor;
 const xf = (d: Data) => DateTime.fromISO(d.date);
 
-const ChartTooltipContent = ({ active, payload }: TooltipContentProps<number, string>) => {
-  if (!active || !payload || payload.length === 0) return null;
+const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
@@ -80,7 +80,7 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[]
   }, [props.dataYearly, chartData]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
@@ -111,8 +111,10 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[]
             />
           ))}
           <RechartsTooltip
-            content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltipContent {...props} />
+            content={(tprops: TooltipContentProps<number, string>) => (
+              <ChartTooltip {...tprops}>
+                {({ payload }) => <ChartTooltipContent payload={payload} />}
+              </ChartTooltip>
             )}
           />
           <Bar

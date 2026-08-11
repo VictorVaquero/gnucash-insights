@@ -12,6 +12,7 @@ import { BarLoader } from "@/components/ui/BarLoader";
 import { sum } from "@/common/aggregate";
 import { getDefaultColor, getRandomColor } from "@/common/getColors";
 import { parseNum } from "@/common/utils.ts";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesByAccountOptions } from "@/db/queries/travel";
 import { useBook, useDB } from "@/hooks/useDB";
@@ -33,11 +34,9 @@ const color_f = (d: Data) =>
 const orderyf = (a: Data, b: Data) => (yf(a) > yf(b) ? 1 : -1);
 
 const ChartTooltipContent = ({
-  active,
   payload,
   sumTotal,
-}: TooltipContentProps<number, string> & { sumTotal: number }) => {
-  if (!active || !payload || payload.length === 0) return null;
+}: Pick<TooltipContentProps<number, string>, "payload"> & { sumTotal: number }) => {
   const d = payload[0].payload as Data;
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
@@ -55,7 +54,7 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
   const sumTotal = sum(sortedData, yf);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
         <p className="text-red-500">{parseNum(sumTotal)}</p>
       </div>
@@ -63,7 +62,9 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
         <PieChart>
           <RechartsTooltip
             content={(p: TooltipContentProps<number, string>) => (
-              <ChartTooltipContent {...p} sumTotal={sumTotal} />
+              <ChartTooltip {...p}>
+                {({ payload }) => <ChartTooltipContent payload={payload} sumTotal={sumTotal} />}
+              </ChartTooltip>
             )}
           />
           <Pie

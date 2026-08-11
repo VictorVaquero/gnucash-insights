@@ -56,18 +56,22 @@ const isValidAccountConfig = (value: unknown): value is AccountConfig => {
   return stringFieldsValid && taxesAllValid;
 };
 
-// Synthetic demo values — not a secret, safe to keep in source (research.md item 1).
+// Synthetic demo values — not a secret, safe to keep in source.
+// Must match the synthetic chart of accounts produced by
+// scripts/generate-guest-data.mjs (default --seed) — re-run
+// scripts/seed-guest-data.sh and copy its printed config here if the
+// generator's account-generation logic ever changes.
 const GUEST_ACCOUNT_CONFIG: AccountConfig = {
-  expenses: "Account29",
-  income: "Account33",
-  checking: "Account24",
-  savings: "Account31",
-  assets: "Account3",
-  working: "Account19",
-  liability: "Account46",
-  investments: "Account19",
-  taxes: "Account56",
-  taxesAll: ["Account6", "Account28", "Account5", "Account42", "Account57", "Account56"],
+  expenses: "ce17d2f2bb362a53ae5c62d50baee397",
+  income: "9e1be4b28d1f9e69595b47dbfe6841b5",
+  checking: "681d053b91fcac8c821104aa8f0654d8",
+  savings: "3ff48dea9c47c8a88ffc4aad6e5e658d",
+  assets: "20bb44503f9f2284666a65e579893545",
+  working: "2420479bcc3a877765428488a6202f1d",
+  liability: "a32b51509376bec72d8de729c368f7dd",
+  investments: "da104b4daee51a3744b8791cbe100533",
+  taxes: "71c73988df20dc8143c7249bbf7debd5",
+  taxesAll: ["30894ffbf3c148afcbcfcd9e58053b3a", "3c4023ff55eb3529ebcdbb3463f28d5e"],
   tripDesc: "Trip",
 };
 

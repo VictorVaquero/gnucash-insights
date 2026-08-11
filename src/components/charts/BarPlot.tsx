@@ -20,13 +20,15 @@ import {
 } from "recharts";
 import type { AxisDomain } from "recharts/types/util/types";
 
+import { useWindowSize } from "@/common/utils.ts";
+import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
+import { ChartTooltip as TouchChartTooltip } from "@/components/charts/ChartTooltip";
 import {
   AvailableChartColors,
   constructCategoryColors,
   getColorClassName,
   getYAxisDomain,
 } from "@/components/charts/utils";
-import { useOnWindowResize } from "@/hooks/useOnWindowResize";
 import { cn } from "@/lib/utils";
 
 //#region Shape
@@ -361,17 +363,22 @@ const ChartLegend = (
   categoryColors: Map<string, AvailableChartColorsKeys>,
   setLegendHeight: React.Dispatch<React.SetStateAction<number>>,
   activeLegend: string | undefined,
+  containerRef: React.RefObject<HTMLDivElement | null>,
   onClick?: (category: string, color: string) => void,
   enableLegendSlider?: boolean,
   legendPosition?: "left" | "center" | "right",
   yAxisWidth?: number,
 ) => {
   const legendRef = React.useRef<HTMLDivElement>(null);
+  // Recalculates off the *outer chart container*'s size (via ResizeObserver, not just
+  // `window.resize`), not the legend's own box -- observing the legend's own height would
+  // feed back into itself once `legendHeight` changes the space Recharts allots it.
+  const [containerWidth] = useWindowSize(containerRef);
 
-  useOnWindowResize(() => {
-    const calculateHeight = (height: number | undefined) => (height ? Number(height) + 15 : 60);
-    setLegendHeight(calculateHeight(legendRef.current?.clientHeight));
-  });
+  React.useEffect(() => {
+    const height = legendRef.current?.clientHeight;
+    setLegendHeight(height ? height + 15 : 60);
+  }, [containerWidth, setLegendHeight]);
 
   const filteredPayload = payload.filter((item: any) => item.type !== "none");
 
@@ -560,6 +567,15 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
     ...other
   } = props;
   const CustomTooltip = customTooltip;
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const setContainerRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node;
+      if (typeof forwardedRef === "function") forwardedRef(node);
+      else if (forwardedRef) forwardedRef.current = node;
+    },
+    [forwardedRef],
+  );
   const paddingValue = (!showXAxis && !showYAxis) || (startEndOnly && !showYAxis) ? 0 : 20;
   const [legendHeight, setLegendHeight] = React.useState(60);
   const [activeLegend, setActiveLegend] = React.useState<string | undefined>(undefined);
@@ -568,6 +584,13 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
   const yAxisDomain = getYAxisDomain(autoMinValue, minValue, maxValue);
   const hasOnValueChange = !!onValueChange;
   const stacked = type === "stacked" || type === "percent";
+
+  // A summed "primary value" is only meaningful when categories stack into a single
+  // total; grouped/percent bars have no one coherent number to surface.
+  const latestRow = type === "stacked" ? data[data.length - 1] : undefined;
+  const latestKeyValue = latestRow
+    ? categories.reduce((acc, category) => acc + (Number(latestRow[category]) || 0), 0)
+    : undefined;
 
   const prevActiveRef = React.useRef<boolean | undefined>(undefined);
   const prevLabelRef = React.useRef<string | undefined>(undefined);
@@ -614,11 +637,18 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
 
   return (
     <div
-      ref={forwardedRef}
-      className={cn("h-64 md:h-80 w-full", className)}
+      ref={setContainerRef}
+      className={cn("relative h-64 md:h-80 w-full", className)}
       tremor-id="tremor-raw"
       {...other}
     >
+      {latestKeyValue != null && (
+        <ChartKeyValue
+          label={latestRow?.[index] as string}
+          value={valueFormatter(latestKeyValue)}
+          className={showLegend && legendPosition === "right" ? "top-8" : undefined}
+        />
+      )}
       <ResponsiveContainer>
         <RechartsBarChart
           accessibilityLayer
@@ -737,38 +767,46 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
               x: layout === "horizontal" ? undefined : yAxisWidth + 20,
             }}
             content={({ active, payload, label }) => {
-              const cleanPayload: TooltipProps["payload"] = payload
-                ? payload.map((item: any) => ({
-                    category: item.dataKey,
-                    value: item.value,
-                    index: item.payload[index],
-                    color: categoryColors.get(item.dataKey) as AvailableChartColorsKeys,
-                    type: item.type,
-                    payload: item.payload,
-                  }))
-                : [];
+              const toCleanPayload = (rawPayload: any): TooltipProps["payload"] =>
+                rawPayload
+                  ? rawPayload.map((item: any) => ({
+                      category: item.dataKey,
+                      value: item.value,
+                      index: item.payload[index],
+                      color: categoryColors.get(item.dataKey) as AvailableChartColorsKeys,
+                      type: item.type,
+                      payload: item.payload,
+                    }))
+                  : [];
 
               if (
                 tooltipCallback &&
                 (active !== prevActiveRef.current || label !== prevLabelRef.current)
               ) {
-                tooltipCallback({ active, payload: cleanPayload, label });
+                tooltipCallback({ active, payload: toCleanPayload(payload), label });
                 prevActiveRef.current = active;
                 prevLabelRef.current = label;
               }
 
-              return showTooltip && active ? (
-                CustomTooltip ? (
-                  <CustomTooltip active={active} payload={cleanPayload} label={label} />
-                ) : (
-                  <ChartTooltip
-                    active={active}
-                    payload={cleanPayload}
-                    label={label}
-                    valueFormatter={valueFormatter}
-                  />
-                )
-              ) : null;
+              if (!showTooltip) return null;
+
+              return (
+                <TouchChartTooltip active={active} payload={payload} label={label}>
+                  {({ payload: pinnedPayload, label: pinnedLabel }) => {
+                    const cleanPayload = toCleanPayload(pinnedPayload);
+                    return CustomTooltip ? (
+                      <CustomTooltip active={true} payload={cleanPayload} label={pinnedLabel} />
+                    ) : (
+                      <ChartTooltip
+                        active={true}
+                        payload={cleanPayload}
+                        label={pinnedLabel}
+                        valueFormatter={valueFormatter}
+                      />
+                    );
+                  }}
+                </TouchChartTooltip>
+              );
             }}
           />
           {showLegend ? (
@@ -781,6 +819,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
                   categoryColors,
                   setLegendHeight,
                   activeLegend,
+                  containerRef,
                   hasOnValueChange
                     ? (clickedLegendItem: string) => onCategoryClick(clickedLegendItem)
                     : undefined,

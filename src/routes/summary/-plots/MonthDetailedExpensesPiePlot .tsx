@@ -13,6 +13,7 @@ import {
 import { sum } from "@/common/aggregate";
 import { getDefaultColor, getRandomColor } from "@/common/getColors";
 import { parseNum, twStyles } from "@/common/utils.ts";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
 import { netCostsYearMonthOptions } from "@/db/queries/summary";
@@ -43,11 +44,9 @@ const colorOf = (d: Data, accounts: Account[]) => {
 };
 
 const ChartTooltipContent = ({
-  active,
   payload,
   accounts,
-}: TooltipContentProps<number, string> & { accounts: Account[] }) => {
-  if (!active || !payload || payload.length === 0) return null;
+}: Pick<TooltipContentProps<number, string>, "payload"> & { accounts: Account[] }) => {
   const d = payload[0].payload as Data;
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
@@ -73,7 +72,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
   const total = sum(filtered_data, yf);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
         <p className="text-muted-foreground">{props.date.toFormat("yyyy-MM")}</p>
         <p className="text-red-500">{parseNum(total)}</p>
@@ -82,7 +81,11 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
         <PieChart>
           <RechartsTooltip
             content={(p: TooltipContentProps<number, string>) => (
-              <ChartTooltipContent {...p} accounts={props.accounts} />
+              <ChartTooltip {...p}>
+                {({ payload }) => (
+                  <ChartTooltipContent payload={payload} accounts={props.accounts} />
+                )}
+              </ChartTooltip>
             )}
           />
           <Pie

@@ -23,7 +23,7 @@ export const LoginPage = () => {
     e.preventDefault();
     try {
       await signIn(user, password);
-      router.history.push(search.redirect);
+      router.navigate({ to: search.redirect });
     } catch (error) {
       setMsg(getErrorMessage(error));
       setVisible(true);
@@ -32,11 +32,11 @@ export const LoginPage = () => {
   const handleGuestSignIn = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     signInGuest();
-    router.history.push(search.redirect);
+    router.navigate({ to: search.redirect });
   };
 
   useEffect(() => {
-    if (isAuthenticated()) router.history.push(search.redirect);
+    if (isAuthenticated()) router.navigate({ to: search.redirect });
   }, [isAuthenticated]);
 
   return (

@@ -13,6 +13,7 @@ import {
 import { BarLoader } from "@/components/ui/BarLoader";
 
 import { parseNum, useIsNarrowViewport } from "@/common/utils.ts";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useAuth } from "@/contexts/useAuthContext";
 import { travelExpensesDetailedYearMonthOptions } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
@@ -35,8 +36,10 @@ const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const gf = (d: Data) => d.name;
 
-const ChartTooltipContent = ({ active, payload, label }: TooltipContentProps<number, string>) => {
-  if (!active || !payload || payload.length === 0) return null;
+const ChartTooltipContent = ({
+  payload,
+  label,
+}: Pick<TooltipContentProps<number, string>, "payload" | "label">) => {
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{label}</span>
@@ -69,7 +72,7 @@ const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
   }, [props.data]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
@@ -87,7 +90,11 @@ const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
             width={margin.left}
           />
           <RechartsTooltip
-            content={(p: TooltipContentProps<number, string>) => <ChartTooltipContent {...p} />}
+            content={(p: TooltipContentProps<number, string>) => (
+              <ChartTooltip {...p}>
+                {({ payload, label }) => <ChartTooltipContent payload={payload} label={label} />}
+              </ChartTooltip>
+            )}
           />
           {names.map((name) => (
             <Bar

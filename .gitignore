@@ -41,3 +41,5 @@ routeTree.gen.ts
 
 # Lighthouse CI
 /.lighthouseci/
+
+*.tsbuildinfo
