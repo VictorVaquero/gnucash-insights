@@ -1,41 +1,35 @@
 import { Slider } from "@/components/ui/slider"; // uses your custom Slider
 import type { DateRange } from "@/types/domain";
 import { DateTime } from "luxon";
-import { useEffect, useState } from "react";
 
 interface DateRangeSliderProps {
-  start: string; // "2024-01-01"
-  end: string; // "2024-12-31"
-  onChange?: (range: DateRange) => void;
+  min: string; // absolute lower bound, e.g. "2023-09-01"
+  max: string; // absolute upper bound, e.g. "2026-07-01"
+  value: DateRange;
+  onChange: (range: DateRange) => void;
 }
 
-export function DateRangeSlider({ start, end, onChange }: DateRangeSliderProps) {
-  const startDt = DateTime.fromISO(start).startOf("day");
-  const endDt = DateTime.fromISO(end).startOf("day");
-
-  const startMs = startDt.toMillis();
-  const endMs = endDt.toMillis();
-
-  const [range, setRange] = useState<[number, number]>([startMs, endMs]);
-
-  useEffect(() => {
-    if (onChange) {
-      onChange({
-        from: DateTime.fromMillis(range[0]),
-        to: DateTime.fromMillis(range[1]),
-      });
-    }
-  }, [range, onChange]);
+export function DateRangeSlider({ min, max, value, onChange }: DateRangeSliderProps) {
+  const minMs = DateTime.fromISO(min).startOf("day").toMillis();
+  const maxMs = DateTime.fromISO(max).startOf("day").toMillis();
+  const fromMs = value.from.startOf("day").toMillis();
+  const toMs = value.to.startOf("day").toMillis();
 
   return (
-    <div className="w-full p-4">
+    <div className="w-full flex flex-col gap-2 p-1">
       <Slider
-        value={range}
-        min={startMs}
-        max={endMs}
+        value={[fromMs, toMs]}
+        min={minMs}
+        max={maxMs}
         step={24 * 60 * 60 * 1000} // one day
-        onValueChange={(val) => setRange(val as [number, number])}
-      ></Slider>
+        onValueChange={([from, to]) =>
+          onChange({ from: DateTime.fromMillis(from), to: DateTime.fromMillis(to) })
+        }
+      />
+      <div className="flex items-center justify-between text-xs text-muted-foreground tabular-nums">
+        <span>{value.from.toFormat("MMM yyyy")}</span>
+        <span>{value.to.toFormat("MMM yyyy")}</span>
+      </div>
     </div>
   );
 }
