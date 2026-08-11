@@ -9,10 +9,17 @@ import {
   taxesYearMonthOptions,
 } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
+import { BalancesBlock } from "@/routes/summary/-BalancesBlock.tsx";
+import { BudgetVsActual } from "@/routes/summary/-BudgetVsActual.tsx";
+import { CollapsibleSection } from "@/routes/summary/-CollapsibleSection.tsx";
 import { KpiBlock } from "@/routes/summary/-KpiBlock.tsx";
+import { RecurringExpenses } from "@/routes/summary/-RecurringExpenses.tsx";
 import { SavingsBlock } from "@/routes/summary/-SavingsBlock.tsx";
+import { TopMovers } from "@/routes/summary/-TopMovers.tsx";
 import { AssetAccountsPlot } from "@/routes/summary/-plots/AssetAccountsPlot.tsx";
 import { IncomeExpensesPlot } from "@/routes/summary/-plots/IncomeExpensesPlot.tsx";
+import { NetWorthTrendPlot } from "@/routes/summary/-plots/NetWorthTrendPlot.tsx";
+import { ChartCard } from "./-ChartCard";
 import { SettingsBlock } from "./-SettingsBlock";
 import { DetailedExpensesBarPlot } from "./-plots/DetailedExpensesBarPlot";
 import { MonthDetailedExpensesPiePlot } from "./-plots/MonthDetailedExpensesPiePlot ";
@@ -22,33 +29,53 @@ import { DetailedIncomeBarPlot } from "./-plots/DetailedIncomeBarPlot";
 const Summary = () => {
   return (
     <SummaryPageContextProvider>
-      <div
-        className="
-        w-full md:h-full p-4 sm:p-10 pt-0
-        flex flex-col
-        md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_2fr_2fr_4fr_2fr]
-        gap-x-6 gap-y-6
-        "
-      >
-        <div className="row-start-1 row-end-5 flex flex-col gap-y-6">
-          <KpiBlock className="" />
-          <SavingsBlock className="" />
-          <MonthDetailedExpensesPiePlot />
+      <div className="w-full md:h-full p-4 sm:p-10 pt-6 flex flex-col gap-y-6">
+        <h1 className="text-xl font-semibold tracking-tight">Summary</h1>
+        <SettingsBlock />
+        <KpiBlock />
+        <div className="h-72 md:h-80 shrink-0">
+          <ChartCard title="Net worth trend">
+            <NetWorthTrendPlot />
+          </ChartCard>
         </div>
-        <div className="col-start-2 row-start-1">
-          <SettingsBlock />
+        <div className="flex flex-col md:flex-row gap-6 md:flex-1 md:min-h-0">
+          <CollapsibleSection title="Details" className="md:w-72 md:shrink-0 md:self-start">
+            <BalancesBlock />
+            <SavingsBlock />
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Top movers</p>
+              <TopMovers />
+            </div>
+          </CollapsibleSection>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:grid-rows-2 md:flex-1 md:min-w-0 md:min-h-0">
+            <ChartCard title="Assets">
+              <AssetAccountsPlot />
+            </ChartCard>
+            <ChartCard title="Income vs expenses">
+              <IncomeExpensesPlot />
+            </ChartCard>
+            <ChartCard title="Expenses by category">
+              <div className="flex flex-col md:flex-row gap-4 md:h-full">
+                <div className="flex-1 min-w-0 h-64 md:h-full">
+                  <DetailedExpensesBarPlot />
+                </div>
+                <div className="w-full md:w-40 shrink-0 h-64 md:h-full">
+                  <MonthDetailedExpensesPiePlot />
+                </div>
+              </div>
+            </ChartCard>
+            <ChartCard title="Income by category">
+              <DetailedIncomeBarPlot />
+            </ChartCard>
+          </div>
         </div>
-        <div className="col-start-2 row-start-2">
-          <AssetAccountsPlot />
-        </div>
-        <div className="col-start-2 row-start-3">
-          <IncomeExpensesPlot />
-        </div>
-        <div className="col-start-2 row-start-4">
-          <DetailedExpensesBarPlot />
-        </div>
-        <div className="col-start-2 row-start-5">
-          <DetailedIncomeBarPlot />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ChartCard title="Budget vs actual">
+            <BudgetVsActual />
+          </ChartCard>
+          <ChartCard title="Recurring expenses">
+            <RecurringExpenses />
+          </ChartCard>
         </div>
       </div>
     </SummaryPageContextProvider>

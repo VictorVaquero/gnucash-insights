@@ -1,12 +1,12 @@
-import { DateRangeSlider } from "@/components/DateSlider";
 import { PeriodicityTabs } from "@/components/PeriodicityTabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { MultiSelectTree } from "@/components/features/AccountsDropdown";
 import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useQuery } from "@tanstack/react-query";
-import { DateTime } from "luxon";
+import { DateRangePresets } from "./-DateRangePresets";
 import { useSummaryPageContext } from "./-summaryPageContext";
 
 export const SettingsBlock = () => {
@@ -19,6 +19,7 @@ export const SettingsBlock = () => {
   );
 
   const {
+    dateRange,
     setDateRange,
     chartPeriodicity: chartMode,
     setChartPeriodicity: setChartMode,
@@ -28,16 +29,21 @@ export const SettingsBlock = () => {
   const options = accounts ?? [];
 
   return (
-    <>
-      <div className="flex flex-row flex-wrap items-center gap-2">
-        <MultiSelectTree options={options} />
-        <PeriodicityTabs activeMode={chartMode} onChange={setChartMode} />
-      </div>
-      <DateRangeSlider
-        start={from?.toString() ?? "2021-03-01"}
-        end={to?.toString() ?? DateTime.now().toString()}
-        onChange={setDateRange}
-      />
-    </>
+    <Card>
+      <CardContent className="flex flex-row flex-wrap items-center justify-between gap-3 py-3">
+        <div className="flex flex-row flex-wrap items-center gap-2">
+          <PeriodicityTabs activeMode={chartMode} onChange={setChartMode} />
+          <MultiSelectTree options={options} />
+        </div>
+        {from && to && (
+          <DateRangePresets
+            domainFrom={from}
+            domainTo={to}
+            dateRange={dateRange}
+            onChange={setDateRange}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 };

@@ -3,11 +3,12 @@ import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
 
 import { parseNum } from "@/common/utils.ts";
-import { KpiCard } from "@/components/KpiCard.tsx";
+import { KpiRow } from "@/components/KpiRow.tsx";
 import { useAuth } from "@/contexts/useAuthContext";
 import { splitSumOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { cn } from "@/lib/utils";
 
 const useSavings = (
   db: AppDatabase | undefined,
@@ -38,7 +39,7 @@ const useSavings = (
   };
 };
 
-export const SavingsBlock = (props: { className: string }) => {
+export const SavingsBlock = (props: { className?: string }) => {
   const { db } = useDB();
   const { bookId } = useBook();
   const { from: startDate, to: endDate, latestMonth } = useDomain();
@@ -64,17 +65,15 @@ export const SavingsBlock = (props: { className: string }) => {
   const allTime = useSavings(db, dbconf, bookId, startDate, endDate);
 
   return (
-    <section
-      className={
-        "grid grid-cols-2 md:grid-cols-3 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2" +
-        (props.className ? " " + props.className : "")
-      }
-    >
-      <KpiCard name="Mean Savings" value={allTime.value} title={allTime.title} />
-      <KpiCard name="Last Month" value={lastMonth.value} title={lastMonth.title} />
-      <KpiCard name="Last 3" value={lastThreeMonths.value} title={lastThreeMonths.title} />
-      <KpiCard name="Last 6" value={lastSixMonths.value} title={lastSixMonths.title} />
-      <KpiCard name="Last Year" value={lastYear.value} title={lastYear.title} />
-    </section>
+    <div className={cn(props.className)}>
+      <p className="text-xs font-medium text-muted-foreground mb-1">Savings rate</p>
+      <section className="flex flex-col">
+        <KpiRow name="Mean Savings" value={allTime.value} title={allTime.title} />
+        <KpiRow name="Last Month" value={lastMonth.value} title={lastMonth.title} />
+        <KpiRow name="Last 3" value={lastThreeMonths.value} title={lastThreeMonths.title} />
+        <KpiRow name="Last 6" value={lastSixMonths.value} title={lastSixMonths.title} />
+        <KpiRow name="Last Year" value={lastYear.value} title={lastYear.title} />
+      </section>
+    </div>
   );
 };

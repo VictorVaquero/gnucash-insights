@@ -177,7 +177,6 @@ export const DetailedExpensesBarPlot = () => {
     <div className="h-full flex flex-col dark">
       <BarChart
         type="stacked"
-        className="h-full"
         data={data}
         index="dateLabel"
         categories={keyNames}
