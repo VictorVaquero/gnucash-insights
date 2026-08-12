@@ -12,20 +12,26 @@ import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
+interface DateRange {
+  startDate?: DateTime;
+  endDate?: DateTime;
+}
+
 const useSavings = (
   db: AppDatabase | undefined,
   dbconf: ReturnType<typeof getConfig>,
   bookId: string | undefined,
-  startDate?: DateTime,
-  endDate?: DateTime,
+  { startDate, endDate }: DateRange = {},
 ) => {
   const { data: savings } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes], startDate, endDate),
+    splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes], {
+      startDate,
+      endDate,
+    }),
   );
   const { data: income } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.income, dbconf.taxes], startDate, endDate),
+    splitSumOptions(db, bookId, [dbconf.income, dbconf.taxes], { startDate, endDate }),
   );
-  //const { data: taxes } = useQuery(splitSumOptions(db, bookId, [dbconf.taxes], startDate, endDate))
 
   const months = startDate && endDate ? endDate.diff(startDate, ["months"]).months : 1;
 
@@ -50,23 +56,20 @@ export const SavingsBlock = (props: { className?: string }) => {
   const { user } = useAuth();
   const dbconf = getConfig(user);
 
-  const lastMonth = useSavings(db, dbconf, bookId, latestMonth);
-  const lastThreeMonths = useSavings(
-    db,
-    dbconf,
-    bookId,
-    latestMonth?.minus({ months: 3 }),
-    latestMonth,
-  );
-  const lastSixMonths = useSavings(
-    db,
-    dbconf,
-    bookId,
-    latestMonth?.minus({ months: 6 }),
-    latestMonth,
-  );
-  const lastYear = useSavings(db, dbconf, bookId, latestMonth?.minus({ year: 1 }), latestMonth);
-  const allTime = useSavings(db, dbconf, bookId, startDate, endDate);
+  const lastMonth = useSavings(db, dbconf, bookId, { startDate: latestMonth });
+  const lastThreeMonths = useSavings(db, dbconf, bookId, {
+    startDate: latestMonth?.minus({ months: 3 }),
+    endDate: latestMonth,
+  });
+  const lastSixMonths = useSavings(db, dbconf, bookId, {
+    startDate: latestMonth?.minus({ months: 6 }),
+    endDate: latestMonth,
+  });
+  const lastYear = useSavings(db, dbconf, bookId, {
+    startDate: latestMonth?.minus({ year: 1 }),
+    endDate: latestMonth,
+  });
+  const allTime = useSavings(db, dbconf, bookId, { startDate, endDate });
   const { t } = useTranslation();
 
   return (
