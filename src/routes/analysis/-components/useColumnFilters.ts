@@ -10,8 +10,9 @@ const serialize = (filters: ColumnFiltersState): Record<string, string> => {
   return Object.fromEntries(filters.map((x) => [String(x.id), String(x.value)]));
 };
 
+const routeApi = getRouteApi("/analysis/");
+
 export function useColumnFilters(delay = 400) {
-  const routeApi = getRouteApi("/analysis/");
   const { query } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
 

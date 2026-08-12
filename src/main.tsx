@@ -50,11 +50,21 @@ declare module "@tanstack/react-router" {
   }
 }
 
+interface GlobalDbState {
+  db: AppDatabase | undefined;
+  bookId: string | undefined;
+  domain: DateRange | undefined;
+}
+
+const EMPTY_GLOBAL_DB_STATE: GlobalDbState = {
+  db: undefined,
+  bookId: undefined,
+  domain: undefined,
+};
+
 const GlobalCOntextProvider = () => {
   const auth = useAuthSetup();
-  const [db, setDB] = useState<AppDatabase>();
-  const [bookId, setBookId] = useState<string>();
-  const [domain, setDomain] = useState<DateRange>();
+  const [{ db, bookId, domain }, setGlobalDbState] = useState<GlobalDbState>(EMPTY_GLOBAL_DB_STATE);
 
   const {
     data: queryDb,
@@ -68,9 +78,7 @@ const GlobalCOntextProvider = () => {
   // On sign out reset global state & invalidate router
   const resetGlobalState = useCallback(() => {
     resetSetupDB();
-    setDB(undefined);
-    setBookId(undefined);
-    setDomain(undefined);
+    setGlobalDbState(EMPTY_GLOBAL_DB_STATE);
     auth.signOut();
     router.invalidate();
     queryClient.invalidateQueries();
@@ -101,18 +109,21 @@ const GlobalCOntextProvider = () => {
   useEffect(() => {
     if (!!queryDb && !db) {
       const f = async () => {
-        // Set DB
-        setDB(queryDb);
-        // Set default book
         const books = await getBooks(queryDb);
         const defaultBookId = books[0].id;
-        setBookId(defaultBookId);
+        const fetchedDomain = await getDomain(queryDb);
+        if (!fetchedDomain.min || !fetchedDomain.max) throw Error("Problematic domain defined");
+        setGlobalDbState({
+          db: queryDb,
+          bookId: defaultBookId,
+          domain: { from: fetchedDomain.min, to: fetchedDomain.max },
+        });
         console.info(`DEFAULT BOOK ID ${defaultBookId}`);
-        // Set domain
-        const domain = await getDomain(queryDb);
-        if (!domain.min || !domain.max) throw Error("Problematic domain defined");
-        setDomain({ from: domain.min, to: domain.max });
-        console.info("DEFAULT DOMAIN: ", domain.min.toISODate(), domain.max.toISODate());
+        console.info(
+          "DEFAULT DOMAIN: ",
+          fetchedDomain.min.toISODate(),
+          fetchedDomain.max.toISODate(),
+        );
       };
       f().catch(() => console.error("Error setting default book/domain"));
     }
