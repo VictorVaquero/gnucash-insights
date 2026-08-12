@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatCurrency } from "@/common/utils.ts";
@@ -28,12 +28,24 @@ interface Row {
   target: number;
 }
 
-const BudgetRow = (props: { row: Row; onChangeTarget: (value: number) => void }) => {
+const BudgetRow = (props: {
+  row: Row;
+  onChangeTarget: (accountId: string, value: number) => void;
+}) => {
   const { row, onChangeTarget } = props;
   const { locale } = useLocale();
   const { t } = useTranslation();
   const pct = row.target > 0 ? (row.spent / row.target) * 100 : 0;
   const barColor = pct > 100 ? "bg-red-500" : pct > 80 ? "bg-amber-500" : "bg-emerald-500";
+
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      onChangeTarget(row.accountId, Number(e.target.value) || 0);
+    },
+    [onChangeTarget, row.accountId],
+  );
+
+  const barStyle = useMemo(() => ({ width: `${Math.min(pct, 100)}%` }), [pct]);
 
   return (
     <div className="flex flex-col gap-1 py-1.5 border-b border-border/60 last:border-b-0">
@@ -49,16 +61,13 @@ const BudgetRow = (props: { row: Row; onChangeTarget: (value: number) => void })
             min={0}
             value={row.target || ""}
             placeholder={t("summary.budget.setPlaceholder")}
-            onChange={(e) => onChangeTarget(Number(e.target.value) || 0)}
+            onChange={handleChange}
             className="w-14 bg-transparent border border-border rounded px-1 py-0.5 text-right text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
       </div>
       <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-all", barColor)}
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
+        <div className={cn("h-full rounded-full transition-all", barColor)} style={barStyle} />
       </div>
     </div>
   );
@@ -74,13 +83,13 @@ export const BudgetVsActual = (props: { className?: string }) => {
 
   const [budgets, setBudgets] = useState<Record<string, number>>(readBudgets);
 
-  const setTarget = (accountId: string, value: number) => {
+  const setTarget = useCallback((accountId: string, value: number) => {
     setBudgets((prev) => {
       const next = { ...prev, [accountId]: value };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-  };
+  }, []);
 
   const { data: rawData } = useQuery(
     transactByAccountOptions({ db, bookId, accountIds: [dbconf.expenses], periodicity: "monthly" }),
@@ -119,11 +128,7 @@ export const BudgetVsActual = (props: { className?: string }) => {
   return (
     <div className={cn("flex flex-col", props.className)}>
       {rows.map((row) => (
-        <BudgetRow
-          key={row.accountId}
-          row={row}
-          onChangeTarget={(value) => setTarget(row.accountId, value)}
-        />
+        <BudgetRow key={row.accountId} row={row} onChangeTarget={setTarget} />
       ))}
     </div>
   );

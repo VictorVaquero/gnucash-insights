@@ -2,6 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { faBolt, faChartPie, faLock, faWallet } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "motion/react";
+import { useCallback } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { useTranslation } from "react-i18next";
 
@@ -30,13 +31,27 @@ const FEATURES = [
   { icon: faChartPie, textKey: "home.features.richCharts" },
 ];
 
+const MOTION_INITIAL = { opacity: 0, y: 12 };
+const MOTION_ANIMATE = { opacity: 1, y: 0 };
+const PREVIEW_TRANSITION = { duration: 0.5, delay: 0.15, ease: "easeOut" };
+const HERO_TRANSITION = { duration: 0.5, ease: "easeOut" };
+const AREA_CHART_MARGIN = { top: 8, right: 8, bottom: 0, left: 0 };
+const AREA_TOOLTIP_CONTENT_STYLE = {
+  background: "var(--color-popover)",
+  border: "1px solid var(--color-border)",
+  borderRadius: 6,
+};
+const AREA_TOOLTIP_LABEL_STYLE = { color: "var(--color-popover-foreground)" };
+const AREA_TOOLTIP_ITEM_STYLE = { color: "var(--color-popover-foreground)" };
+const LOGIN_SEARCH = { redirect: "/summary" };
+
 const PreviewPanel = () => {
   const { t } = useTranslation();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+      initial={MOTION_INITIAL}
+      animate={MOTION_ANIMATE}
+      transition={PREVIEW_TRANSITION}
       className="w-full max-w-md rounded-xl border border-border bg-secondary p-5 shadow-xl"
     >
       <div className="flex items-center justify-between px-1">
@@ -58,7 +73,7 @@ const PreviewPanel = () => {
 
       <div className="mt-4 h-28 rounded-md bg-background p-2">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={PREVIEW_TREND} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+          <AreaChart data={PREVIEW_TREND} margin={AREA_CHART_MARGIN}>
             <defs>
               <linearGradient id="previewTrendFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--color-brand)" stopOpacity={0.4} />
@@ -67,13 +82,9 @@ const PreviewPanel = () => {
             </defs>
             <XAxis dataKey="month" hide />
             <Tooltip
-              contentStyle={{
-                background: "var(--color-popover)",
-                border: "1px solid var(--color-border)",
-                borderRadius: 6,
-              }}
-              labelStyle={{ color: "var(--color-popover-foreground)" }}
-              itemStyle={{ color: "var(--color-popover-foreground)" }}
+              contentStyle={AREA_TOOLTIP_CONTENT_STYLE}
+              labelStyle={AREA_TOOLTIP_LABEL_STYLE}
+              itemStyle={AREA_TOOLTIP_ITEM_STYLE}
             />
             <Area
               type="monotone"
@@ -94,19 +105,15 @@ const Home = () => {
   const { signInGuest } = useAuth();
   const router = useRouter();
 
-  const handleGuestSignIn = async () => {
+  const handleGuestSignIn = useCallback(async () => {
     await signInGuest();
     router.navigate({ to: "/summary" });
-  };
+  }, [signInGuest, router]);
 
   return (
     <div className="w-full min-h-full flex items-center justify-center px-6 sm:px-10 py-12">
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-6 items-center">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
+        <motion.div initial={MOTION_INITIAL} animate={MOTION_ANIMATE} transition={HERO_TRANSITION}>
           <div className="flex items-center gap-2 text-brand">
             <FontAwesomeIcon icon={faWallet} className="h-5 w-5" />
             <span className="text-sm font-medium tracking-wide">CashPy</span>
@@ -131,7 +138,7 @@ const Home = () => {
             </button>
             <Link
               to="/login"
-              search={{ redirect: "/summary" }}
+              search={LOGIN_SEARCH}
               className="px-5 py-3 rounded-md border border-border text-foreground hover:bg-accent font-medium transition-colors"
             >
               {t("home.actions.signIn")}

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Cell,
@@ -70,12 +70,25 @@ const ChartTooltipContent = ({
   );
 };
 
+interface PieTooltipContentProps extends TooltipContentProps<number, string> {
+  sumTotal: number;
+  defaultAccount: string;
+}
+
+const PieTooltipContent = ({ sumTotal, defaultAccount, ...p }: PieTooltipContentProps) => (
+  <ChartTooltip {...p}>
+    {({ payload }) => (
+      <ChartTooltipContent payload={payload} sumTotal={sumTotal} defaultAccount={defaultAccount} />
+    )}
+  </ChartTooltip>
+);
+
 const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
   const { locale } = useLocale();
   const { t } = useTranslation();
   const defaultAccount = t("summary.plots.others");
-  const sortedData = [...props.data].sort(orderyf);
-  const sumTotal = sum(sortedData, yf);
+  const sortedData = useMemo(() => [...props.data].sort(orderyf), [props.data]);
+  const sumTotal = useMemo(() => sum(sortedData, yf), [sortedData]);
 
   // Same scrubber-adjacent deviation as MonthDetailedExpensesPiePlot: a horizontal drag
   // cycles through wedges by draw-order index rather than tracking a literal x position,
@@ -85,16 +98,11 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
   const { activeIndex } = useChartScrubber(containerRef, { length: sortedData.length });
   const scrubbed = activeIndex != null ? sortedData[activeIndex] : undefined;
 
-  const renderTooltipContent = (p: TooltipContentProps<number, string>) => (
-    <ChartTooltip {...p}>
-      {({ payload }) => (
-        <ChartTooltipContent
-          payload={payload}
-          sumTotal={sumTotal}
-          defaultAccount={defaultAccount}
-        />
-      )}
-    </ChartTooltip>
+  const renderTooltipContent = useCallback(
+    (p: TooltipContentProps<number, string>) => (
+      <PieTooltipContent {...p} sumTotal={sumTotal} defaultAccount={defaultAccount} />
+    ),
+    [sumTotal, defaultAccount],
   );
 
   return (

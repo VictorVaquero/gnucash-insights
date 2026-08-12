@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,13 +13,15 @@ export const CollapsibleSection = (props: {
   const [open, setOpen] = useState(props.defaultOpen ?? true);
   const { t } = useTranslation();
 
+  const toggleOpen = useCallback(() => setOpen((v) => !v), []);
+
   return (
     <Card className={cn(props.className)}>
       <CardHeader>
         <CardTitle>{props.title}</CardTitle>
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={toggleOpen}
           aria-expanded={open}
           aria-label={
             open
