@@ -62,7 +62,7 @@ const RootComponent = () => {
   // Route beforeLoad context stores a translation key, not the resolved string, so a
   // same-page language switch (no navigation) still updates the tab title.
   useEffect(() => {
-    document.title = titleKey ? t(titleKey) : "CashPy";
+    document.title = titleKey ? t(titleKey) : "GnuCash Insights";
   }, [titleKey, t, i18n.language]);
 
   // The drawer now overlays content on every viewport, so close it whenever navigation happens.

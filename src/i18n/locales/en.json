@@ -1,6 +1,5 @@
 {
   "nav": {
-    "home": "Home",
     "metadata": "Metadata",
     "summary": "Summary",
     "expenses": "Expenses",
@@ -45,7 +44,7 @@
     "hero": {
       "titleLine1": "Your money,",
       "titleLine2": "fully visible.",
-      "subtitle": "CashPy turns your GnuCash file into clear, interactive charts, running entirely in your browser."
+      "subtitle": "GnuCash Insights turns your GnuCash file into clear, interactive charts, running entirely in your browser."
     },
     "actions": {
       "tryGuest": "Try as Guest",

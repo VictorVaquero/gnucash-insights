@@ -75,12 +75,15 @@ const GlobalCOntextProvider = () => {
     getIdToken: auth.getIdToken,
   });
 
-  // On sign out reset global state & invalidate router
+  // On sign out reset global state & send the user back to the public landing page --
+  // protected routes' own beforeLoad guards would otherwise bounce an invalidated router
+  // to /login with a "come back here" redirect, which makes sense for an expired session
+  // hitting a protected URL but not for an explicit sign-out.
   const resetGlobalState = useCallback(() => {
     resetSetupDB();
     setGlobalDbState(EMPTY_GLOBAL_DB_STATE);
     auth.signOut();
-    router.invalidate();
+    router.navigate({ to: "/home" });
     queryClient.invalidateQueries();
   }, [resetSetupDB, auth]);
 

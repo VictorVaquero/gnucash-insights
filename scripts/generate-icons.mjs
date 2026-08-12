@@ -44,7 +44,7 @@ async function generateFavicons() {
 }
 
 async function generateOgImage() {
-  // A static branded 1200x630 card (logo + "CashPy" wordmark on a solid brand
+  // A static branded 1200x630 card (logo + "GnuCash Insights" wordmark on a solid brand
   // background) per research.md item 10 -- not a live app screenshot.
   const width = 1200;
   const height = 630;
@@ -63,7 +63,7 @@ async function generateOgImage() {
     <path fill="${logoGreenDark}" fill-rule="evenodd" d="M40 35a17 17 0 1 1 7 23 17 17 0 0 1-7-23Z"/>
     <path fill="#fff" d="M55 55a2 2 0 0 1-1-1v-2a11 11 0 0 1-3 0 13 13 0 0 1-2-1 2 2 0 0 1-1-1 2 2 0 0 1 0-1 2 2 0 0 1 1-1 2 2 0 0 1 1 0 10 10 0 0 0 2 1 9 9 0 0 0 3 0 4 4 0 0 0 2-1 2 2 0 0 0 1-1 1 1 0 0 0 0-1 4 4 0 0 0-2-1l-3-1q-5-1-5-5a5 5 0 0 1 2-3 7 7 0 0 1 4-2v-2a2 2 0 0 1 0-1 2 2 0 0 1 1 0 1 1 0 0 1 1 0 2 2 0 0 1 1 1v2a11 11 0 0 1 2 0 7 7 0 0 1 2 1 2 2 0 0 1 0 1 2 2 0 0 1 0 1 1 1 0 0 1-1 1 2 2 0 0 1-1 0 8 8 0 0 0-2-1 8 8 0 0 0-2 0 4 4 0 0 0-2 1 2 2 0 0 0-1 1 1 1 0 0 0 1 1 4 4 0 0 0 1 1l3 1a7 7 0 0 1 4 2 4 4 0 0 1 1 3 5 5 0 0 1-1 3 7 7 0 0 1-4 2v2a2 2 0 0 1-1 1 1 1 0 0 1-1 0Z"/>
   </g>
-  <text x="${width / 2}" y="${logoY + logoHeight + 130}" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="88" fill="#ffffff">CashPy</text>
+  <text x="${width / 2}" y="${logoY + logoHeight + 130}" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="72" fill="#ffffff">GnuCash Insights</text>
   <text x="${width / 2}" y="${logoY + logoHeight + 185}" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="400" font-size="34" fill="#e0f2fe">Personal finance dashboard for GnuCash</text>
 </svg>`;
 

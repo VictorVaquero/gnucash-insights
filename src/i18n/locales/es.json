@@ -1,6 +1,5 @@
 {
   "nav": {
-    "home": "Inicio",
     "metadata": "Metadatos",
     "summary": "Resumen",
     "expenses": "Gastos",
@@ -45,7 +44,7 @@
     "hero": {
       "titleLine1": "Tu dinero,",
       "titleLine2": "totalmente visible.",
-      "subtitle": "CashPy convierte tu archivo de GnuCash en gráficos claros e interactivos, todo desde tu navegador."
+      "subtitle": "GnuCash Insights convierte tu archivo de GnuCash en gráficos claros e interactivos, todo desde tu navegador."
     },
     "actions": {
       "tryGuest": "Probar como invitado",
