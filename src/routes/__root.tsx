@@ -16,6 +16,7 @@ import { SideBar } from "@/components/SideBar.tsx";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuthSetup } from "@/hooks/useAuth";
 import ErrorPage from "@/layout/ErrorPage";
+import { cn } from "@/lib/utils";
 import { NotFoundPage } from "@/layout/NotFoundPage";
 import React from "react";
 
@@ -83,15 +84,21 @@ const RootComponent = () => {
   // throws ("Account config not yet loaded"). Unauthenticated routes (e.g. /login) don't need it.
   const isAppDataReady = !auth?.isAuthenticated?.() || (!!db && !!bookId);
   const toggleSidebar = useCallback(() => setCollapse((val) => !val), []);
+  // /home and /login are public marketing/auth pages -- the internal nav rail has nothing to
+  // navigate to there and shouldn't bleed into a logged-out visitor's first impression.
+  const isAuthenticated = !!auth?.isAuthenticated?.();
 
   return (
     <>
-      <SideBar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
-      <AccountMenu />
+      {isAuthenticated && <SideBar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />}
+      {isAuthenticated && <AccountMenu />}
       <main
         ref={mainRef}
         tabIndex={-1}
-        className="min-h-full w-full pl-14 outline-none lg:min-h-[calc(100vh-2rem)]"
+        className={cn(
+          "min-h-full w-full outline-none lg:min-h-[calc(100vh-2rem)]",
+          isAuthenticated && "pl-14",
+        )}
       >
         {isAppDataReady ? (
           <Outlet />
