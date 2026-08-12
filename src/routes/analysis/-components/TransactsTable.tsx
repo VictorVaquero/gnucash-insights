@@ -87,6 +87,143 @@ const buildColumns = (t: (key: string, opts?: Record<string, unknown>) => string
   }),
 ];
 
+const TableBody = ({ table }: { table: Table<Data> }) => (
+  <div className="overflow-x-auto">
+    <table className="border-collapse border-spacing-y-4 border-shark-600 text-foreground">
+      <thead>
+        {table.getHeaderGroups().map((hg) => (
+          <tr key={hg.id}>
+            {hg.headers.map((h) => (
+              <th key={h.id} colSpan={h.colSpan}>
+                <div className="mb-2 p-1 ps-2">
+                  {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                  {{
+                    asc: " 🔼",
+                    desc: " 🔽",
+                  }[h.column.getIsSorted() as string] ?? null}
+                  {h.column.getCanFilter() ? (
+                    <div className="mt-2">
+                      <Filter column={h.column} table={table} />
+                    </div>
+                  ) : null}
+                </div>
+              </th>
+            ))}
+          </tr>
+        ))}
+      </thead>
+      <tbody className="mt-2 bg-shark-800 text-white">
+        {table.getRowModel().rows.map((row) => (
+          <tr className="hover:bg-shark-600" key={row.id} onClick={row.getToggleSelectedHandler()}>
+            {row.getVisibleCells().map((cell) => (
+              <td key={cell.id} className="border border-shark-600 p-2 ps-4 text-xs">
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
+
+const TablePagination = ({ table }: { table: Table<Data> }) => {
+  const { t } = useTranslation();
+
+  const handleFirstPage = useCallback(() => table.firstPage(), [table]);
+  const handlePreviousPage = useCallback(() => table.previousPage(), [table]);
+  const handleNextPage = useCallback(() => table.nextPage(), [table]);
+  const handleLastPage = useCallback(() => table.lastPage(), [table]);
+  const handleGoToPage = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const page = e.target.value ? Number(e.target.value) - 1 : 0;
+      table.setPageIndex(page);
+    },
+    [table],
+  );
+  const handlePageSizeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      table.setPageSize(Number(e.target.value));
+    },
+    [table],
+  );
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-foreground">
+      <span className="flex items-center gap-1 text-white">
+        <button
+          className="rounded p-1 bg-shark-800"
+          onClick={handleFirstPage}
+          disabled={!table.getCanPreviousPage()}
+        >
+          {"<<"}
+        </button>
+        <button
+          className="rounded p-1 bg-shark-800"
+          onClick={handlePreviousPage}
+          disabled={!table.getCanPreviousPage()}
+        >
+          {"<"}
+        </button>
+        <button
+          className="rounded p-1 bg-shark-800"
+          onClick={handleNextPage}
+          disabled={!table.getCanNextPage()}
+        >
+          {">"}
+        </button>
+        <button
+          className="rounded p-1 bg-shark-800"
+          onClick={handleLastPage}
+          disabled={!table.getCanNextPage()}
+        >
+          {">>"}
+        </button>
+      </span>
+      <span className="flex items-center gap-1">
+        <div className="text-foreground">{t("analysis.table.page")}</div>
+        <span>{table.getState().pagination.pageIndex + 1}</span>
+        <div className="text-foreground">{t("analysis.table.of")}</div>
+        <span>{table.getPageCount().toLocaleString()}</span>
+      </span>
+      <span className="flex items-center gap-1">
+        <label htmlFor="go-to-page" className="text-foreground">
+          {t("analysis.table.goToPage")}
+        </label>
+        <input
+          id="go-to-page"
+          type="number"
+          min="1"
+          defaultValue={table.getState().pagination.pageIndex + 1}
+          onChange={handleGoToPage}
+          className="p-1 rounded w-16 bg-shark-800 text-white"
+        />
+      </span>
+      <select
+        aria-label={t("analysis.table.rowsPerPage")}
+        className="p-2 rounded bg-shark-800 text-white"
+        value={table.getState().pagination.pageSize}
+        onChange={handlePageSizeChange}
+      >
+        {PAGE_SIZE_OPTIONS.map((pageSize) => (
+          <option key={pageSize} value={pageSize}>
+            {t("analysis.table.showPageSize", { pageSize })}
+          </option>
+        ))}
+      </select>
+      <p>
+        <span className="text-foreground">{t("analysis.table.showing")} </span>
+        {table.getRowModel().rows.length.toLocaleString()}
+        <span className="text-foreground"> {t("analysis.table.of")} </span>
+        {table.getRowCount().toLocaleString()}
+        <span className="text-foreground"> {t("analysis.table.rows")}</span>
+      </p>
+    </div>
+  );
+};
+
 export const TransactTable = (props: {
   data: Data[];
   rowSelection: RowSelectionState;
@@ -123,139 +260,10 @@ export const TransactTable = (props: {
     },
   });
 
-  const handleFirstPage = useCallback(() => table.firstPage(), [table]);
-  const handlePreviousPage = useCallback(() => table.previousPage(), [table]);
-  const handleNextPage = useCallback(() => table.nextPage(), [table]);
-  const handleLastPage = useCallback(() => table.lastPage(), [table]);
-  const handleGoToPage = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const page = e.target.value ? Number(e.target.value) - 1 : 0;
-      table.setPageIndex(page);
-    },
-    [table],
-  );
-  const handlePageSizeChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      table.setPageSize(Number(e.target.value));
-    },
-    [table],
-  );
-
   return (
     <div>
-      <div className="overflow-x-auto">
-        <table className="border-collapse border-spacing-y-4 border-shark-600 text-foreground">
-          <thead>
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((h) => (
-                  <th key={h.id} colSpan={h.colSpan}>
-                    <div className="mb-2 p-1 ps-2">
-                      {h.isPlaceholder
-                        ? null
-                        : flexRender(h.column.columnDef.header, h.getContext())}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[h.column.getIsSorted() as string] ?? null}
-                      {h.column.getCanFilter() ? (
-                        <div className="mt-2">
-                          <Filter column={h.column} table={table} />
-                        </div>
-                      ) : null}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="mt-2 bg-shark-800 text-white">
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                className="hover:bg-shark-600"
-                key={row.id}
-                onClick={row.getToggleSelectedHandler()}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="border border-shark-600 p-2 ps-4 text-xs">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-foreground">
-        <span className="flex items-center gap-1 text-white">
-          <button
-            className="rounded p-1 bg-shark-800"
-            onClick={handleFirstPage}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {"<<"}
-          </button>
-          <button
-            className="rounded p-1 bg-shark-800"
-            onClick={handlePreviousPage}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {"<"}
-          </button>
-          <button
-            className="rounded p-1 bg-shark-800"
-            onClick={handleNextPage}
-            disabled={!table.getCanNextPage()}
-          >
-            {">"}
-          </button>
-          <button
-            className="rounded p-1 bg-shark-800"
-            onClick={handleLastPage}
-            disabled={!table.getCanNextPage()}
-          >
-            {">>"}
-          </button>
-        </span>
-        <span className="flex items-center gap-1">
-          <div className="text-foreground">{t("analysis.table.page")}</div>
-          <span>{table.getState().pagination.pageIndex + 1}</span>
-          <div className="text-foreground">{t("analysis.table.of")}</div>
-          <span>{table.getPageCount().toLocaleString()}</span>
-        </span>
-        <span className="flex items-center gap-1">
-          <label htmlFor="go-to-page" className="text-foreground">
-            {t("analysis.table.goToPage")}
-          </label>
-          <input
-            id="go-to-page"
-            type="number"
-            min="1"
-            defaultValue={table.getState().pagination.pageIndex + 1}
-            onChange={handleGoToPage}
-            className="p-1 rounded w-16 bg-shark-800 text-white"
-          />
-        </span>
-        <select
-          aria-label={t("analysis.table.rowsPerPage")}
-          className="p-2 rounded bg-shark-800 text-white"
-          value={table.getState().pagination.pageSize}
-          onChange={handlePageSizeChange}
-        >
-          {[10, 20, 30, 40, 50].map((pageSize) => (
-            <option key={pageSize} value={pageSize}>
-              {t("analysis.table.showPageSize", { pageSize })}
-            </option>
-          ))}
-        </select>
-        <p>
-          <span className="text-foreground">{t("analysis.table.showing")} </span>
-          {table.getRowModel().rows.length.toLocaleString()}
-          <span className="text-foreground"> {t("analysis.table.of")} </span>
-          {table.getRowCount().toLocaleString()}
-          <span className="text-foreground"> {t("analysis.table.rows")}</span>
-        </p>
-      </div>
+      <TableBody table={table} />
+      <TablePagination table={table} />
     </div>
   );
 };
