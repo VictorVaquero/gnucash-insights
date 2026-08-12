@@ -14,6 +14,7 @@ import { useBook, useDB } from "@/hooks/useDB";
 import { useLocale } from "@/hooks/useLocale";
 import { DateTime } from "luxon";
 import { useSummaryPageContext } from "../-summaryPageContext";
+import { useDeflator } from "../-useDeflator";
 
 export interface Data {
   accountId: string;
@@ -117,6 +118,7 @@ export const DetailedExpensesBarPlot = () => {
   const { user } = useAuth();
   const dbconfig = getConfig(user);
   const { hideAccounts, setDetailedDate, dateRange, chartPeriodicity } = useSummaryPageContext();
+  const { deflate } = useDeflator();
   const { locale } = useLocale();
   const { t } = useTranslation();
   const othersLabel = t("summary.plots.others");
@@ -134,7 +136,8 @@ export const DetailedExpensesBarPlot = () => {
               collapseMinorAccounts(
                 rawData
                   .filter((d) => d.date >= dateRange.from.toString())
-                  .filter((d) => d.date <= dateRange.to.toString()),
+                  .filter((d) => d.date <= dateRange.to.toString())
+                  .map((d) => ({ ...d, value: deflate(d.value, d.date) })),
                 14,
                 othersLabel,
               ),
@@ -143,7 +146,7 @@ export const DetailedExpensesBarPlot = () => {
           }
           return { data: undefined, keys: undefined };
         },
-        [dateRange, othersLabel],
+        [dateRange, othersLabel, deflate],
       ),
     }),
   );

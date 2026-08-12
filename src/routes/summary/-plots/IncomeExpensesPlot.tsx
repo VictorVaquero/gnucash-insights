@@ -27,6 +27,7 @@ import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
+import { useDeflator } from "../-useDeflator";
 
 type colorType = "g" | "r";
 export interface PlotData {
@@ -180,6 +181,7 @@ export const IncomeExpensesPlot = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const { dateRange, hideAccounts, chartPeriodicity: charMode } = useSummaryPageContext();
+  const { deflate } = useDeflator();
   const dbconf = getConfig(user);
 
   const { data: expenses } = useQuery(
@@ -228,9 +230,13 @@ export const IncomeExpensesPlot = () => {
       };
 
       // Populate the Map
-      net.forEach((d) => (getEntry(d.date, d.dateLabel).net = -d.value));
-      income.forEach((d) => (getEntry(d.date, d.dateLabel).income = Math.abs(d.value)));
-      expenses.forEach((d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(d.value)));
+      net.forEach((d) => (getEntry(d.date, d.dateLabel).net = -deflate(d.value, d.date)));
+      income.forEach(
+        (d) => (getEntry(d.date, d.dateLabel).income = Math.abs(deflate(d.value, d.date))),
+      );
+      expenses.forEach(
+        (d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(deflate(d.value, d.date))),
+      );
 
       // Convert to array and sort by date chronologically
       return Array.from(registry.values())
@@ -242,7 +248,7 @@ export const IncomeExpensesPlot = () => {
           return timeA - timeB;
         });
     }
-  }, [net, income, expenses, dateRange]);
+  }, [net, income, expenses, dateRange, deflate]);
 
   if (!data || !dateRange)
     return (

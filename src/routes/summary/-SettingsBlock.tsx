@@ -7,6 +7,7 @@ import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useQuery } from "@tanstack/react-query";
 import { DateRangePresets } from "./-DateRangePresets";
+import { DeflateToggle } from "./-DeflateToggle";
 import { useSummaryPageContext } from "./-summaryPageContext";
 
 export const SettingsBlock = () => {
@@ -34,6 +35,7 @@ export const SettingsBlock = () => {
         <div className="flex flex-row flex-wrap items-center gap-2">
           <PeriodicityTabs activeMode={chartMode} onChange={setChartMode} />
           <MultiSelectTree options={options} />
+          <DeflateToggle />
         </div>
         {from && to && (
           <DateRangePresets

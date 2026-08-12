@@ -25,6 +25,7 @@ import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
+import { useDeflator } from "../-useDeflator";
 
 interface Data {
   account: string | null;
@@ -186,6 +187,7 @@ export const MonthDetailedExpensesPiePlot = () => {
   const { bookId } = useBook();
   const { user } = useAuth();
   const { hideAccounts, toggleHideAccount, detailedDate } = useSummaryPageContext();
+  const { deflate } = useDeflator();
 
   const dbconf = getConfig(user);
   const { data: accounts, isSuccess: isSuccessAccounts } = useQuery(
@@ -201,9 +203,11 @@ export const MonthDetailedExpensesPiePlot = () => {
       </div>
     );
 
+  const deflatedData = data.map((d) => ({ ...d, value: deflate(d.value, d.date) }));
+
   return (
     <DrawMonthDetailedExpensesPiePlot
-      data={data}
+      data={deflatedData}
       accounts={accounts}
       date={detailedDate}
       hideAccounts={hideAccounts}

@@ -81,6 +81,11 @@
       "details": "Detalles",
       "topMovers": "Mayores variaciones"
     },
+    "deflate": {
+      "toggle": "Ajustar por inflación",
+      "tooltip": "Reescala los periodos pasados a euros de {{year}} usando el IPC anual de España, para que los importes sean comparables al poder adquisitivo actual.",
+      "badge": "Términos reales (€ {{year}})"
+    },
     "balances": {
       "heading": "Cuentas",
       "assets": "Activos",

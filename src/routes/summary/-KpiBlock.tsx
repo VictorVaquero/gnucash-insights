@@ -12,6 +12,7 @@ import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
+import { useDeflator } from "./-useDeflator";
 
 const useSum = (
   db: AnyDB | undefined,
@@ -50,28 +51,55 @@ export const KpiBlock = (props: { className?: string }) => {
   const dbconf = getConfig(user);
   const { locale } = useLocale();
   const { t } = useTranslation();
+  const { deflate } = useDeflator();
   const prevMonth = latestMonth?.minus({ months: 1 });
+  const latestDateKey = latestMonth?.toISODate() ?? "";
+  const prevDateKey = prevMonth?.toISODate() ?? "";
 
-  const netGain = useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes]);
-  const earnings = useSum(db, bookId, [dbconf.income, dbconf.taxes]);
-  const costs = useSum(db, bookId, [dbconf.expenses]);
-  const checking = useSum(db, bookId, [dbconf.checking]);
-  const savings = useSum(db, bookId, [dbconf.savings]);
-  const assets = useSum(db, bookId, [dbconf.assets]);
-  const investments = useSum(db, bookId, [dbconf.investments]);
+  const netGain = deflate(
+    useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes]),
+    latestDateKey,
+  );
+  const earnings = deflate(useSum(db, bookId, [dbconf.income, dbconf.taxes]), latestDateKey);
+  const costs = deflate(useSum(db, bookId, [dbconf.expenses]), latestDateKey);
+  const checking = deflate(useSum(db, bookId, [dbconf.checking]), latestDateKey);
+  const savings = deflate(useSum(db, bookId, [dbconf.savings]), latestDateKey);
+  const assets = deflate(useSum(db, bookId, [dbconf.assets]), latestDateKey);
+  const investments = deflate(useSum(db, bookId, [dbconf.investments]), latestDateKey);
 
   const prevRange = { startDate: prevMonth, endDate: latestMonth };
-  const prevNetGain = useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes], prevRange);
-  const prevEarnings = useSum(db, bookId, [dbconf.income, dbconf.taxes], prevRange);
-  const prevCosts = useSum(db, bookId, [dbconf.expenses], prevRange);
-  const prevChecking = useSum(db, bookId, [dbconf.checking], { endDate: latestMonth });
-  const prevSavings = useSum(db, bookId, [dbconf.savings], { endDate: latestMonth });
-  const prevAssets = useSum(db, bookId, [dbconf.assets], { endDate: latestMonth });
-  const prevInvestments = useSum(db, bookId, [dbconf.investments], { endDate: latestMonth });
-  const costsLast3 = useSum(db, bookId, [dbconf.expenses], {
-    startDate: latestMonth?.minus({ months: 3 }),
-    endDate: latestMonth,
-  });
+  const prevNetGain = deflate(
+    useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes], prevRange),
+    prevDateKey,
+  );
+  const prevEarnings = deflate(
+    useSum(db, bookId, [dbconf.income, dbconf.taxes], prevRange),
+    prevDateKey,
+  );
+  const prevCosts = deflate(useSum(db, bookId, [dbconf.expenses], prevRange), prevDateKey);
+  const prevChecking = deflate(
+    useSum(db, bookId, [dbconf.checking], { endDate: latestMonth }),
+    prevDateKey,
+  );
+  const prevSavings = deflate(
+    useSum(db, bookId, [dbconf.savings], { endDate: latestMonth }),
+    prevDateKey,
+  );
+  const prevAssets = deflate(
+    useSum(db, bookId, [dbconf.assets], { endDate: latestMonth }),
+    prevDateKey,
+  );
+  const prevInvestments = deflate(
+    useSum(db, bookId, [dbconf.investments], { endDate: latestMonth }),
+    prevDateKey,
+  );
+  const costsLast3 = deflate(
+    useSum(db, bookId, [dbconf.expenses], {
+      startDate: latestMonth?.minus({ months: 3 }),
+      endDate: latestMonth,
+    }),
+    latestDateKey,
+  );
 
   const savingsRate = earnings ? (netGain / earnings) * 100 : 0;
   const prevSavingsRate = prevEarnings ? (prevNetGain / prevEarnings) * 100 : 0;

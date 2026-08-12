@@ -28,6 +28,7 @@ import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
+import { useDeflator } from "../-useDeflator";
 
 interface Data {
   date: string;
@@ -194,6 +195,7 @@ export const AssetAccountsPlot = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const { dateRange, chartPeriodicity } = useSummaryPageContext();
+  const { deflate } = useDeflator();
   const dbconfig = getConfig(user);
 
   const { data: rawData } = useQuery(
@@ -219,9 +221,10 @@ export const AssetAccountsPlot = () => {
           return timeA - timeB;
         })
         .filter((d) => d.date >= dateRange.from.toString())
-        .filter((d) => d.date <= dateRange.to.toString());
+        .filter((d) => d.date <= dateRange.to.toString())
+        .map((d) => ({ ...d, value: deflate(d.value, d.date) }));
     }
-  }, [rawData, dateRange]);
+  }, [rawData, dateRange, deflate]);
 
   if (!data || !accounts || !dateRange)
     return (
