@@ -1,6 +1,12 @@
 import { AnimatePresence, motion } from "motion/react";
+import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+
+const initial = { opacity: 0 };
+const animate = { opacity: [1, 1, 0, 1, 1] };
+const transition = { duration: 0.4 };
+const exit = { opacity: 0 };
 
 export const ErrorModal = ({
   msg,
@@ -12,6 +18,7 @@ export const ErrorModal = ({
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const { t } = useTranslation();
+  const close = useCallback(() => setVisible(false), [setVisible]);
   return (
     <>
       {isVisible &&
@@ -20,10 +27,10 @@ export const ErrorModal = ({
             <motion.div
               className="absolute left-[70%] top-0 m-10 text-popover-foreground bg-popover border border-border rounded"
               key="login-modal"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [1, 1, 0, 1, 1] }}
-              transition={{ duration: 0.4 }}
-              exit={{ opacity: 0 }}
+              initial={initial}
+              animate={animate}
+              transition={transition}
+              exit={exit}
             >
               <div className="p-6 pb-2">
                 <h2 className="text-xl text-popover-foreground">{t("errorModal.title")}</h2>
@@ -32,7 +39,7 @@ export const ErrorModal = ({
               <div className="p-4 pt-2 flex flex-row justify-end">
                 <button
                   className="p-4 text-muted-foreground hover:bg-accent rounded"
-                  onClick={() => setVisible(false)}
+                  onClick={close}
                 >
                   {t("errorModal.close")}
                 </button>

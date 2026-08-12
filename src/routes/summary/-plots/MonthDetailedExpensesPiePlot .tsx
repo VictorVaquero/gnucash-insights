@@ -1,6 +1,6 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Cell,
@@ -45,6 +45,18 @@ const colorOf = (d: Data, accounts: Account[], defaultAccount: string) => {
   return name !== defaultAccount ? getRandomColor(name) : getDefaultColor();
 };
 
+// `colorOf` returns a stable string per account, so a small cache keeps the resulting
+// style object referentially stable across renders for the same color.
+const colorStyleCache = new Map<string, { color: string }>();
+const colorStyle = (color: string) => {
+  let style = colorStyleCache.get(color);
+  if (!style) {
+    style = { color };
+    colorStyleCache.set(color, style);
+  }
+  return style;
+};
+
 const ChartTooltipContent = ({
   payload,
   accounts,
@@ -59,7 +71,7 @@ const ChartTooltipContent = ({
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{nameOf(d, accounts, defaultAccount)}</span>
       <span className="text-muted-foreground text-xs">{d.date}</span>
-      <span style={{ color: colorOf(d, accounts, defaultAccount) }}>
+      <span style={colorStyle(colorOf(d, accounts, defaultAccount))}>
         {formatCurrency(d.value, locale, { compact: true })}
       </span>
     </div>
@@ -92,6 +104,27 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
   const { activeIndex } = useChartScrubber(containerRef, { length: filtered_data.length });
   const scrubbed = activeIndex != null ? filtered_data[activeIndex] : undefined;
 
+  const { setHideAccounts } = props;
+  const renderTooltipContent = useCallback(
+    (p: TooltipContentProps<number, string>) => (
+      <ChartTooltip {...p}>
+        {({ payload }) => (
+          <ChartTooltipContent
+            payload={payload}
+            accounts={props.accounts}
+            defaultAccount={defaultAccount}
+          />
+        )}
+      </ChartTooltip>
+    ),
+    [props.accounts, defaultAccount],
+  );
+
+  const hideAccountHandlers = useMemo(
+    () => new Map(filtered_data.map((d) => [d.account, () => setHideAccounts(d.account)])),
+    [filtered_data, setHideAccounts],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
@@ -100,7 +133,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
             <p className="text-muted-foreground">
               {nameOf(scrubbed, props.accounts, defaultAccount)}
             </p>
-            <p style={{ color: colorOf(scrubbed, props.accounts, defaultAccount) }}>
+            <p style={colorStyle(colorOf(scrubbed, props.accounts, defaultAccount))}>
               {formatCurrency(scrubbed.value, locale, { compact: true })}
             </p>
           </>
@@ -115,19 +148,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <RechartsTooltip
-            content={(p: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...p}>
-                {({ payload }) => (
-                  <ChartTooltipContent
-                    payload={payload}
-                    accounts={props.accounts}
-                    defaultAccount={defaultAccount}
-                  />
-                )}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           <Pie
             data={filtered_data}
             dataKey="value"
@@ -150,7 +171,7 @@ const DrawMonthDetailedExpensesPiePlot = (props: {
                 }
                 stroke={i === activeIndex ? "var(--color-foreground)" : "white"}
                 strokeWidth={i === activeIndex ? 3 : 1.5}
-                onClick={() => props.setHideAccounts(d.account)}
+                onClick={hideAccountHandlers.get(d.account)}
               />
             ))}
           </Pie>

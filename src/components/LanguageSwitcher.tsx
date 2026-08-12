@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useLocale, type Locale } from "@/hooks/useLocale";
 import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useCallback } from "react";
 
 const LOCALE_OPTIONS: { value: Locale; label: string }[] = [
   { value: "en", label: "English" },
@@ -17,6 +18,7 @@ const LOCALE_OPTIONS: { value: Locale; label: string }[] = [
 
 export const LanguageSwitcher = ({ isCollapsed }: { isCollapsed?: boolean }) => {
   const { locale, setLocale } = useLocale();
+  const handleValueChange = useCallback((value: string) => setLocale(value as Locale), [setLocale]);
 
   return (
     <DropdownMenu>
@@ -29,10 +31,7 @@ export const LanguageSwitcher = ({ isCollapsed }: { isCollapsed?: boolean }) => 
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={isCollapsed ? "start" : "end"}>
-        <DropdownMenuRadioGroup
-          value={locale}
-          onValueChange={(value) => setLocale(value as Locale)}
-        >
+        <DropdownMenuRadioGroup value={locale} onValueChange={handleValueChange}>
           {LOCALE_OPTIONS.map((option) => (
             <DropdownMenuRadioItem
               key={option.value}

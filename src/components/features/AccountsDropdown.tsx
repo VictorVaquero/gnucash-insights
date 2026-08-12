@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSummaryPageContext } from "@/routes/summary/-summaryPageContext";
-import React, { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Option {
@@ -21,10 +21,50 @@ interface MultiSelectTreeProps {
   options: Option[];
 }
 
+interface TreeNodeProps {
+  node: OptionExtended;
+  level: number;
+  selected: string[];
+  onToggle: (id: string) => void;
+}
+
+const TreeNode = ({ node, level, selected, onToggle }: TreeNodeProps) => {
+  const isSelected = selected.includes(node.id);
+  const style = useMemo(() => ({ paddingLeft: `${level * 16 + 8}px` }), [level]);
+  const handleClick = useCallback(() => onToggle(node.id), [onToggle, node.id]);
+
+  return (
+    <div>
+      <div
+        className="flex items-center gap-2 py-1 cursor-pointer"
+        style={style}
+        onClick={handleClick}
+      >
+        <Checkbox checked={isSelected} />
+        <span>{node.name}</span>
+      </div>
+
+      {node.children.map((child) => (
+        <TreeNode
+          key={child.id}
+          node={child}
+          level={level + 1}
+          selected={selected}
+          onToggle={onToggle}
+        />
+      ))}
+    </div>
+  );
+};
+
 export function MultiSelectTree({ options }: MultiSelectTreeProps) {
   const { hideAccounts: selected, toggleHideAccount: onToggle } = useSummaryPageContext();
   const [search, setSearch] = useState("");
   const { t } = useTranslation();
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    [],
+  );
 
   // Build a tree structure using parentId
   const tree = useMemo(() => {
@@ -51,25 +91,6 @@ export function MultiSelectTree({ options }: MultiSelectTreeProps) {
     return roots;
   }, [options, search]);
 
-  const renderNode = (node: OptionExtended, level = 0): React.ReactNode => {
-    const isSelected = selected.includes(node.id);
-
-    return (
-      <div key={node.id}>
-        <div
-          className="flex items-center gap-2 py-1 cursor-pointer"
-          style={{ paddingLeft: `${level * 16 + 8}px` }}
-          onClick={() => onToggle(node.id)}
-        >
-          <Checkbox checked={isSelected} />
-          <span>{node.name}</span>
-        </div>
-
-        {node.children.map((child) => renderNode(child, level + 1))}
-      </div>
-    );
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -90,11 +111,13 @@ export function MultiSelectTree({ options }: MultiSelectTreeProps) {
             type="text"
             placeholder={t("accountsDropdown.searchPlaceholder")}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full rounded-md border px-2 py-1 text-sm"
           />
         </div>
-        {tree.map((node) => renderNode(node))}
+        {tree.map((node) => (
+          <TreeNode key={node.id} node={node} level={0} selected={selected} onToggle={onToggle} />
+        ))}
         {/* Render filtered tree */}
       </DropdownMenuContent>
     </DropdownMenu>

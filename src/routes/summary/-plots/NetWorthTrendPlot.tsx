@@ -42,6 +42,8 @@ const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const lineColor = twStyles.getPropertyValue("--color-blue-500");
 const activeDot = renderTouchDot(lineColor, 4);
+const axisTickStyle = { fontSize: 10, fill: "currentColor" };
+const lineColorStyle = { color: lineColor };
 
 const ChartTooltipContent = ({
   payload,
@@ -51,12 +53,18 @@ const ChartTooltipContent = ({
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center gap-0.5">
       <span className="text-muted-foreground text-xs">{label}</span>
-      <span style={{ color: lineColor }}>
+      <span style={lineColorStyle}>
         {formatCurrency((payload[0]?.value as number) ?? 0, locale, { compact: true })}
       </span>
     </div>
   );
 };
+
+const renderTooltipContent = (props: TooltipContentProps<number, string>) => (
+  <ChartTooltip {...props}>
+    {({ payload, label }) => <ChartTooltipContent payload={payload} label={label} />}
+  </ChartTooltip>
+);
 
 const DrawNetWorthTrendPlot = ({ data }: { data: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
@@ -85,6 +93,11 @@ const DrawNetWorthTrendPlot = ({ data }: { data: Data[] }) => {
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  const yTickFormatter = useMemo(
+    () => (value: number) => formatCurrency(value, locale, { compact: true }),
+    [locale],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <ChartKeyValue
@@ -104,24 +117,18 @@ const DrawNetWorthTrendPlot = ({ data }: { data: Data[] }) => {
           )}
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
+            tickFormatter={yTickFormatter}
             width={margin.left}
           />
-          <RechartsTooltip
-            content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...props}>
-                {({ payload, label }) => <ChartTooltipContent payload={payload} label={label} />}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           <Line
             type="linear"
             dataKey="total"

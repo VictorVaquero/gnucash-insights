@@ -1,8 +1,9 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import type { OnChangeFn, RowSelectionState } from "@tanstack/react-table";
 import { DateTime } from "luxon";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PeriodicityTabs } from "@/components/PeriodicityTabs";
@@ -51,11 +52,32 @@ const Analysis = () => {
   const { bookId } = useBook();
   const { t } = useTranslation();
 
-  const [filteredTransactions, setFilteredTransactions] = useState<FullTransaction[]>([]);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState | null>(null);
   const [chartPeriodicity, setChartPeriodicity] = useState<Periodicity>("monthly");
 
   const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
   const transactions = useMemo(() => data, [data]);
+  // Defaults to "all rows selected" until the user makes an explicit selection.
+  const effectiveRowSelection = useMemo(
+    () =>
+      rowSelection ??
+      (transactions ?? []).reduce<RowSelectionState>(
+        (d, row) => ({ ...d, [row.splitId]: true }),
+        {},
+      ),
+    [transactions, rowSelection],
+  );
+  const filteredTransactions = useMemo(
+    () => (transactions ?? []).filter((row) => effectiveRowSelection[row.splitId]),
+    [transactions, effectiveRowSelection],
+  );
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = useCallback(
+    (updater) =>
+      setRowSelection((prev) =>
+        typeof updater === "function" ? updater(prev ?? effectiveRowSelection) : updater,
+      ),
+    [effectiveRowSelection],
+  );
 
   if (!isSuccess || !transactions)
     return (
@@ -84,7 +106,11 @@ const Analysis = () => {
         <KpiBlock data={filteredTransactions} />
       </div>
       <div className="md:row-start-2 md:col-start-1">
-        <TransactTable data={transactions} setFilteredData={setFilteredTransactions} />
+        <TransactTable
+          data={transactions}
+          rowSelection={effectiveRowSelection}
+          onRowSelectionChange={handleRowSelectionChange}
+        />
       </div>
       <div className="md:row-start-2 md:col-start-2">
         <PeriodicityTabs activeMode={chartPeriodicity} onChange={setChartPeriodicity} />

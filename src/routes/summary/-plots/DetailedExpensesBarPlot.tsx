@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { flatRollup, groupBy, rollup, sum } from "@/common/aggregate";
 import { formatCurrency } from "@/common/utils";
-import { BarChart } from "@/components/charts/BarPlot";
+import { BarChart, BarChartEventProps } from "@/components/charts/BarPlot";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuth } from "@/contexts/useAuthContext";
 import { AccountsData, accountsOptions } from "@/db/queries/global";
@@ -169,6 +169,17 @@ export const DetailedExpensesBarPlot = () => {
     }),
   );
 
+  const valueFormatter = useMemo(
+    () => (number: number) => formatCurrency(number, locale, { digits: 0, compact: true }),
+    [locale],
+  );
+
+  const onValueChange = useCallback(
+    (v: BarChartEventProps) =>
+      setDetailedDate(DateTime.fromFormat(v?.date as string, "yyyy-LL-dd")),
+    [setDetailedDate],
+  );
+
   if (!data || !dateRange || !keyNames) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -185,10 +196,8 @@ export const DetailedExpensesBarPlot = () => {
         index="dateLabel"
         categories={keyNames}
         showLegend={false}
-        valueFormatter={(number: number) =>
-          formatCurrency(number, locale, { digits: 0, compact: true })
-        }
-        onValueChange={(v) => setDetailedDate(DateTime.fromFormat(v?.date as string, "yyyy-LL-dd"))}
+        valueFormatter={valueFormatter}
+        onValueChange={onValueChange}
       />
     </div>
   );

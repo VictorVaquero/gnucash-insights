@@ -33,6 +33,9 @@ const red = twStyles.getPropertyValue("--color-red-500");
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 50 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 36 };
 const getColor = (d: string) => (d === "Ingresos" ? green : red);
+const axisTickStyle = { fontSize: 10, fill: "currentColor" };
+const mixinColor = getColor("Mixin");
+const mixinColorStyle = { color: mixinColor };
 
 const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
@@ -40,12 +43,16 @@ const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, strin
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{d.dateLabel}</span>
-      <span style={{ color: getColor("Mixin") }}>
-        {formatCurrency(d.value, locale, { compact: true })}
-      </span>
+      <span style={mixinColorStyle}>{formatCurrency(d.value, locale, { compact: true })}</span>
     </div>
   );
 };
+
+const renderTooltipContent = (props: TooltipContentProps<number, string>) => (
+  <ChartTooltip {...props}>
+    {({ payload }) => <ChartTooltipContent payload={payload} />}
+  </ChartTooltip>
+);
 
 export const TransactsPlot = ({
   data,
@@ -68,9 +75,8 @@ export const TransactsPlot = ({
     })).sort((a, b) => (a.dateLabel > b.dateLabel ? 1 : -1));
   }, [data, format]);
 
-  const color = getColor("Mixin");
-  const dot = useMemo(() => renderTouchDot(color, 5), [color]);
-  const activeDot = useMemo(() => renderTouchDot(color, 6), [color]);
+  const dot = useMemo(() => renderTouchDot(mixinColor, 5), []);
+  const activeDot = useMemo(() => renderTouchDot(mixinColor, 6), []);
   const latest = chartData[chartData.length - 1];
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,13 +86,20 @@ export const TransactsPlot = ({
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  const yTickFormatter = useMemo(
+    () => (value: number) => formatCurrency(value, locale, { compact: true }),
+    [locale],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       {latest && (
         <ChartKeyValue
           label={latest.dateLabel}
           value={
-            <span style={{ color }}>{formatCurrency(latest.value, locale, { compact: true })}</span>
+            <span style={mixinColorStyle}>
+              {formatCurrency(latest.value, locale, { compact: true })}
+            </span>
           }
         />
       )}
@@ -103,28 +116,22 @@ export const TransactsPlot = ({
           )}
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
+            tickFormatter={yTickFormatter}
             width={margin.left}
           />
-          <RechartsTooltip
-            content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...props}>
-                {({ payload }) => <ChartTooltipContent payload={payload} />}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           <Line
             type="monotone"
             dataKey="value"
-            stroke={color}
+            stroke={mixinColor}
             strokeWidth={1.5}
             dot={dot}
             activeDot={activeDot}

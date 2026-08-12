@@ -1,6 +1,6 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   CartesianGrid,
   ComposedChart,
@@ -38,18 +38,31 @@ interface ChartRow extends Data {
 
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
+const axisTickStyle = { fontSize: 10, fill: "currentColor" };
 const xf = (d: Data) => DateTime.fromISO(d.fin);
 
 // Minimum touch hit-area per chart-component-contract (44x44px), independent of the
 // visible bar's drawn width.
 const MIN_HIT_SIZE = 44;
 
+// `getColor` returns a stable string per travel name, so a small cache keeps the
+// resulting style object referentially stable across renders for the same color.
+const colorStyleCache = new Map<string, { color: string }>();
+const colorStyle = (color: string) => {
+  let style = colorStyleCache.get(color);
+  if (!style) {
+    style = { color };
+    colorStyleCache.set(color, style);
+  }
+  return style;
+};
+
 const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
   const { locale } = useLocale();
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
-      <span style={{ color: getColor(d.name) }}>{d.name}</span>
+      <span style={colorStyle(getColor(d.name))}>{d.name}</span>
       <span className="text-muted-foreground text-xs">
         {d.ini} | {d.fin}
       </span>
@@ -57,6 +70,12 @@ const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, strin
     </div>
   );
 };
+
+const renderTooltipContent = (props: TooltipContentProps<number, string>) => (
+  <ChartTooltip {...props}>
+    {({ payload }) => <ChartTooltipContent payload={payload} />}
+  </ChartTooltip>
+);
 
 /**
  * Draws each travel as a rect positioned by its actual end-date on a continuous time
@@ -68,44 +87,42 @@ const OverlappingBars = ({ data }: { data: ChartRow[] }) => {
   const plotArea = usePlotArea();
   const rectWidth = plotArea ? Math.max((plotArea.width / data.length) * 1.4, 6) : 8;
 
-  return (
-    <Scatter
-      data={data}
-      dataKey="value"
-      isAnimationActive={false}
-      shape={(props: { cx?: number; cy?: number; payload?: ChartRow }) => {
-        const { cx, cy, payload } = props;
-        if (cx == null || cy == null || !payload || !plotArea) return <g />;
-        const color = getColor(payload.name);
-        const baselineY = plotArea.y + plotArea.height;
-        const height = Math.max(baselineY - cy, 0);
-        const hitWidth = Math.max(rectWidth, MIN_HIT_SIZE);
-        const hitHeight = Math.max(height, MIN_HIT_SIZE);
-        const hitY = Math.min(cy, baselineY - hitHeight);
-        return (
-          <g>
-            <rect
-              x={cx - hitWidth / 2}
-              y={hitY}
-              width={hitWidth}
-              height={baselineY - hitY}
-              fill="transparent"
-            />
-            <rect
-              x={cx - rectWidth / 2}
-              y={cy}
-              width={rectWidth}
-              height={height}
-              fill={color}
-              fillOpacity={0.4}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-          </g>
-        );
-      }}
-    />
+  const renderShape = useCallback(
+    (props: { cx?: number; cy?: number; payload?: ChartRow }) => {
+      const { cx, cy, payload } = props;
+      if (cx == null || cy == null || !payload || !plotArea) return <g />;
+      const color = getColor(payload.name);
+      const baselineY = plotArea.y + plotArea.height;
+      const height = Math.max(baselineY - cy, 0);
+      const hitWidth = Math.max(rectWidth, MIN_HIT_SIZE);
+      const hitHeight = Math.max(height, MIN_HIT_SIZE);
+      const hitY = Math.min(cy, baselineY - hitHeight);
+      return (
+        <g>
+          <rect
+            x={cx - hitWidth / 2}
+            y={hitY}
+            width={hitWidth}
+            height={baselineY - hitY}
+            fill="transparent"
+          />
+          <rect
+            x={cx - rectWidth / 2}
+            y={cy}
+            width={rectWidth}
+            height={height}
+            fill={color}
+            fillOpacity={0.4}
+            stroke={color}
+            strokeWidth={1.5}
+          />
+        </g>
+      );
+    },
+    [plotArea, rectWidth],
   );
+
+  return <Scatter data={data} dataKey="value" isAnimationActive={false} shape={renderShape} />;
 };
 
 const DrawTravelExpensesPlot = (props: {
@@ -147,6 +164,7 @@ const DrawTravelExpensesPlot = (props: {
 
   const yMax = Math.max(...chartData.map((d) => d.value), 0);
   const latest = chartData[chartData.length - 1];
+  const yDomain = useMemo((): [number, number] => [0, yMax], [yMax]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const { activeIndex } = useChartScrubber(containerRef, {
@@ -155,13 +173,22 @@ const DrawTravelExpensesPlot = (props: {
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  const xTickFormatter = useMemo(
+    () => (ms: number) => DateTime.fromMillis(ms).setLocale(locale).toFormat("LLL yy"),
+    [locale],
+  );
+  const yTickFormatter = useMemo(
+    () => (value: number) => formatCurrency(value, locale, { compact: true }),
+    [locale],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       {latest && (
         <ChartKeyValue
           label={latest.name}
           value={
-            <span style={{ color: getColor(latest.name) }}>
+            <span style={colorStyle(getColor(latest.name))}>
               {formatCurrency(latest.value, locale, { compact: true })}
             </span>
           }
@@ -183,28 +210,20 @@ const DrawTravelExpensesPlot = (props: {
             dataKey="finMillis"
             domain={xDomain}
             ticks={xTicks}
-            tickFormatter={(ms: number) =>
-              DateTime.fromMillis(ms).setLocale(locale).toFormat("LLL yy")
-            }
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tickFormatter={xTickFormatter}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
           />
           <YAxis
-            domain={[0, yMax]}
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            domain={yDomain}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
+            tickFormatter={yTickFormatter}
             width={margin.left}
           />
-          <RechartsTooltip
-            content={(tprops: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...tprops}>
-                {({ payload }) => <ChartTooltipContent payload={payload} />}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           <OverlappingBars data={chartData} />
         </ComposedChart>
       </ResponsiveContainer>
@@ -220,12 +239,17 @@ export const TravelExpensesPlot = () => {
 
   const { data, isSuccess } = useQuery(travelExpensesDetailedOptions({ db, user, bookId }));
 
-  if (!isSuccess || from == null || to == null)
+  const domain = useMemo(
+    () => (from != null && to != null ? { startDate: from, endDate: to } : undefined),
+    [from, to],
+  );
+
+  if (!isSuccess || domain == null)
     return (
       <div className="w-full h-full flex flex-row items-center justify-center">
         <BarLoader />
       </div>
     );
 
-  return <DrawTravelExpensesPlot data={data as Data[]} domain={{ startDate: from, endDate: to }} />;
+  return <DrawTravelExpensesPlot data={data as Data[]} domain={domain} />;
 };

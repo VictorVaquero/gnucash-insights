@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { AppDatabase } from "@/db/dbType";
 import { DateTime } from "luxon";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { AccountMenu } from "@/components/AccountMenu.tsx";
@@ -72,10 +72,11 @@ const RootComponent = () => {
   // lookup). Routes read that state unconditionally, so rendering the Outlet before it's ready
   // throws ("Account config not yet loaded"). Unauthenticated routes (e.g. /login) don't need it.
   const isAppDataReady = !auth?.isAuthenticated?.() || (!!db && !!bookId);
+  const toggleSidebar = useCallback(() => setCollapse((val) => !val), []);
 
   return (
     <>
-      <SideBar isCollapsed={isCollapsed} toggleSidebar={() => setCollapse((val) => !val)} />
+      <SideBar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
       <AccountMenu />
       <main
         ref={mainRef}

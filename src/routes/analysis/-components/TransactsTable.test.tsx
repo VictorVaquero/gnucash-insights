@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "vitest-axe";
 import { DateTime } from "luxon";
-import type { ColumnFiltersState } from "@tanstack/react-table";
+import type { ColumnFiltersState, RowSelectionState } from "@tanstack/react-table";
 import type { FullTransaction } from "..";
 import { TransactTable } from "./TransactsTable";
 
@@ -18,7 +18,15 @@ vi.mock("./useColumnFilters", () => ({
   },
 }));
 
-const noop: CallableFunction = () => undefined;
+// TransactTable now takes controlled row-selection state instead of an internal effect that
+// reports selected rows to the parent, so tests render it via a small wrapper that owns that
+// state the same way the real "/analysis/" route does.
+const TestTransactTable = ({ data }: { data: FullTransaction[] }) => {
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  return (
+    <TransactTable data={data} rowSelection={rowSelection} onRowSelectionChange={setRowSelection} />
+  );
+};
 
 const ROW_COUNT = 12;
 const data: FullTransaction[] = Array.from({ length: ROW_COUNT }, (_, i) => ({
@@ -36,12 +44,12 @@ const data: FullTransaction[] = Array.from({ length: ROW_COUNT }, (_, i) => ({
 
 describe("TransactTable", () => {
   it("has no axe violations", async () => {
-    const { container } = render(<TransactTable data={data} setFilteredData={noop} />);
+    const { container } = render(<TestTransactTable data={data} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 
   it("shows only the first page (8 rows) by default", () => {
-    render(<TransactTable data={data} setFilteredData={noop} />);
+    render(<TestTransactTable data={data} />);
 
     for (let i = 0; i < 8; i++) expect(screen.getByText(`Row ${i}`)).toBeInTheDocument();
     for (let i = 8; i < ROW_COUNT; i++)
@@ -50,7 +58,7 @@ describe("TransactTable", () => {
 
   it("shows the next page of rows when the next-page control is clicked", async () => {
     const user = userEvent.setup();
-    render(<TransactTable data={data} setFilteredData={noop} />);
+    render(<TestTransactTable data={data} />);
 
     await user.click(screen.getByRole("button", { name: ">" }));
 
@@ -60,7 +68,7 @@ describe("TransactTable", () => {
 
   it("shows more rows when a larger page size is selected", async () => {
     const user = userEvent.setup();
-    render(<TransactTable data={data} setFilteredData={noop} />);
+    render(<TestTransactTable data={data} />);
 
     await user.selectOptions(screen.getByRole("combobox"), "20");
 
@@ -69,7 +77,7 @@ describe("TransactTable", () => {
 
   it("jumps to the requested page via the go-to-page input", async () => {
     const user = userEvent.setup();
-    render(<TransactTable data={data} setFilteredData={noop} />);
+    render(<TestTransactTable data={data} />);
 
     const pageInput = screen.getByRole("spinbutton");
     await user.clear(pageInput);

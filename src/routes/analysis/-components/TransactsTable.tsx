@@ -1,5 +1,7 @@
 import {
   Column,
+  OnChangeFn,
+  RowSelectionState,
   Table,
   createColumnHelper,
   flexRender,
@@ -10,7 +12,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { DateTime } from "luxon";
-import { useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Checkbox } from "@/components/Checkbox";
@@ -85,33 +87,35 @@ const buildColumns = (t: (key: string, opts?: Record<string, unknown>) => string
   }),
 ];
 
-export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFunction }) => {
+export const TransactTable = (props: {
+  data: Data[];
+  rowSelection: RowSelectionState;
+  onRowSelectionChange: OnChangeFn<RowSelectionState>;
+}) => {
   const { t } = useTranslation();
   const { columnFilters, setColumnFilters } = useColumnFilters();
   const columns = useMemo(() => buildColumns(t), [t]);
-  const initialRowSelection = useMemo(
-    () => props.data.reduce((d, row) => ({ ...d, [row.splitId]: true }), {}),
-    [props.data],
-  );
+  const { data, rowSelection, onRowSelectionChange } = props;
 
   const table = useReactTable<Data>({
-    data: props.data,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: onRowSelectionChange,
     getRowId: (row) => row.splitId,
     state: {
       columnFilters,
+      rowSelection,
     },
     initialState: {
       columnVisibility: {
         id: false,
         idAccount: false,
       },
-      rowSelection: initialRowSelection,
       pagination: {
         pageIndex: 0,
         pageSize: 8,
@@ -119,11 +123,23 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
     },
   });
 
-  const rows = table.getSelectedRowModel().flatRows;
-  const { setFilteredData } = props;
-  useEffect(() => {
-    setFilteredData(rows.map((r) => r.original));
-  }, [setFilteredData, rows]);
+  const handleFirstPage = useCallback(() => table.firstPage(), [table]);
+  const handlePreviousPage = useCallback(() => table.previousPage(), [table]);
+  const handleNextPage = useCallback(() => table.nextPage(), [table]);
+  const handleLastPage = useCallback(() => table.lastPage(), [table]);
+  const handleGoToPage = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const page = e.target.value ? Number(e.target.value) - 1 : 0;
+      table.setPageIndex(page);
+    },
+    [table],
+  );
+  const handlePageSizeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      table.setPageSize(Number(e.target.value));
+    },
+    [table],
+  );
 
   return (
     <div>
@@ -174,28 +190,28 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
         <span className="flex items-center gap-1 text-white">
           <button
             className="rounded p-1 bg-shark-800"
-            onClick={() => table.firstPage()}
+            onClick={handleFirstPage}
             disabled={!table.getCanPreviousPage()}
           >
             {"<<"}
           </button>
           <button
             className="rounded p-1 bg-shark-800"
-            onClick={() => table.previousPage()}
+            onClick={handlePreviousPage}
             disabled={!table.getCanPreviousPage()}
           >
             {"<"}
           </button>
           <button
             className="rounded p-1 bg-shark-800"
-            onClick={() => table.nextPage()}
+            onClick={handleNextPage}
             disabled={!table.getCanNextPage()}
           >
             {">"}
           </button>
           <button
             className="rounded p-1 bg-shark-800"
-            onClick={() => table.lastPage()}
+            onClick={handleLastPage}
             disabled={!table.getCanNextPage()}
           >
             {">>"}
@@ -216,10 +232,7 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
             type="number"
             min="1"
             defaultValue={table.getState().pagination.pageIndex + 1}
-            onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0;
-              table.setPageIndex(page);
-            }}
+            onChange={handleGoToPage}
             className="p-1 rounded w-16 bg-shark-800 text-white"
           />
         </span>
@@ -227,9 +240,7 @@ export const TransactTable = (props: { data: Data[]; setFilteredData: CallableFu
           aria-label={t("analysis.table.rowsPerPage")}
           className="p-2 rounded bg-shark-800 text-white"
           value={table.getState().pagination.pageSize}
-          onChange={(e) => {
-            table.setPageSize(Number(e.target.value));
-          }}
+          onChange={handlePageSizeChange}
         >
           {[10, 20, 30, 40, 50].map((pageSize) => (
             <option key={pageSize} value={pageSize}>
@@ -255,24 +266,51 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
 
   const columnFilterValue = column.getFilterValue();
 
+  const handleMinNumberChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      column.setFilterValue((old: string) => String([e.target.value, old.split(",")[1]])),
+    [column],
+  );
+  const handleMaxNumberChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      column.setFilterValue((old: string) => String([old.split(",")[0], e.target.value])),
+    [column],
+  );
+  const handleMinDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      column.setFilterValue((old: [DateTime, DateTime]) => [
+        DateTime.fromFormat(e.target.value, "yyyy-LL-dd"),
+        old?.[1],
+      ]),
+    [column],
+  );
+  const handleMaxDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      column.setFilterValue((old: [DateTime, DateTime]) => [
+        old?.[0],
+        DateTime.fromFormat(e.target.value, "yyyy-LL-dd"),
+      ]),
+    [column],
+  );
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => column.setFilterValue(e.target.value),
+    [column],
+  );
+
   if (typeof firstValue === "number") {
     return (
       <div className="flex space-x-2 text-black dark:text-white">
         <input
           type="number"
           value={(columnFilterValue as string).split(",").map((v) => Number(v))?.[0] ?? ""}
-          onChange={(e) =>
-            column.setFilterValue((old: string) => String([e.target.value, old.split(",")[1]]))
-          }
+          onChange={handleMinNumberChange}
           placeholder={t("analysis.table.min")}
           className="w-16 ps-2 border shadow rounded"
         />
         <input
           type="number"
           value={(columnFilterValue as string).split(",").map((v) => Number(v))?.[1] ?? ""}
-          onChange={(e) =>
-            column.setFilterValue((old: string) => String([old.split(",")[0], e.target.value]))
-          }
+          onChange={handleMaxNumberChange}
           placeholder={t("analysis.table.max")}
           className="w-16 ps-2 border shadow rounded"
         />
@@ -286,24 +324,14 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
         <input
           type="date"
           value={(columnFilterValue as [DateTime, DateTime])?.[0].toISODate() ?? undefined}
-          onChange={(e) =>
-            column.setFilterValue((old: [DateTime, DateTime]) => [
-              DateTime.fromFormat(e.target.value, "yyyy-LL-dd"),
-              old?.[1],
-            ])
-          }
+          onChange={handleMinDateChange}
           placeholder={t("analysis.table.min")}
           className="w-16 ps-2 border shadow rounded"
         />
         <input
           type="date"
           value={(columnFilterValue as [DateTime, DateTime])?.[1].toISODate() ?? undefined}
-          onChange={(e) =>
-            column.setFilterValue((old: [DateTime, DateTime]) => [
-              old?.[0],
-              DateTime.fromFormat(e.target.value, "yyyy-LL-dd"),
-            ])
-          }
+          onChange={handleMaxDateChange}
           placeholder={t("analysis.table.max")}
           className="w-16 ps-2 border shadow rounded"
         />
@@ -315,7 +343,7 @@ function Filter<D>({ column, table }: { column: Column<D, unknown>; table: Table
     <input
       type="text"
       value={(columnFilterValue ?? "") as string}
-      onChange={(e) => column.setFilterValue(e.target.value)}
+      onChange={handleTextChange}
       placeholder={t("analysis.table.search")}
       className="w-24 ps-2 border shadow rounded text-black dark:text-white"
     />

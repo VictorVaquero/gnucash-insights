@@ -50,6 +50,10 @@ const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const getColor = (d: colorType) => colorCodes[d];
 const activeDotGreen = renderTouchDot(getColor("g"), 4);
 const activeDotRed = renderTouchDot(getColor("r"), 4);
+const axisTickStyle = { fontSize: 10, fill: "currentColor" };
+const greenStyle = { color: getColor("g") };
+const redStyle = { color: getColor("r") };
+const netStyle = (positive: boolean) => (positive ? greenStyle : redStyle);
 
 const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, string>, "payload">) => {
   const d = payload[0].payload as ChartRow;
@@ -60,25 +64,25 @@ const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, strin
       <span className="text-muted-foreground text-xs">{d.dateLabel}</span>
       <div className="text-muted-foreground text-sm">
         {t("summary.plots.income")}:{" "}
-        <span style={{ color: getColor("g") }}>
-          {formatCurrency(d.income, locale, { compact: true })}
-        </span>
+        <span style={greenStyle}>{formatCurrency(d.income, locale, { compact: true })}</span>
       </div>
       <div className="text-muted-foreground text-sm">
         {t("summary.plots.expenses")}:{" "}
-        <span style={{ color: getColor("r") }}>
-          {formatCurrency(d.expenses, locale, { compact: true })}
-        </span>
+        <span style={redStyle}>{formatCurrency(d.expenses, locale, { compact: true })}</span>
       </div>
       <div className="text-muted-foreground text-sm">
         {t("summary.plots.net")}:{" "}
-        <span style={{ color: getColor(d.net > 0 ? "g" : "r") }}>
-          {formatCurrency(d.net, locale, { compact: true })}
-        </span>
+        <span style={netStyle(d.net > 0)}>{formatCurrency(d.net, locale, { compact: true })}</span>
       </div>
     </div>
   );
 };
+
+const renderTooltipContent = (props: TooltipContentProps<number, string>) => (
+  <ChartTooltip {...props}>
+    {({ payload }) => <ChartTooltipContent payload={payload} />}
+  </ChartTooltip>
+);
 
 const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
@@ -100,13 +104,18 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  const yTickFormatter = useMemo(
+    () => (value: number) => formatCurrency(value, locale, { compact: true }),
+    [locale],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       {latest && (
         <ChartKeyValue
           label={t("summary.plots.netWithDate", { date: latest.dateLabel })}
           value={
-            <span style={{ color: getColor(latest.net > 0 ? "g" : "r") }}>
+            <span style={netStyle(latest.net > 0)}>
               {formatCurrency(latest.net, locale, { compact: true })}
             </span>
           }
@@ -125,24 +134,18 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
           )}
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
+            tickFormatter={yTickFormatter}
             width={margin.left}
           />
-          <RechartsTooltip
-            content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...props}>
-                {({ payload }) => <ChartTooltipContent payload={payload} />}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           <Bar dataKey="netAbs" fillOpacity={0.4} isAnimationActive={false}>
             {chartData.map((d) => (
               <Cell key={"net" + d.date} fill={getColor(d.net > 0 ? "g" : "r")} />

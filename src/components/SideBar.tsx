@@ -115,6 +115,11 @@ const NavList = ({ isCollapsed }: { isCollapsed: boolean }) => {
   );
 };
 
+const wordmarkInitial = { width: 0, opacity: 0 };
+const wordmarkAnimate = { width: "auto", opacity: 1 };
+const wordmarkExit = { width: 0, opacity: 0 };
+const wordmarkTransition = { duration: 0.15, delay: 0, ease: "easeInOut" as const };
+
 const MenuIcon = ({ isOpen }: { isOpen: boolean }) => {
   const bar =
     "absolute left-0 h-0.5 w-6 rounded-full bg-current transition-all duration-300 ease-in-out";
@@ -169,10 +174,10 @@ export const SideBar = ({
               <motion.span
                 className="overflow-hidden whitespace-nowrap text-lg font-semibold text-secondary-foreground"
                 key="cashpy-wordmark"
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "auto", opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.15, delay: 0, ease: "easeInOut" }}
+                initial={wordmarkInitial}
+                animate={wordmarkAnimate}
+                exit={wordmarkExit}
+                transition={wordmarkTransition}
               >
                 CashPy
               </motion.span>

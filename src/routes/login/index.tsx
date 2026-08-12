@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { getErrorMessage } from "@/common/utils";
@@ -21,25 +21,39 @@ export const LoginPage = () => {
   const router = useRouter();
   const search = Route.useSearch({});
 
-  const handleSignIn = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    try {
-      await signIn(user, password);
+  const handleSignIn = useCallback(
+    async (e: { preventDefault: () => void }) => {
+      e.preventDefault();
+      try {
+        await signIn(user, password);
+        router.navigate({ to: search.redirect });
+      } catch (error) {
+        setMsg(getErrorMessage(error));
+        setVisible(true);
+      }
+    },
+    [signIn, user, password, router, search.redirect],
+  );
+  const handleGuestSignIn = useCallback(
+    async (e: { preventDefault: () => void }) => {
+      e.preventDefault();
+      signInGuest();
       router.navigate({ to: search.redirect });
-    } catch (error) {
-      setMsg(getErrorMessage(error));
-      setVisible(true);
-    }
-  };
-  const handleGuestSignIn = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    signInGuest();
-    router.navigate({ to: search.redirect });
-  };
+    },
+    [signInGuest, router, search.redirect],
+  );
+  const handleUserChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setUser(e.target.value),
+    [],
+  );
+  const handlePasswordChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value),
+    [],
+  );
 
   useEffect(() => {
     if (isAuthenticated()) router.navigate({ to: search.redirect });
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router, search.redirect]);
 
   return (
     <div className="h-full min-h-fit flex justify-center items-center overflow-y-auto py-6">
@@ -55,7 +69,7 @@ export const LoginPage = () => {
               id="user"
               type="user"
               value={user}
-              onChange={(e) => setUser(e.target.value)}
+              onChange={handleUserChange}
               placeholder={t("login.form.email")}
               autoComplete="off"
               required
@@ -71,7 +85,7 @@ export const LoginPage = () => {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               placeholder={t("login.form.password")}
               autoComplete="off"
               required
