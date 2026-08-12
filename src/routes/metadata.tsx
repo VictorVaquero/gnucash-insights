@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DropDownForm } from "@/components/DropDownForm.tsx";
 import { KpiCard } from "@/components/KpiCard.tsx";
 import { booksOptions, domainOptions } from "@/db/queries/global";
 import { useBook, useDB } from "@/hooks/useDB";
+
+const noopSetValue = () => undefined;
 
 const Metadata = () => {
   const { bookId } = useBook();
@@ -15,7 +18,11 @@ const Metadata = () => {
   const { data: books = [] } = useQuery(booksOptions(db));
   const { data: domainDates } = useQuery(domainOptions(db));
 
-  let bookOptions: { key: string; value: string }[] = [];
+  const bookOptions = useMemo(
+    () => (db ? books.map((b) => ({ key: b.id, value: b.id })) : []),
+    [db, books],
+  );
+
   let book = {
     id: "",
     version: "",
@@ -28,7 +35,6 @@ const Metadata = () => {
   let domain = { min: "-", max: "-" };
 
   if (db) {
-    bookOptions = books.map((b) => ({ key: b.id, value: b.id }));
     book = books.filter((b) => b.id === bookId)[0] ?? book;
 
     domain = {
@@ -45,7 +51,7 @@ const Metadata = () => {
         list={bookOptions}
         value={bookId}
         //setValue={setBookId}
-        setValue={() => undefined}
+        setValue={noopSetValue}
       />
       <div className="mt-6 flex flex-row flex-wrap gap-x-6 gap-y-4">
         <KpiCard name={t("metadata.accounts")} value={book.countAccount} />

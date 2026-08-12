@@ -25,16 +25,13 @@ export const BarLoader = ({
     };
   }, [sync]);
 
+  const trackStyle = useMemo(() => ({ backgroundColor: `${color}33` }), [color]); // 20% opacity track
+  const barStyle = useMemo(() => ({ backgroundColor: color, ...syncStyle }), [color, syncStyle]);
+
   return (
     <div className="flex w-full justify-center">
-      <div
-        className={`relative overflow-hidden rounded-sm ${className}`}
-        style={{ backgroundColor: `${color}33` }} // 20% opacity track
-      >
-        <div
-          className="animate-bar-slide absolute h-full rounded-sm"
-          style={{ backgroundColor: color, ...syncStyle }}
-        />
+      <div className={`relative overflow-hidden rounded-sm ${className}`} style={trackStyle}>
+        <div className="animate-bar-slide absolute h-full rounded-sm" style={barStyle} />
       </div>
     </div>
   );

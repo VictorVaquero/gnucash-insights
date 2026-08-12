@@ -1,28 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { usePersistentState } from "./usePersistentState";
 
 export type ThemePreference = "light" | "dark" | "system";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
-function systemPrefersDark() {
+const noop = () => undefined;
+
+function noSubscription() {
+  return noop;
+}
+
+function subscribeToSystemTheme(onChange: () => void) {
+  const mql = window.matchMedia(DARK_QUERY);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
+
+function getSystemDarkSnapshot() {
   return window.matchMedia(DARK_QUERY).matches;
 }
 
 export function useTheme() {
   const [preference, setPreference] = usePersistentState<ThemePreference>("theme", "system");
 
-  const [systemDark, setSystemDark] = useState(systemPrefersDark);
-
-  useEffect(() => {
-    if (preference !== "system") return;
-
-    const mql = window.matchMedia(DARK_QUERY);
-    const onChange = () => setSystemDark(mql.matches);
-    onChange();
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, [preference]);
+  const systemDark = useSyncExternalStore(
+    preference === "system" ? subscribeToSystemTheme : noSubscription,
+    getSystemDarkSnapshot,
+  );
 
   const resolved = preference === "system" ? (systemDark ? "dark" : "light") : preference;
 

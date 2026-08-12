@@ -505,7 +505,7 @@ interface BaseEventProps {
   [key: string]: number | string;
 }
 
-type BarChartEventProps = BaseEventProps | null | undefined;
+export type BarChartEventProps = BaseEventProps | null | undefined;
 
 interface BarChartProps extends React.HTMLAttributes<HTMLDivElement> {
   data: Record<string, any>[];

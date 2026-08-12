@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/useAuthContext";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export const AccountMenu = () => {
@@ -14,6 +15,8 @@ export const AccountMenu = () => {
   const { user, isAuthenticated, signOut } = useAuth();
   const firstLetter = user?.toUpperCase().substring(0, 1);
   const { t } = useTranslation();
+  const handleSignOut = useCallback(() => signOut(), [signOut]);
+  const loginSearch = useMemo(() => ({ redirect: redirect ?? selected }), [redirect, selected]);
 
   return (
     <div className="fixed top-4 right-4 z-50 cursor-pointer">
@@ -25,13 +28,11 @@ export const AccountMenu = () => {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => signOut()}>
-              {t("accountMenu.logOut")}
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleSignOut}>{t("accountMenu.logOut")}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Link className="text-foreground" to="/login" search={{ redirect: redirect ?? selected }}>
+        <Link className="text-foreground" to="/login" search={loginSearch}>
           {t("accountMenu.logIn")}
         </Link>
       )}

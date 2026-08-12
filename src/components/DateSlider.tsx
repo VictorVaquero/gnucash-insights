@@ -2,6 +2,9 @@ import { Slider } from "@/components/ui/slider"; // uses your custom Slider
 import { useLocale } from "@/hooks/useLocale";
 import type { DateRange } from "@/types/domain";
 import { DateTime } from "luxon";
+import { useCallback, useMemo } from "react";
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 interface DateRangeSliderProps {
   min: string; // absolute lower bound, e.g. "2023-09-01"
@@ -16,17 +19,21 @@ export function DateRangeSlider({ min, max, value, onChange }: DateRangeSliderPr
   const maxMs = DateTime.fromISO(max).startOf("day").toMillis();
   const fromMs = value.from.startOf("day").toMillis();
   const toMs = value.to.startOf("day").toMillis();
+  const sliderValue = useMemo(() => [fromMs, toMs], [fromMs, toMs]);
+  const handleValueChange = useCallback(
+    ([from, to]: number[]) =>
+      onChange({ from: DateTime.fromMillis(from), to: DateTime.fromMillis(to) }),
+    [onChange],
+  );
 
   return (
     <div className="w-full flex flex-col gap-2 p-1">
       <Slider
-        value={[fromMs, toMs]}
+        value={sliderValue}
         min={minMs}
         max={maxMs}
-        step={24 * 60 * 60 * 1000} // one day
-        onValueChange={([from, to]) =>
-          onChange({ from: DateTime.fromMillis(from), to: DateTime.fromMillis(to) })
-        }
+        step={ONE_DAY_MS}
+        onValueChange={handleValueChange}
       />
       <div className="flex items-center justify-between text-xs text-muted-foreground tabular-nums">
         <span>{value.from.setLocale(locale).toFormat("MMM yyyy")}</span>

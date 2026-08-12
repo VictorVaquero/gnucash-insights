@@ -41,6 +41,7 @@ const redColor = twStyles.getPropertyValue("--color-red-500");
 
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
+const axisTickStyle = { fontSize: 10, fill: "currentColor" };
 const getColor = () => redColor;
 const xf = (d: Data) => DateTime.fromISO(d.date);
 
@@ -54,6 +55,12 @@ const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, strin
     </div>
   );
 };
+
+const renderTooltipContent = (props: TooltipContentProps<number, string>) => (
+  <ChartTooltip {...props}>
+    {({ payload }) => <ChartTooltipContent payload={payload} />}
+  </ChartTooltip>
+);
 
 const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
@@ -91,6 +98,11 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[]
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  const yTickFormatter = useMemo(
+    () => (value: number) => formatCurrency(value, locale, { compact: true }),
+    [locale],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <ResponsiveContainer width="100%" height="100%">
@@ -106,15 +118,15 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[]
           )}
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
+            tickFormatter={yTickFormatter}
             width={margin.left}
           />
           {yearBands.map((b) => (
@@ -130,13 +142,7 @@ const DrawTravelExpensesMonthlyPlot = (props: { data: Data[]; dataYearly: Data[]
               ifOverflow="visible"
             />
           ))}
-          <RechartsTooltip
-            content={(tprops: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...tprops}>
-                {({ payload }) => <ChartTooltipContent payload={payload} />}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           <Bar
             dataKey="value"
             fill={getColor()}

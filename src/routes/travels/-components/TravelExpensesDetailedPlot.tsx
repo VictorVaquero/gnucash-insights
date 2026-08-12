@@ -36,8 +36,21 @@ interface ChartRow {
 
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
+const axisTickStyle = { fontSize: 10, fill: "currentColor" };
 const xf = (d: Data) => DateTime.fromISO(d.date);
 const gf = (d: Data) => d.name;
+
+// `entry.color` is a stable string sourced from getColor(name), so a small cache keeps
+// the resulting style object referentially stable across renders for the same color.
+const entryColorStyleCache = new Map<string | undefined, { color: string | undefined }>();
+const entryColorStyle = (color: string | undefined) => {
+  let style = entryColorStyleCache.get(color);
+  if (!style) {
+    style = { color };
+    entryColorStyleCache.set(color, style);
+  }
+  return style;
+};
 
 const ChartTooltipContent = ({
   payload,
@@ -48,13 +61,19 @@ const ChartTooltipContent = ({
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{label}</span>
       {payload.map((entry) => (
-        <span key={entry.dataKey} style={{ color: entry.color }}>
+        <span key={entry.dataKey} style={entryColorStyle(entry.color)}>
           {entry.dataKey}: {formatCurrency(entry.value as number, locale, { compact: true })}
         </span>
       ))}
     </div>
   );
 };
+
+const renderTooltipContent = (props: TooltipContentProps<number, string>) => (
+  <ChartTooltip {...props}>
+    {({ payload, label }) => <ChartTooltipContent payload={payload} label={label} />}
+  </ChartTooltip>
+);
 
 const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
   const isNarrowViewport = useIsNarrowViewport();
@@ -83,6 +102,11 @@ const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  const yTickFormatter = useMemo(
+    () => (value: number) => formatCurrency(value, locale, { compact: true }),
+    [locale],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <ResponsiveContainer width="100%" height="100%">
@@ -98,24 +122,18 @@ const DrawTravelExpensesPlot = (props: { data: Data[] }) => {
           )}
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
+            tickFormatter={yTickFormatter}
             width={margin.left}
           />
-          <RechartsTooltip
-            content={(p: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...p}>
-                {({ payload, label }) => <ChartTooltipContent payload={payload} label={label} />}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           {names.map((name) => (
             <Bar
               key={name}

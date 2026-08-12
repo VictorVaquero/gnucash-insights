@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Cell,
@@ -35,6 +35,18 @@ const color_f = (d: Data, defaultAccount: string) =>
   namef(d) !== defaultAccount ? getRandomColor(namef(d)) : getDefaultColor();
 const orderyf = (a: Data, b: Data) => (yf(a) > yf(b) ? 1 : -1);
 
+// `color_f` returns a stable string per account, so a small cache keeps the resulting
+// style object referentially stable across renders for the same color.
+const colorStyleCache = new Map<string, { color: string }>();
+const colorStyle = (color: string) => {
+  let style = colorStyleCache.get(color);
+  if (!style) {
+    style = { color };
+    colorStyleCache.set(color, style);
+  }
+  return style;
+};
+
 const ChartTooltipContent = ({
   payload,
   sumTotal,
@@ -48,7 +60,7 @@ const ChartTooltipContent = ({
   return (
     <div className="bg-popover text-popover-foreground border border-border rounded px-4 py-2 flex flex-col items-center">
       <span className="text-muted-foreground text-xs">{namef(d)}</span>
-      <span style={{ color: color_f(d, defaultAccount) }}>
+      <span style={colorStyle(color_f(d, defaultAccount))}>
         {formatCurrency(yf(d), locale, { compact: true })}
       </span>
       <span className="text-muted-foreground text-xs">
@@ -73,13 +85,28 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
   const { activeIndex } = useChartScrubber(containerRef, { length: sortedData.length });
   const scrubbed = activeIndex != null ? sortedData[activeIndex] : undefined;
 
+  const renderTooltipContent = useCallback(
+    (p: TooltipContentProps<number, string>) => (
+      <ChartTooltip {...p}>
+        {({ payload }) => (
+          <ChartTooltipContent
+            payload={payload}
+            sumTotal={sumTotal}
+            defaultAccount={defaultAccount}
+          />
+        )}
+      </ChartTooltip>
+    ),
+    [sumTotal, defaultAccount],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
       <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-center items-center pointer-events-none">
         {scrubbed ? (
           <>
             <p className="text-muted-foreground text-sm">{namef(scrubbed)}</p>
-            <p style={{ color: color_f(scrubbed, defaultAccount) }}>
+            <p style={colorStyle(color_f(scrubbed, defaultAccount))}>
               {formatCurrency(yf(scrubbed), locale, { compact: true })}
             </p>
           </>
@@ -89,19 +116,7 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <RechartsTooltip
-            content={(p: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...p}>
-                {({ payload }) => (
-                  <ChartTooltipContent
-                    payload={payload}
-                    sumTotal={sumTotal}
-                    defaultAccount={defaultAccount}
-                  />
-                )}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           <Pie
             data={sortedData}
             dataKey="value"

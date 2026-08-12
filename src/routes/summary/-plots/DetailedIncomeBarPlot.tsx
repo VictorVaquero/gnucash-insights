@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { groupBy, rollup, sum } from "@/common/aggregate";
@@ -125,6 +125,11 @@ export const DetailedIncomeBarPlot = () => {
     }),
   );
 
+  const valueFormatter = useMemo(
+    () => (number: number) => formatCurrency(number, locale, { digits: 0, compact: true }),
+    [locale],
+  );
+
   if (!data || !dateRange || !keyNames) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -142,9 +147,7 @@ export const DetailedIncomeBarPlot = () => {
         categories={keyNames}
         showLegend={false}
         showXAxis={false}
-        valueFormatter={(number: number) =>
-          formatCurrency(number, locale, { digits: 0, compact: true })
-        }
+        valueFormatter={valueFormatter}
       />
     </div>
   );

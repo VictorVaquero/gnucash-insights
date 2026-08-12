@@ -1,6 +1,6 @@
 import { BarLoader } from "@/components/ui/BarLoader";
 import { DateTime } from "luxon";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
@@ -48,6 +48,20 @@ interface ChartRow {
 
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
+const axisTickStyle = { fontSize: 10, fill: "currentColor" };
+
+// Recharts hands back a fresh payload array every render, so `entry.color` (a stable
+// string sourced from getRandomColor/getDefaultColor) is memoized into a style object
+// keyed by color, keeping referential stability across renders for the same color.
+const entryColorStyleCache = new Map<string, { color: string }>();
+const entryColorStyle = (color: string) => {
+  let style = entryColorStyleCache.get(color);
+  if (!style) {
+    style = { color };
+    entryColorStyleCache.set(color, style);
+  }
+  return style;
+};
 
 const ChartTooltipContent = ({
   payload,
@@ -61,7 +75,7 @@ const ChartTooltipContent = ({
       {payload.map((entry) => {
         const account = accounts.find((a) => a.id === entry.dataKey);
         return (
-          <span key={entry.dataKey} style={{ color: entry.color }}>
+          <span key={entry.dataKey} style={entryColorStyle(entry.color)}>
             {account?.name}: {formatCurrency(entry.value as number, locale, { compact: true })}
           </span>
         );
@@ -75,6 +89,24 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
   const { locale } = useLocale();
   const { t } = useTranslation();
+
+  const yTickFormatter = useMemo(
+    () => (value: number) => formatCurrency(value, locale, { compact: true }),
+    [locale],
+  );
+
+  // `accounts` is component-local (fetched data), so this render-prop wrapper can't be
+  // hoisted to module scope the way the reference plots' `renderTooltipContent` was.
+  const renderTooltipContent = useCallback(
+    (props: TooltipContentProps<number, string>) => (
+      <ChartTooltip {...props}>
+        {({ payload, label }) => (
+          <ChartTooltipContent payload={payload} label={label} accounts={accounts} />
+        )}
+      </ChartTooltip>
+    ),
+    [accounts],
+  );
 
   const chartData = useMemo(() => {
     const byDate = new Map<string, ChartRow>();
@@ -125,26 +157,18 @@ const DrawMonthlyAccountsPlot = ({ data, accounts }: { data: Data[]; accounts: A
           )}
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={axisTickStyle}
             className="text-gray-500"
             tickLine={false}
-            tickFormatter={(value: number) => formatCurrency(value, locale, { compact: true })}
+            tickFormatter={yTickFormatter}
             width={margin.left}
           />
-          <RechartsTooltip
-            content={(props: TooltipContentProps<number, string>) => (
-              <ChartTooltip {...props}>
-                {({ payload, label }) => (
-                  <ChartTooltipContent payload={payload} label={label} accounts={accounts} />
-                )}
-              </ChartTooltip>
-            )}
-          />
+          <RechartsTooltip content={renderTooltipContent} />
           {accounts.map((s) => (
             <Line
               key={s.id}

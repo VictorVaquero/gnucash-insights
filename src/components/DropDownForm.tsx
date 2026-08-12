@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+
 export interface DropDownItem {
   key: string;
   value: string;
@@ -9,6 +11,12 @@ export const DropDownForm = (props: {
   value: string | undefined;
   setValue: CallableFunction;
 }) => {
+  const { setValue } = props;
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => setValue(e.target.value),
+    [setValue],
+  );
+
   return (
     <form className="p-4 pt-2.5 bg-secondary max-w-80 rounded">
       <label htmlFor={props.id} className="block text-secondary-foreground mb-1">
@@ -19,7 +27,7 @@ export const DropDownForm = (props: {
         name={props.id}
         className="w-full max-w-full p-4 bg-secondary text-secondary-foreground border-0 border-b-2 border-border"
         value={props.value}
-        onChange={(e) => props.setValue(e.target.value)}
+        onChange={handleChange}
       >
         {props.list.map((item) => (
           <option key={item.key} value={item.key}>

@@ -1,4 +1,4 @@
-import { MutableRefObject, useEffect, useLayoutEffect, useState } from "react";
+import { MutableRefObject, useLayoutEffect, useState, useSyncExternalStore } from "react";
 
 export const twStyles = getComputedStyle(document.documentElement);
 
@@ -63,17 +63,14 @@ const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
 const TOUCH_POINTER_QUERY = "(pointer: coarse)";
 
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
-
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const onChange = () => setMatches(mql.matches);
-    onChange();
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, [query]);
-
-  return matches;
+  return useSyncExternalStore(
+    (onChange) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(query).matches,
+  );
 }
 
 // Reflects the device's actual current input capability, and updates live (e.g. a
