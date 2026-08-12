@@ -138,6 +138,69 @@ const mintReadOnlyToken = async (databaseName: string) => {
   return jwt;
 };
 
+const sendGuestToken = async (
+  res: VercelResponse,
+  guestDatabaseName: string,
+  guestDatabaseUrl: string,
+) => {
+  const token = await mintReadOnlyToken(guestDatabaseName);
+  res.status(200).json({
+    url: guestDatabaseUrl,
+    token,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    accountConfig: GUEST_ACCOUNT_CONFIG,
+  });
+};
+
+const sendOwnerToken = async (
+  res: VercelResponse,
+  prodDatabaseName: string,
+  prodDatabaseUrl: string,
+) => {
+  // Owner path: a Turso credential scoped to real financial data is only ever
+  // issued after Cognito verification succeeds AND the token carries owners-group
+  // membership.
+  const accountConfig = getRealAccountConfig();
+  if (!accountConfig) {
+    console.error("turso-token: missing or malformed ACCOUNT_CONFIG_VICTOR env var");
+    res.status(500).json({ error: "Server misconfigured" });
+    return;
+  }
+  const token = await mintReadOnlyToken(prodDatabaseName);
+  res.status(200).json({
+    url: prodDatabaseUrl,
+    token,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    accountConfig,
+  });
+};
+
+const handleAuthenticatedRequest = async (
+  res: VercelResponse,
+  authHeader: string,
+  config: {
+    prodDatabaseName: string;
+    prodDatabaseUrl: string;
+    guestDatabaseName: string;
+    guestDatabaseUrl: string;
+  },
+) => {
+  const payload = await verifyCognitoIdToken(authHeader.slice("Bearer ".length));
+  const groups = Array.isArray(payload["cognito:groups"]) ? payload["cognito:groups"] : [];
+  const isOwner = groups.includes(OWNER_GROUP);
+
+  if (!isOwner) {
+    // Authenticated but not in the owners group (e.g. the Playwright CI test
+    // account): same guest-equivalent data as the unauthenticated guest path,
+    // never real financials — only owners-group membership unlocks the real
+    // database.
+    await sendGuestToken(res, config.guestDatabaseName, config.guestDatabaseUrl);
+    return;
+  }
+
+  await sendOwnerToken(res, config.prodDatabaseName, config.prodDatabaseUrl);
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     res.status(405).end();
@@ -169,40 +232,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (authHeader?.startsWith("Bearer ")) {
-      const payload = await verifyCognitoIdToken(authHeader.slice("Bearer ".length));
-      const groups = Array.isArray(payload["cognito:groups"]) ? payload["cognito:groups"] : [];
-      const isOwner = groups.includes(OWNER_GROUP);
-
-      if (!isOwner) {
-        // Authenticated but not in the owners group (e.g. the Playwright CI test
-        // account): same guest-equivalent data as the unauthenticated guest path,
-        // never real financials — only owners-group membership unlocks the real
-        // database.
-        const token = await mintReadOnlyToken(guestDatabaseName);
-        res.status(200).json({
-          url: guestDatabaseUrl,
-          token,
-          expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-          accountConfig: GUEST_ACCOUNT_CONFIG,
-        });
-        return;
-      }
-
-      // Owner path: a Turso credential scoped to real financial data is only ever
-      // issued after Cognito verification succeeds AND the token carries owners-group
-      // membership.
-      const accountConfig = getRealAccountConfig();
-      if (!accountConfig) {
-        console.error("turso-token: missing or malformed ACCOUNT_CONFIG_VICTOR env var");
-        res.status(500).json({ error: "Server misconfigured" });
-        return;
-      }
-      const token = await mintReadOnlyToken(prodDatabaseName);
-      res.status(200).json({
-        url: prodDatabaseUrl,
-        token,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-        accountConfig,
+      await handleAuthenticatedRequest(res, authHeader, {
+        prodDatabaseName,
+        prodDatabaseUrl,
+        guestDatabaseName,
+        guestDatabaseUrl,
       });
       return;
     }
@@ -211,13 +245,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Guest path: no Cognito credential exists to verify (parity with today's
       // no-login guest access) — token is scoped to the guest database only, which
       // never contains real financial data, by construction.
-      const token = await mintReadOnlyToken(guestDatabaseName);
-      res.status(200).json({
-        url: guestDatabaseUrl,
-        token,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-        accountConfig: GUEST_ACCOUNT_CONFIG,
-      });
+      await sendGuestToken(res, guestDatabaseName, guestDatabaseUrl);
       return;
     }
 

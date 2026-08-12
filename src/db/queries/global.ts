@@ -137,13 +137,17 @@ export const fullTransactionsOptions = <TDB extends AnyDB>(db?: TDB, bookId?: st
   });
 };
 
+interface SplitSumFilters {
+  startDate?: DateTime;
+  endDate?: DateTime;
+  notes?: string;
+}
+
 const getSplitSumQuery = <TDB extends AnyDB>(
   db: TDB,
   bookId: string,
   accountNames: string[],
-  startDate?: DateTime,
-  endDate?: DateTime,
-  notes?: string,
+  { startDate, endDate, notes }: SplitSumFilters = {},
 ) => {
   const ft = fullTransactionsQuery(db);
   const accounts = getAccountsClosureQuery(db, accountNames);
@@ -168,24 +172,16 @@ export const splitSumOptions = <TDB extends AnyDB>(
   db: TDB | undefined,
   bookId: string | undefined,
   accountNames: string[],
-  startDate?: DateTime,
-  endDate?: DateTime,
-  notes?: string,
+  filters: SplitSumFilters = {},
 ) => {
+  const { startDate, endDate, notes } = filters;
   const enabled = !!db && !!bookId;
   return queryOptions({
     queryKey: ["splitSum", bookId, ...accountNames, startDate?.toISO(), endDate?.toISO(), notes],
     queryFn: !enabled
       ? skipToken
       : async () => {
-          const data = await getSplitSumQuery(
-            db,
-            bookId,
-            accountNames,
-            startDate,
-            endDate,
-            notes,
-          ).execute();
+          const data = await getSplitSumQuery(db, bookId, accountNames, filters).execute();
           return data[0].value;
         },
     enabled: enabled,

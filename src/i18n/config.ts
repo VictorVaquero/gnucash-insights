@@ -16,5 +16,3 @@ i18next.use(initReactI18next).init({
   // suspend for -- skip react-i18next's Suspense integration entirely.
   react: { useSuspense: false },
 });
-
-export default i18next;

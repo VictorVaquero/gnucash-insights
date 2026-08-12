@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { DateTime } from "luxon";
 import { useTranslation } from "react-i18next";
 
 import { formatCurrency, formatNumber } from "@/common/utils.ts";
@@ -6,10 +7,18 @@ import { KpiCard } from "@/components/KpiCard.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/useAuthContext";
 import { splitSumOptions } from "@/db/queries/global";
+import { AnyDB } from "@/db/dbType";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
+
+const useSum = (
+  db: AnyDB | undefined,
+  bookId: string | undefined,
+  accountNames: string[],
+  filters?: { startDate?: DateTime; endDate?: DateTime },
+) => useQuery(splitSumOptions(db, bookId, accountNames, filters)).data ?? 0;
 
 const DeltaChip = (props: { current: number; previous: number; positiveIsGood?: boolean }) => {
   const { current, previous, positiveIsGood = true } = props;
@@ -43,55 +52,34 @@ export const KpiBlock = (props: { className?: string }) => {
   const { t } = useTranslation();
   const prevMonth = latestMonth?.minus({ months: 1 });
 
-  const { data: netGain } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes]),
-  );
-  const { data: earnings } = useQuery(splitSumOptions(db, bookId, [dbconf.income, dbconf.taxes]));
-  const { data: costs } = useQuery(splitSumOptions(db, bookId, [dbconf.expenses]));
-  const { data: checking } = useQuery(splitSumOptions(db, bookId, [dbconf.checking]));
-  const { data: savings } = useQuery(splitSumOptions(db, bookId, [dbconf.savings]));
-  const { data: assets } = useQuery(splitSumOptions(db, bookId, [dbconf.assets]));
-  const { data: investments } = useQuery(splitSumOptions(db, bookId, [dbconf.investments]));
+  const netGain = useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes]);
+  const earnings = useSum(db, bookId, [dbconf.income, dbconf.taxes]);
+  const costs = useSum(db, bookId, [dbconf.expenses]);
+  const checking = useSum(db, bookId, [dbconf.checking]);
+  const savings = useSum(db, bookId, [dbconf.savings]);
+  const assets = useSum(db, bookId, [dbconf.assets]);
+  const investments = useSum(db, bookId, [dbconf.investments]);
 
-  const { data: prevNetGain } = useQuery(
-    splitSumOptions(
-      db,
-      bookId,
-      [dbconf.expenses, dbconf.income, dbconf.taxes],
-      prevMonth,
-      latestMonth,
-    ),
-  );
-  const { data: prevEarnings } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.income, dbconf.taxes], prevMonth, latestMonth),
-  );
-  const { data: prevCosts } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.expenses], prevMonth, latestMonth),
-  );
-  const { data: prevChecking } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.checking], undefined, latestMonth),
-  );
-  const { data: prevSavings } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.savings], undefined, latestMonth),
-  );
-  const { data: prevAssets } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.assets], undefined, latestMonth),
-  );
-  const { data: prevInvestments } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.investments], undefined, latestMonth),
-  );
-  const { data: costsLast3 } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.expenses], latestMonth?.minus({ months: 3 }), latestMonth),
-  );
+  const prevRange = { startDate: prevMonth, endDate: latestMonth };
+  const prevNetGain = useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes], prevRange);
+  const prevEarnings = useSum(db, bookId, [dbconf.income, dbconf.taxes], prevRange);
+  const prevCosts = useSum(db, bookId, [dbconf.expenses], prevRange);
+  const prevChecking = useSum(db, bookId, [dbconf.checking], { endDate: latestMonth });
+  const prevSavings = useSum(db, bookId, [dbconf.savings], { endDate: latestMonth });
+  const prevAssets = useSum(db, bookId, [dbconf.assets], { endDate: latestMonth });
+  const prevInvestments = useSum(db, bookId, [dbconf.investments], { endDate: latestMonth });
+  const costsLast3 = useSum(db, bookId, [dbconf.expenses], {
+    startDate: latestMonth?.minus({ months: 3 }),
+    endDate: latestMonth,
+  });
 
-  const savingsRate = earnings ? ((netGain ?? 0) / earnings) * 100 : 0;
-  const prevSavingsRate = prevEarnings ? ((prevNetGain ?? 0) / prevEarnings) * 100 : 0;
-  const netWorth = (checking ?? 0) + (savings ?? 0) + (assets ?? 0) + (investments ?? 0);
-  const prevNetWorth =
-    (prevChecking ?? 0) + (prevSavings ?? 0) + (prevAssets ?? 0) + (prevInvestments ?? 0);
+  const savingsRate = earnings ? (netGain / earnings) * 100 : 0;
+  const prevSavingsRate = prevEarnings ? (prevNetGain / prevEarnings) * 100 : 0;
+  const netWorth = checking + savings + assets + investments;
+  const prevNetWorth = prevChecking + prevSavings + prevAssets + prevInvestments;
 
-  const avgMonthlyExpense = Math.abs(costsLast3 ?? 0) / 3;
-  const liquidFunds = (checking ?? 0) + (savings ?? 0);
+  const avgMonthlyExpense = Math.abs(costsLast3) / 3;
+  const liquidFunds = checking + savings;
   const runwayMonths = avgMonthlyExpense > 0 ? liquidFunds / avgMonthlyExpense : undefined;
 
   return (
@@ -100,25 +88,23 @@ export const KpiBlock = (props: { className?: string }) => {
         <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
           <KpiCard
             name={t("summary.kpi.net")}
-            value={formatCurrency(netGain ?? 0, locale, { compact: true })}
-            delta={<DeltaChip current={-(netGain ?? 0)} previous={-(prevNetGain ?? 0)} />}
+            value={formatCurrency(netGain, locale, { compact: true })}
+            delta={<DeltaChip current={-netGain} previous={-prevNetGain} />}
           />
           <KpiCard
             name={t("summary.kpi.income")}
-            value={formatCurrency(earnings ?? 0, locale, { compact: true })}
+            value={formatCurrency(earnings, locale, { compact: true })}
             color="text-green-600"
-            delta={
-              <DeltaChip current={Math.abs(earnings ?? 0)} previous={Math.abs(prevEarnings ?? 0)} />
-            }
+            delta={<DeltaChip current={Math.abs(earnings)} previous={Math.abs(prevEarnings)} />}
           />
           <KpiCard
             name={t("summary.kpi.expenses")}
-            value={formatCurrency(costs ?? 0, locale, { compact: true })}
+            value={formatCurrency(costs, locale, { compact: true })}
             color="text-red-600"
             delta={
               <DeltaChip
-                current={Math.abs(costs ?? 0)}
-                previous={Math.abs(prevCosts ?? 0)}
+                current={Math.abs(costs)}
+                previous={Math.abs(prevCosts)}
                 positiveIsGood={false}
               />
             }

@@ -23,6 +23,79 @@ interface Recurring {
   lastDate: string;
 }
 
+interface RecurringGroup {
+  description: string;
+  accountName: string;
+  amounts: number[];
+  months: Set<string>;
+  lastDate: string;
+}
+
+interface Transaction {
+  accountId: string;
+  accountName: string;
+  description: string | null;
+  ymdPosted: string | null;
+  value: number;
+}
+
+const groupRecurringCandidates = (
+  transactions: Transaction[],
+  expenseAccountIds: Set<string>,
+  cutoff: string,
+) => {
+  const groups = new Map<string, RecurringGroup>();
+
+  for (const tx of transactions) {
+    if (!expenseAccountIds.has(tx.accountId)) continue;
+    const description = tx.description?.trim();
+    if (!description) continue;
+    if (!tx.ymdPosted || tx.ymdPosted < cutoff) continue;
+
+    const key = description.toLowerCase();
+    const entry = groups.get(key) ?? {
+      description,
+      accountName: tx.accountName,
+      amounts: [],
+      months: new Set<string>(),
+      lastDate: tx.ymdPosted,
+    };
+    entry.amounts.push(Math.abs(tx.value));
+    entry.months.add(tx.ymdPosted.slice(0, 7));
+    if (tx.ymdPosted > entry.lastDate) {
+      entry.lastDate = tx.ymdPosted;
+      entry.description = description;
+      entry.accountName = tx.accountName;
+    }
+    groups.set(key, entry);
+  }
+
+  return groups;
+};
+
+const scoreRecurringGroups = (groups: Map<string, RecurringGroup>) => {
+  const results: Recurring[] = [];
+  for (const [key, entry] of groups) {
+    if (entry.months.size < MIN_MONTHS_SEEN) continue;
+    const mean = entry.amounts.reduce((a, b) => a + b, 0) / entry.amounts.length;
+    if (mean <= 0) continue;
+    const variance =
+      entry.amounts.reduce((sum, v) => sum + (v - mean) ** 2, 0) / entry.amounts.length;
+    const stddev = Math.sqrt(variance);
+    if (stddev / mean > MAX_COEFFICIENT_OF_VARIATION) continue;
+
+    results.push({
+      key,
+      description: entry.description,
+      accountName: entry.accountName,
+      avgAmount: mean,
+      monthsSeen: entry.months.size,
+      lastDate: entry.lastDate,
+    });
+  }
+  return results;
+};
+
 export const RecurringExpenses = (props: { className?: string }) => {
   const { db } = useDB();
   const { bookId } = useBook();
@@ -43,62 +116,10 @@ export const RecurringExpenses = (props: { className?: string }) => {
     const cutoff = latestMonth.minus({ months: WINDOW_MONTHS }).toISODate();
     if (!cutoff) return [];
 
-    const groups = new Map<
-      string,
-      {
-        description: string;
-        accountName: string;
-        amounts: number[];
-        months: Set<string>;
-        lastDate: string;
-      }
-    >();
-
-    for (const tx of transactions) {
-      if (!expenseAccountIds.has(tx.accountId)) continue;
-      const description = tx.description?.trim();
-      if (!description) continue;
-      if (!tx.ymdPosted || tx.ymdPosted < cutoff) continue;
-
-      const key = description.toLowerCase();
-      const entry = groups.get(key) ?? {
-        description,
-        accountName: tx.accountName,
-        amounts: [],
-        months: new Set<string>(),
-        lastDate: tx.ymdPosted,
-      };
-      entry.amounts.push(Math.abs(tx.value));
-      entry.months.add(tx.ymdPosted.slice(0, 7));
-      if (tx.ymdPosted > entry.lastDate) {
-        entry.lastDate = tx.ymdPosted;
-        entry.description = description;
-        entry.accountName = tx.accountName;
-      }
-      groups.set(key, entry);
-    }
-
-    const results: Recurring[] = [];
-    for (const [key, entry] of groups) {
-      if (entry.months.size < MIN_MONTHS_SEEN) continue;
-      const mean = entry.amounts.reduce((a, b) => a + b, 0) / entry.amounts.length;
-      if (mean <= 0) continue;
-      const variance =
-        entry.amounts.reduce((sum, v) => sum + (v - mean) ** 2, 0) / entry.amounts.length;
-      const stddev = Math.sqrt(variance);
-      if (stddev / mean > MAX_COEFFICIENT_OF_VARIATION) continue;
-
-      results.push({
-        key,
-        description: entry.description,
-        accountName: entry.accountName,
-        avgAmount: mean,
-        monthsSeen: entry.months.size,
-        lastDate: entry.lastDate,
-      });
-    }
-
-    return results.sort((a, b) => b.avgAmount - a.avgAmount).slice(0, 8);
+    const groups = groupRecurringCandidates(transactions, expenseAccountIds, cutoff);
+    return scoreRecurringGroups(groups)
+      .sort((a, b) => b.avgAmount - a.avgAmount)
+      .slice(0, 8);
   }, [transactions, expenseAccounts, latestMonth]);
 
   if (recurring.length === 0) {

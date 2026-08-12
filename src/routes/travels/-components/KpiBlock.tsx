@@ -8,12 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
+const safeDivide = (numerator?: number, denominator?: number) =>
+  numerator != null && denominator ? numerator / denominator : 0;
+
 const calcExpenses = (
   t: TFunction,
   locale: string,
-  total?: number,
-  expense?: number,
-  months?: number,
+  { total, expense, months }: { total?: number; expense?: number; months?: number },
 ) => {
   if (total == null || expense == null || months == null) return { value: "value", title: "title" };
 
@@ -36,22 +37,41 @@ export const KpiBlock = (props: { className?: string }) => {
 
   const { data: kpis } = useQuery(uniqueTravelsOptions({ db, user, bookId }));
   const { data: expenses } = useGetTravelExpensesKPIs({ db, user, bookId, latestMonth });
+  const {
+    total_lm,
+    expense_lm,
+    total_3m,
+    expense_3m,
+    total_6m,
+    expense_6m,
+    total_1y,
+    expense_1y,
+    total_all,
+    expense_all,
+  } = expenses ?? {};
+  const { number: travelCount } = kpis ?? {};
 
-  const lastMonth = calcExpenses(t, locale, expenses?.total_lm, expenses?.expense_lm, 1);
-  const lastThreeMonths = calcExpenses(t, locale, expenses?.total_3m, expenses?.expense_3m, 3);
-  const lastSixMonths = calcExpenses(t, locale, expenses?.total_6m, expenses?.expense_6m, 6);
-  const lastYear = calcExpenses(t, locale, expenses?.total_1y, expenses?.expense_1y, 12);
-  const allTime = calcExpenses(
-    t,
-    locale,
-    expenses?.total_all,
-    expenses?.expense_all,
-    numMonths ?? 1,
-  );
+  const lastMonth = calcExpenses(t, locale, { total: total_lm, expense: expense_lm, months: 1 });
+  const lastThreeMonths = calcExpenses(t, locale, {
+    total: total_3m,
+    expense: expense_3m,
+    months: 3,
+  });
+  const lastSixMonths = calcExpenses(t, locale, {
+    total: total_6m,
+    expense: expense_6m,
+    months: 6,
+  });
+  const lastYear = calcExpenses(t, locale, { total: total_1y, expense: expense_1y, months: 12 });
+  const allTime = calcExpenses(t, locale, {
+    total: total_all,
+    expense: expense_all,
+    months: numMonths ?? 1,
+  });
 
-  const travelNum = kpis?.number ?? 0;
-  const travelYearNum = kpis && numYears ? kpis?.number / numYears : 0;
-  const meanTravel = kpis && expenses ? expenses.expense_all / kpis.number : 0;
+  const travelNum = travelCount ?? 0;
+  const travelYearNum = safeDivide(travelCount, numYears);
+  const meanTravel = safeDivide(expense_all, travelCount);
 
   return (
     <>

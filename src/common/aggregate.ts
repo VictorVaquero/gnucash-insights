@@ -4,26 +4,6 @@ export function sum<T>(data: T[], f: (d: T) => number): number {
   return total;
 }
 
-export function maxBy<T, V>(data: T[], f: (d: T) => V): V | undefined {
-  if (data.length === 0) return undefined;
-  let max = f(data[0]);
-  for (let i = 1; i < data.length; i++) {
-    const v = f(data[i]);
-    if (v > max) max = v;
-  }
-  return max;
-}
-
-export function minBy<T, V>(data: T[], f: (d: T) => V): V | undefined {
-  if (data.length === 0) return undefined;
-  let min = f(data[0]);
-  for (let i = 1; i < data.length; i++) {
-    const v = f(data[i]);
-    if (v < min) min = v;
-  }
-  return min;
-}
-
 export function groupBy<T, K>(data: T[], keyFn: (d: T) => K): Map<K, T[]> {
   const map = new Map<K, T[]>();
   for (const d of data) {
