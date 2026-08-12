@@ -190,11 +190,16 @@
   },
   "analysis": {
     "filters": {
-      "title": "Filter list",
+      "searchLabel": "Search transactions",
+      "searchPlaceholder": "Search description, notes, category…",
+      "typeAll": "All",
+      "typeExpense": "Expenses",
+      "typeIncome": "Income",
       "expenses": "Expenses",
       "tobacco": "Tobacco",
       "trips": "Trips",
-      "sport": "Sport"
+      "sport": "Sport",
+      "export": "Export CSV"
     },
     "kpi": {
       "mean": "Mean",
@@ -202,9 +207,21 @@
       "last3": "Last 3",
       "last6": "Last 6",
       "lastYear": "Last year",
-      "total": "Total"
+      "total": "Total",
+      "deltaFlat": "No change",
+      "vsPreviousPeriod": "vs previous period"
+    },
+    "chart": {
+      "income": "Income",
+      "expense": "Expenses",
+      "analyzing": "Analyzing {{count}} of {{total}} transactions",
+      "resetSelection": "Reset to filtered"
+    },
+    "selection": {
+      "sum": "Sum {{amount}}"
     },
     "table": {
+      "title": "Transactions",
       "headers": {
         "splitId": "Split Id",
         "description": "Description",
@@ -213,11 +230,14 @@
         "accountType": "Account Type",
         "accountName": "Account Name",
         "accountId": "Account Id",
+        "transactionId": "Transaction Id",
         "value": "Value"
       },
-      "toggle": "Toggle",
+      "detailsColumn": "Details",
       "selectAllRows": "Select all rows",
       "selectRow": "Select row: {{description}}",
+      "expandRow": "Show details for {{description}}",
+      "collapseRow": "Hide details for {{description}}",
       "page": "Page",
       "of": "of",
       "goToPage": "| Go to page:",
@@ -225,9 +245,7 @@
       "showPageSize": "Show {{pageSize}}",
       "showing": "Showing",
       "rows": "Rows",
-      "min": "Min",
-      "max": "Max",
-      "search": "Search..."
+      "empty": "No transactions match your filters"
     }
   },
   "metadata": {
