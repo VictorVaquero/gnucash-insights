@@ -38,48 +38,35 @@ const TreeNode = ({ item }: { item: TreeListItem }) => {
   const [collapse, isCollapsed] = useState(false);
   const toggleCollapse = useCallback(() => isCollapsed((prev) => !prev), []);
   const chevronAnimate = useMemo(() => ({ rotate: collapse ? 0 : 90, translateY: 0 }), [collapse]);
+  const indentStyle = useMemo(() => ({ paddingLeft: item.depth * 20 }), [item.depth]);
 
   if (!item.children || item.children.length == 0)
     return (
       <li
-        className="grid grid-cols-subgrid col-span-full hover:bg-shark-700 hover:text-white rounded-sm"
+        className="flex items-center justify-between gap-4 py-2 hover:bg-secondary rounded-sm"
+        style={indentStyle}
         key={item.key}
       >
-        <span
-          className={cn(
-            "col-start-" + (item.depth + 1),
-            "flex items-center text-left font-medium sticky left-0 bg-shark-900 text-white",
-          )}
-        >
-          {item.header}
-        </span>
+        <span className="text-left font-medium truncate">{item.header}</span>
         {item.node}
       </li>
     );
   return (
-    <li className="grid grid-cols-subgrid col-span-full" key={item.key}>
+    <li key={item.key}>
       <button
-        className="grid grid-cols-subgrid col-span-full  hover:bg-shark-700 hover:text-white rounded-sm"
+        className="w-full flex items-center justify-between gap-4 py-2 hover:bg-secondary rounded-sm"
+        style={indentStyle}
         onClick={toggleCollapse}
       >
-        <div
-          className={cn(
-            "col-start-" + (item.depth + 1),
-            "col-span-2 flex items-center sticky left-0 bg-shark-900 text-white",
-          )}
-        >
-          <motion.span className="" style={chevronStyle} animate={chevronAnimate}>
+        <span className="flex items-center min-w-0">
+          <motion.span style={chevronStyle} animate={chevronAnimate}>
             &gt;
           </motion.span>
-          <span className={cn("pl-2 text-left font-medium")}>{item.header}</span>
-        </div>
+          <span className={cn("pl-2 text-left font-medium truncate")}>{item.header}</span>
+        </span>
         {item.node}
       </button>
-      <AnimatePresence mode="sync">
-        {collapse && (
-          <TreeList data={item.children} className={cn("grid grid-cols-subgrid col-span-full")} />
-        )}
-      </AnimatePresence>
+      <AnimatePresence mode="sync">{collapse && <TreeList data={item.children} />}</AnimatePresence>
     </li>
   );
 };
