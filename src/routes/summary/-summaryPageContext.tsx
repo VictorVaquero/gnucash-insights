@@ -34,6 +34,10 @@ interface SummaryContextType {
 
   chartPeriodicity: Periodicity;
   setChartPeriodicity: (value: Periodicity) => void;
+
+  // Deflate past periods to today's purchasing power (real terms) using CPI.
+  deflate: boolean;
+  toggleDeflate: () => void;
 }
 
 // --- Context ---
@@ -56,6 +60,7 @@ export function SummaryPageContextProvider({ children }: { children: ReactNode }
   });
   const [isYearly, toggleYearly] = useReducer((v) => !v, false);
   const [chartPeriodicity, setChartPeriodicity] = useState<Periodicity>("monthly");
+  const [deflate, toggleDeflate] = useReducer((v) => !v, false);
 
   // Seed dateRange from the real transaction domain (defaults to "All time")
   // the first time it becomes available, without clobbering later user changes.
@@ -79,8 +84,10 @@ export function SummaryPageContextProvider({ children }: { children: ReactNode }
       toggleYearly,
       chartPeriodicity,
       setChartPeriodicity,
+      deflate,
+      toggleDeflate,
     }),
-    [hideAccounts, detailedDate, dateRange, isYearly, chartPeriodicity],
+    [hideAccounts, detailedDate, dateRange, isYearly, chartPeriodicity, deflate],
   );
 
   return <SummaryPageContext value={value}>{children}</SummaryPageContext>;

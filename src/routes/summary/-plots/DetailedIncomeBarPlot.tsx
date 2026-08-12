@@ -13,6 +13,7 @@ import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useLocale } from "@/hooks/useLocale";
 import { useSummaryPageContext } from "../-summaryPageContext";
+import { useDeflator } from "../-useDeflator";
 
 export interface Data {
   accountId: string;
@@ -76,6 +77,7 @@ export const DetailedIncomeBarPlot = () => {
   const { user } = useAuth();
   const dbconfig = getConfig(user);
   const { dateRange, chartPeriodicity } = useSummaryPageContext();
+  const { deflate } = useDeflator();
   const { locale } = useLocale();
   const { t } = useTranslation();
   const otherAccountLabel = t("summary.plots.otherAccount");
@@ -91,7 +93,7 @@ export const DetailedIncomeBarPlot = () => {
           if (rawData) {
             const { data, keys } = pivotData(
               rawData
-                .map((d) => ({ ...d, value: -d.value }))
+                .map((d) => ({ ...d, value: -deflate(d.value, d.date) }))
                 .filter((d) => d.date >= dateRange.from.toString())
                 .filter((d) => d.date <= dateRange.to.toString()),
             );
@@ -99,7 +101,7 @@ export const DetailedIncomeBarPlot = () => {
           }
           return { data: undefined, keys: undefined };
         },
-        [dateRange],
+        [dateRange, deflate],
       ),
     }),
   );

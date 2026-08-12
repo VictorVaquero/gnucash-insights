@@ -81,6 +81,11 @@
       "details": "Details",
       "topMovers": "Top movers"
     },
+    "deflate": {
+      "toggle": "Adjust for inflation",
+      "tooltip": "Rescales past periods to {{year}} euros using Spain's annual CPI, so amounts are comparable to today's purchasing power.",
+      "badge": "Real terms ({{year}} €)"
+    },
     "balances": {
       "heading": "Accounts",
       "assets": "Assets",
