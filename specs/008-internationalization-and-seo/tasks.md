@@ -108,7 +108,7 @@ and the browser tab title change immediately with no reload, and persist across 
       **Done**: imported in `src/main.tsx` before `index.css`, ahead of the app render.
 - [x] T008 [P] [US1] Create `src/hooks/useLocale.ts` per
       `contracts/use-locale-hook-contract.md`: `usePersistentState<Locale>("locale",
-    detectDefault())` where `detectDefault()` reads
+detectDefault())` where `detectDefault()` reads
       `navigator.language.split("-")[0]`, falling back to `"en"` if not `"en"`/`"es"`; a
       `useEffect` syncing `document.documentElement.lang = locale`; a `useEffect` calling
       `i18next.changeLanguage(locale)` (depends on T006).
@@ -180,8 +180,8 @@ breakage from longer Spanish strings.
 
 - [x] T016 [US2] Replace `parseNum` in `src/common/utils.ts` with
       `formatCurrency(value, locale, options)` built on `Intl.NumberFormat(locale, {
-    style: "currency", currency: "EUR", notation: options?.compact ? "compact" :
-    "standard", maximumFractionDigits: options?.digits ?? 2 })` (depends on Phase 3
+style: "currency", currency: "EUR", notation: options?.compact ? "compact" :
+"standard", maximumFractionDigits: options?.digits ?? 2 })` (depends on Phase 3
       being complete for `useLocale` to source `locale` from at call sites).
       **Done**: `parseNum` removed entirely. Added `formatCurrency` exactly per the API
       above, plus a sibling `formatNumber` (same options shape, no currency style) for the
@@ -206,7 +206,7 @@ breakage from longer Spanish strings.
       `parseNum` with `formatCurrency` (depends on T016).
       **Done**: migrated in a prior session batch.
 - [x] T021 [P] [US2] Update `src/routes/summary/-plots/MonthDetailedExpensesPiePlot
-    .tsx`: replace `parseNum` with `formatCurrency` and its `toFormat("yyyy-MM")` call
+.tsx`: replace `parseNum` with `formatCurrency` and its `toFormat("yyyy-MM")` call
       with `.setLocale(locale).toFormat("yyyy-MM")` (depends on T016).
       **Done**: `formatCurrency` used in `ChartTooltipContent`, the scrubbed/total
       readout, and the Y-axis tick formatter; `toFormat("yyyy-MM")` now
@@ -223,7 +223,7 @@ breakage from longer Spanish strings.
       `formatCurrency(..., { compact: true })`; `Savings rate` uses
       `formatNumber(..., { digits: 0 })` + manual `%` suffix (pre-scaled 0-100 percent,
       not an `Intl` currency/percent value); `Runway` uses `formatNumber(..., { digits:
-    1 })` + manual `" mo"` suffix (a duration, not currency). `DeltaChip`'s
+1 })` + manual `" mo"` suffix (a duration, not currency). `DeltaChip`'s
       `± N% vs last month` badge also switched from `parseNum(..., { symbol: "%" })` to
       `formatNumber` + manual `%`. Both `DeltaChip` and `KpiBlock` call `useLocale()`
       directly (hook called before `DeltaChip`'s early `if (!previous) return null`).
@@ -250,7 +250,7 @@ breakage from longer Spanish strings.
 - [x] T028 [P] [US2] Update `src/routes/summary/-TopMovers.tsx`: replace `parseNum` with
       `formatCurrency` (depends on T016).
       **Done**: the current-amount span uses `formatCurrency(..., { digits: 0, compact:
-    true })`; the `▲/▼ N%` delta uses `formatNumber(..., { digits: 0 })` + manual `%`
+true })`; the `▲/▼ N%` delta uses `formatNumber(..., { digits: 0 })` + manual `%`
       (pre-scaled percent, not currency).
 - [x] T029 [P] [US2] Update `src/routes/summary/-DateRangePresets.tsx`: replace its
       `toFormat("MMM yyyy")` call with `.setLocale(locale).toFormat("MMM yyyy")` (no
@@ -270,7 +270,7 @@ breakage from longer Spanish strings.
       `parseNum` with `formatCurrency` and its `toFormat("yyyy-LL")` call with
       `.setLocale(locale).toFormat("yyyy-LL")` (depends on T016).
       **Done**: all six KPI value/title pairs migrated to `formatCurrency(...,
-    { compact: true })`; `useLocale()` called before the component's early
+{ compact: true })`; `useLocale()` called before the component's early
       `if (!latestMonth) return <></>`. (This file's `toFormat("yyyy-LL")` grouping key
       is numeric-only, not user-facing text, so it was left as-is — no locale-sensitive
       month names to localize there.) Also swept the untracked
@@ -298,10 +298,10 @@ breakage from longer Spanish strings.
       `analysis/-components/TransactsPlot.tsx`, which was folded into T031's Done note
       instead. No further action needed here.
 - [x] T034 [P] [US2] Update `src/routes/travels/-components/TravelExpensesPiePlot
-    .tsx`: replace `parseNum` with `formatCurrency` (depends on T016).
+.tsx`: replace `parseNum` with `formatCurrency` (depends on T016).
       **Done**: `ChartTooltipContent`'s value and percent-of-total, the scrubbed/total
       center readout, all migrated — currency figures to `formatCurrency(...,
-    { compact: true })`, the percent-of-total to `formatNumber(..., { digits: 0 })` +
+{ compact: true })`, the percent-of-total to `formatNumber(..., { digits: 0 })` +
       manual `%`. `useLocale()` called in both `ChartTooltipContent` and
       `DrawTravelExpensesPiePlot`.
 - [x] T035 [P] [US2] Update
@@ -380,7 +380,7 @@ gzip / 105 kB budget — both still within budget).
       `travel.kpi.*`, and `calcExpenses()`'s embedded "(total)"/"(% expenses)" annotations
       moved into a single interpolated `travel.kpi.expenseTooltip` template (now takes a
       `TFunction` param since it's called outside the component). `TravelExpensesPiePlot
-    .tsx`'s module-level `defaultAccount = "Others"` constant refactored the same way as
+.tsx`'s module-level `defaultAccount = "Others"` constant refactored the same way as
       T040's plot files (threaded through `color_f`/`namef` and `ChartTooltipContent` as a
       parameter). `travels/index.tsx`, `TravelExpensesPlot.tsx`, and `utils.ts` needed no
       changes (no hardcoded UI strings; travel/account names are user/GnuCash data).
@@ -438,7 +438,7 @@ gzip / 105 kB budget — both still within budget).
       `row.accountName`/`r.description`/`m.accountName` (summary), `item.name` (expenses
       category hierarchy), `node.name` (`AccountsDropdown`), `account?.name` (chart
       tooltips), and all `FullTransaction` fields rendered in `analysis/-components/
-    TransactsTable.tsx`'s cells (only the column _headers_ were translated).
+TransactsTable.tsx`'s cells (only the column _headers_ were translated).
 - [x] T048 [US2] Manual verification: with the switcher set to Spanish, check every
       route at mobile width for overflow/clipping/broken layout from longer Spanish
       strings (quickstart.md User Story 2, step 5); log outcome in
@@ -637,7 +637,7 @@ both complete.
       `docs/review/05-seo.md` status lines from "Planning done" to "Implemented",
       matching spec 007's close-out pattern for its own source review docs.
       **Done**: both updated to `**Status**: Implemented — see
-    specs/008-internationalization-and-seo (all 65 tasks complete)`, matching the exact
+specs/008-internationalization-and-seo (all 65 tasks complete)`, matching the exact
       phrasing spec 007 used in `docs/review/13-15`.
 - [x] T064 Update `specs/008-internationalization-and-seo/spec.md`'s Status line to
       reflect completion once all prior phases are done.

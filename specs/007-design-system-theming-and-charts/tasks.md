@@ -653,7 +653,7 @@ On a touch device, tap a data point; confirm a tooltip pins and stays visible.
       active `payload`/`label` on `useIsTouchDevice()` devices once `active` goes true, and
       is not cleared when `active` goes false (i.e. on touchend) — only by tapping a new
       point (effect re-fires) or the dismiss control. On `useIsTouchDevice() &&
-  useIsNarrowViewport()` it portals the pinned content to `document.body` as a fixed
+useIsNarrowViewport()` it portals the pinned content to `document.body` as a fixed
       bottom sheet; on touch-but-wide it renders inline with a small dismiss button; on
       non-touch it just follows Recharts' own `active`/`payload` (no pinning), matching
       desktop hover behavior unchanged.
@@ -735,7 +735,7 @@ T044 and the matching US4 task).
       real date proximity). Recharts' `Bar` has no continuous-positioning mode, so replaced
       it with `Scatter` (numeric `finMillis` x/y) + a custom `shape` drawing a `<rect>` sized
       via the public `usePlotArea()` hook (baseline = plotArea bottom, since `YAxis
-  domain={[0, yMax]}`), reproducing the original D3 rect math exactly without a d3
+domain={[0, yMax]}`), reproducing the original D3 rect math exactly without a d3
       dependency. Also added an invisible wider hit-rect per bar (>=44px) for touch, explicit
       month-boundary `XAxis` ticks (data-driven, tiered by viewport), a "latest travel"
       `ChartKeyValue`, and the standard `ChartTooltip` wiring. Verified visually via a
@@ -747,7 +747,7 @@ T044 and the matching US4 task).
       per-date category stacking (the semantically important part); neither lost its
       primary effect, though both still space bars categorically rather than by continuous
       date like the original (same minor nuance, lower priority, not fixed here). `tsc
-  --noEmit` and `eslint` clean.
+--noEmit` and `eslint` clean.
 - [x] T056 [P] [US5] Wire into `src/routes/analysis/-components/TransactsPlot.tsx`
       (depends on T037, T044).
       **Done**: same pattern as T047/T050; this file previously lacked narrow-viewport
@@ -868,7 +868,7 @@ matching US5 task).
       inside `DrawMonthlyAccountsPlot`; wrapping div now has `ref={containerRef}` and a
       `touch-none` class (so the browser doesn't consume the drag as a page-scroll gesture
       before `preventDefault()` runs); a conditional `<ReferenceLine x={scrubbedPoint
-    .dateLabel} .../>` renders the crosshair. No extra "feed to ChartTooltip" plumbing was
+.dateLabel} .../>` renders the crosshair. No extra "feed to ChartTooltip" plumbing was
       needed: Pointer Events fire alongside native mouse/touch events, so Recharts' own
       hover/touchmove-based Tooltip tracking (already relied on since T047/US5) keeps
       updating live in sync with the same drag gesture the hook also tracks independently
@@ -917,7 +917,7 @@ matching US5 task).
 - [x] T071 [P] [US6] Wire into `src/routes/travels/-components/TravelExpensesPlot.tsx`
       (depends on T055, T061).
       Done: this chart's x-axis is numeric (`finMillis`, continuous time via `type=
-    "number"`), so the `ReferenceLine`'s `x` is fed `scrubbedPoint.finMillis` directly
+"number"`), so the `ReferenceLine`'s `x` is fed `scrubbedPoint.finMillis` directly
       (a millisecond timestamp) rather than a category-label string; the hook's `length`/
       `margin` options are unaffected by that distinction. `OverlappingBars`'s own
       `usePlotArea()`-based `Scatter` rendering is untouched. Verified via `tsc --noEmit`.
@@ -930,10 +930,10 @@ matching US5 task).
       outer wrapping div, already used by the legend's overflow logic). Margin passed to
       the hook mirrors the `RechartsBarChart`'s own `margin` prop plus `yAxisWidth` (which
       also eats into the plot area whenever `showYAxis` is true) — `left: (yAxisLabel ? 20
-    : 0) + (showYAxis ? yAxisWidth : 0)`, `right: yAxisLabel ? 5 : 0`. A conditional
+: 0) + (showYAxis ? yAxisWidth : 0)`, `right: yAxisLabel ? 5 : 0`. A conditional
       `<ReferenceLine x={scrubbedLabel} .../>` renders the crosshair only for the default
       `layout="horizontal"` case (categorical x-axis); confirmed via `git grep -rn
-    'layout="vertical"' src --include=*.tsx` that zero callers anywhere in `src` use
+'layout="vertical"' src --include=*.tsx` that zero callers anywhere in `src` use
       vertical layout, so that branch is an acceptable, unwired deviation. `touch-none`
       added to the container div's className. Verified via `tsc --noEmit` and the full
       `vitest run` suite (45/45 passing, no regressions).
@@ -983,7 +983,7 @@ resize, touch, and scrubber support.
       `pnpm run build` → succeeds (pre-existing Rollup circular-reexport warnings about
       recharts' own `Bar` export and a >500kB main-chunk size warning, both predating this
       segment's changes and not build failures). `pnpm exec playwright test
-    --project=chromium --project=mobile --workers=1` (matches `pnpm test:e2e`'s full
+--project=chromium --project=mobile --workers=1` (matches `pnpm test:e2e`'s full
       project matrix, run serially to eliminate the CPU-contention flakiness documented in
       T074's Done note) → 8 passed, 1 skipped (expected — `real-user-login.spec.ts` needs
       real Cognito credentials), 0 failed.

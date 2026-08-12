@@ -21,18 +21,15 @@ describe("SideBar", () => {
   it("keeps the aside fixed-positioned when collapsed", async () => {
     renderWithRouter(<SideBar isCollapsed toggleSidebar={vi.fn()} />);
 
-    // Collapsed state also renders two "Home" links (wordmark + nav item, the latter
-    // now carrying an aria-label since its visible text is hidden while collapsed).
-    const homeLinks = await screen.findAllByRole("link", { name: "Home" });
-    homeLinks.forEach((link) => expect(link.closest("aside")).toHaveClass("fixed"));
+    const summaryLink = await screen.findByRole("link", { name: "Summary" });
+    expect(summaryLink.closest("aside")).toHaveClass("fixed");
   });
 
   it("keeps the aside fixed-positioned when expanded", async () => {
     renderWithRouter(<SideBar isCollapsed={false} toggleSidebar={vi.fn()} />);
 
-    // Expanded state renders two "Home" links (wordmark + nav item); both live in the aside.
-    const homeLinks = await screen.findAllByRole("link", { name: "Home" });
-    homeLinks.forEach((link) => expect(link.closest("aside")).toHaveClass("fixed"));
+    const summaryLink = await screen.findByRole("link", { name: "Summary" });
+    expect(summaryLink.closest("aside")).toHaveClass("fixed");
   });
 
   it("calls toggleSidebar on click and reflects aria-expanded", async () => {
