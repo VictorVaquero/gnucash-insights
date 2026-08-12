@@ -33,14 +33,15 @@ const head = data.filter((d) => d.id === "a")[0];
 const hierarchy = toHierarchy(
   head,
   data.filter((d) => d.id !== head.id),
-  (d) => d.id,
-  (d) => d.name,
-  (d) => d.parent ?? "",
-  (a, b) => (a.value > b.value ? -1 : 1),
-  (d) => (
-    <div className="w-full flex flex-row gap-x-6 py-4 border-b border-shark-500">{d.name}</div>
-  ),
-  0,
+  {
+    key: (d) => d.id,
+    header: (d) => d.name,
+    parent: (d) => d.parent ?? "",
+    sort: (a, b) => (a.value > b.value ? -1 : 1),
+    func: (d) => (
+      <div className="w-full flex flex-row gap-x-6 py-4 border-b border-shark-500">{d.name}</div>
+    ),
+  },
 );
 
 const meta: Meta<typeof TreeList> = {

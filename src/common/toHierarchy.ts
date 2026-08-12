@@ -6,16 +6,21 @@ interface Nested<T> {
   depth: number;
 }
 
+interface ToHierarchyOptions<T, U> {
+  key: (d: T) => string;
+  header: (d: T) => string;
+  parent: (d: T) => string;
+  sort: (a: T, b: T) => number;
+  func: (d: T) => U;
+}
+
 export const toHierarchy = <T, U = T>(
   head: T,
   data: T[],
-  key: (d: T) => string,
-  header: (d: T) => string,
-  parent: (d: T) => string,
-  sort: (a: T, b: T) => number,
-  func: (d: T) => U,
-  depth: number,
+  options: ToHierarchyOptions<T, U>,
+  depth = 0,
 ): Nested<U> => {
+  const { key, header, parent, sort, func } = options;
   const children = data.filter((d) => key(head) == parent(d));
   if (children.length == 0)
     return { key: key(head), header: header(head), node: func(head), children: [], depth: depth };
@@ -23,9 +28,7 @@ export const toHierarchy = <T, U = T>(
     key: key(head),
     header: header(head),
     node: func(head),
-    children: children
-      .sort(sort)
-      .map((p) => toHierarchy(p, data, key, header, parent, sort, func, depth + 1)),
+    children: children.sort(sort).map((p) => toHierarchy(p, data, options, depth + 1)),
     depth: depth,
   };
 };
