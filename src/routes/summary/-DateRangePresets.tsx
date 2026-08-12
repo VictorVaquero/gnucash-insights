@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DateRangeSlider } from "@/components/DateSlider";
@@ -27,6 +27,22 @@ const chipClass = (active: boolean) =>
       ? "bg-brand/10 text-brand border-brand"
       : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground",
   );
+
+const PresetButton = (props: {
+  preset: Preset;
+  active: boolean;
+  onClick: (preset: Preset) => void;
+  label: string;
+}) => {
+  const { preset, active, onClick, label } = props;
+  const handleClick = useCallback(() => onClick(preset), [onClick, preset]);
+
+  return (
+    <button type="button" onClick={handleClick} className={chipClass(active)}>
+      {label}
+    </button>
+  );
+};
 
 export const DateRangePresets = (props: {
   domainFrom: DateTime;
@@ -57,24 +73,30 @@ export const DateRangePresets = (props: {
     return r.from.hasSame(dateRange.from, "day") && r.to.hasSame(dateRange.to, "day");
   });
 
+  const handlePresetClick = useCallback(
+    (preset: Preset) => {
+      onChange(preset.getRange(domainFrom, domainTo));
+    },
+    [onChange, domainFrom, domainTo],
+  );
+
+  const toggleCustomOpen = useCallback(() => {
+    setCustomOpen((v) => !v);
+  }, []);
+
   return (
     <div className={cn("flex items-center gap-1.5 flex-wrap", className)}>
       {PRESETS.map((preset) => (
-        <button
+        <PresetButton
           key={preset.label}
-          type="button"
-          onClick={() => onChange(preset.getRange(domainFrom, domainTo))}
-          className={chipClass(activePreset?.label === preset.label)}
-        >
-          {preset.label === "allTime" ? t("summary.dateRange.allTime") : preset.label}
-        </button>
+          preset={preset}
+          active={activePreset?.label === preset.label}
+          onClick={handlePresetClick}
+          label={preset.label === "allTime" ? t("summary.dateRange.allTime") : preset.label}
+        />
       ))}
       <div className="relative" ref={panelRef}>
-        <button
-          type="button"
-          onClick={() => setCustomOpen((v) => !v)}
-          className={chipClass(!activePreset)}
-        >
+        <button type="button" onClick={toggleCustomOpen} className={chipClass(!activePreset)}>
           {!activePreset
             ? `${dateRange.from.setLocale(locale).toFormat("MMM yyyy")} – ${dateRange.to.setLocale(locale).toFormat("MMM yyyy")}`
             : t("summary.dateRange.custom")}
