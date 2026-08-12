@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface UseChartScrubberOptions {
   /** Number of points along the container's width to snap the drag position to. */
@@ -33,9 +33,11 @@ export function useChartScrubber(
   // a `length`/`margin` change (e.g. the date range filter changing the data array) never
   // has to tear down and re-attach the listeners.
   const lengthRef = useRef(length);
-  lengthRef.current = length;
   const marginRef = useRef(margin);
-  marginRef.current = margin;
+  useLayoutEffect(() => {
+    lengthRef.current = length;
+    marginRef.current = margin;
+  });
 
   useEffect(() => {
     const node = containerRef.current;

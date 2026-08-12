@@ -41,23 +41,33 @@ export function ChartTooltip<TValue extends number, TName extends string>({
   const isTouch = useIsTouchDevice();
   const isNarrow = useIsNarrowViewport();
   const [pinned, setPinned] = useState<Pinned<TValue, TName> | null>(null);
+  const [prevIsTouch, setPrevIsTouch] = useState(isTouch);
   const hasLiveData = Boolean(active && payload && payload.length > 0);
   // Recharts keeps `active`/`payload` truthy after a touch lifts (no touchend/leave clears
   // it), so an explicit dismiss must be remembered per-label -- otherwise the pin effect
   // below would immediately re-latch onto the still-active point on the next render.
   const dismissedLabelRef = useRef<Pinned<TValue, TName>["label"]>(undefined);
 
+  // `payload` is a fresh array from Recharts on every render, so it's read via a ref (kept in
+  // sync every render) rather than closed over directly -- closing over it would pull it into
+  // the effect below's dependency array, making that effect re-run (and re-pin) on every
+  // render instead of only when the active point (`label`) actually changes.
+  const payloadRef = useRef(payload);
   useEffect(() => {
-    if (isTouch && hasLiveData && label !== dismissedLabelRef.current)
-      setPinned({ payload, label });
-    // `payload` is a fresh array from Recharts on every render; keying off `label` (which only
-    // changes when the active point actually changes) avoids re-running this effect every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTouch, hasLiveData, label]);
+    payloadRef.current = payload;
+  });
 
   useEffect(() => {
+    if (isTouch && hasLiveData && label !== dismissedLabelRef.current)
+      setPinned({ payload: payloadRef.current, label });
+  }, [isTouch, hasLiveData, label]);
+
+  // Adjusted during render (rather than in an effect) per React's guidance on resetting state
+  // when a prop changes.
+  if (isTouch !== prevIsTouch) {
+    setPrevIsTouch(isTouch);
     if (!isTouch) setPinned(null);
-  }, [isTouch]);
+  }
 
   const effective = isTouch ? pinned : hasLiveData ? { payload, label } : null;
   if (!effective) return null;

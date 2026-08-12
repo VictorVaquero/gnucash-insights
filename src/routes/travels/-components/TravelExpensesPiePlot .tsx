@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Cell,
@@ -85,19 +85,16 @@ const DrawTravelExpensesPiePlot = (props: { data: Data[] }) => {
   const { activeIndex } = useChartScrubber(containerRef, { length: sortedData.length });
   const scrubbed = activeIndex != null ? sortedData[activeIndex] : undefined;
 
-  const renderTooltipContent = useCallback(
-    (p: TooltipContentProps<number, string>) => (
-      <ChartTooltip {...p}>
-        {({ payload }) => (
-          <ChartTooltipContent
-            payload={payload}
-            sumTotal={sumTotal}
-            defaultAccount={defaultAccount}
-          />
-        )}
-      </ChartTooltip>
-    ),
-    [sumTotal, defaultAccount],
+  const renderTooltipContent = (p: TooltipContentProps<number, string>) => (
+    <ChartTooltip {...p}>
+      {({ payload }) => (
+        <ChartTooltipContent
+          payload={payload}
+          sumTotal={sumTotal}
+          defaultAccount={defaultAccount}
+        />
+      )}
+    </ChartTooltip>
   );
 
   return (

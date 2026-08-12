@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatCurrency } from "@/common/utils.ts";
@@ -72,10 +72,7 @@ export const BudgetVsActual = (props: { className?: string }) => {
   const { latestMonth } = useDomain();
   const dbconf = getConfig(user);
 
-  const [budgets, setBudgets] = useState<Record<string, number>>({});
-  useEffect(() => {
-    setBudgets(readBudgets());
-  }, []);
+  const [budgets, setBudgets] = useState<Record<string, number>>(readBudgets);
 
   const setTarget = (accountId: string, value: number) => {
     setBudgets((prev) => {

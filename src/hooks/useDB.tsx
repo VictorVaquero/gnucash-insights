@@ -1,12 +1,12 @@
 import { useRouteContext } from "@tanstack/react-router";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 
 import { AppDatabase } from "@/db/dbType";
 import { setAccountConfig } from "@/db/utils";
 import { DomainContext } from "@/contexts/GlobalContext";
 import { setupTursoDB } from "@/services/DbService";
 import { fetchTursoToken } from "@/services/tursoService";
-import { queryOptions, skipToken, useQuery } from "@tanstack/react-query";
+import { queryOptions, skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const TURSO_TOKEN_STALE_MS = 55 * 60 * 1000; // Turso tokens expire in 1h
 
@@ -39,20 +39,21 @@ export const useSetupDB = ({
   user: string | undefined;
   getIdToken?: () => Promise<string | undefined>;
 }) => {
-  const [db, setDB] = useState<AppDatabase>();
-
   const { data: tursoToken, isError } = useQuery(tursoTokenOptions({ user, getIdToken }));
+  const queryClient = useQueryClient();
+
+  const db: AppDatabase | undefined = useMemo(
+    () => (tursoToken ? setupTursoDB({ url: tursoToken.url, token: tursoToken.token }) : undefined),
+    [tursoToken],
+  );
 
   useEffect(() => {
-    if (tursoToken) {
-      setDB(setupTursoDB({ url: tursoToken.url, token: tursoToken.token }));
-      if (user) setAccountConfig(user, tursoToken.accountConfig);
-    }
+    if (tursoToken && user) setAccountConfig(user, tursoToken.accountConfig);
   }, [tursoToken, user]);
 
-  const resetSetupDB = () => {
-    setDB(undefined);
-  };
+  const resetSetupDB = useCallback(() => {
+    queryClient.removeQueries({ queryKey: ["tursoToken", user] });
+  }, [queryClient, user]);
 
   return { data: db, isError, resetSetupDB };
 };

@@ -2,6 +2,7 @@
 
 import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
+import reactCompiler from "eslint-plugin-react-compiler";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactPerf from "eslint-plugin-react-perf";
 import reactRefresh from "eslint-plugin-react-refresh";
@@ -16,7 +17,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
-  reactHooks.configs["recommended-latest"],
+  reactHooks.configs.flat["recommended-latest"],
   {
     files: ["**/*.{ts,tsx}"],
     plugins: { "react-perf": reactPerf },
@@ -27,6 +28,23 @@ export default tseslint.config(
     },
   },
   reactYouMightNotNeedAnEffect.configs.recommended,
+  {
+    files: ["**/*.{ts,tsx}"],
+    plugins: { "react-compiler": reactCompiler },
+    rules: {
+      // "warn" while the React Compiler migration is in progress; tighten to "error" once landed.
+      "react-compiler/react-compiler": "warn",
+    },
+  },
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      complexity: ["warn", 15],
+      "max-depth": ["warn", 4],
+      "max-lines-per-function": ["warn", 150],
+      "max-params": ["warn", 4],
+    },
+  },
   {
     files: ["scripts/**/*.mjs"],
     languageOptions: {
