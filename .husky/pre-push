@@ -1,1 +1,5 @@
+pnpm run lint
+pnpm run format:check
+pnpm run check-csp-drift
 pnpm exec tsc --noEmit
+pnpm run test
