@@ -10,9 +10,10 @@ import {
   taxesYearMonthOptions,
 } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
+import { ChartCard } from "@/components/charts/ChartCard";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { BalancesBlock } from "@/routes/summary/-BalancesBlock.tsx";
 import { BudgetVsActual } from "@/routes/summary/-BudgetVsActual.tsx";
-import { CollapsibleSection } from "@/routes/summary/-CollapsibleSection.tsx";
 import { KpiBlock } from "@/routes/summary/-KpiBlock.tsx";
 import { RecurringExpenses } from "@/routes/summary/-RecurringExpenses.tsx";
 import { SavingsBlock } from "@/routes/summary/-SavingsBlock.tsx";
@@ -20,7 +21,6 @@ import { TopMovers } from "@/routes/summary/-TopMovers.tsx";
 import { AssetAccountsPlot } from "@/routes/summary/-plots/AssetAccountsPlot.tsx";
 import { IncomeExpensesPlot } from "@/routes/summary/-plots/IncomeExpensesPlot.tsx";
 import { NetWorthTrendPlot } from "@/routes/summary/-plots/NetWorthTrendPlot.tsx";
-import { ChartCard } from "./-ChartCard";
 import { SettingsBlock } from "./-SettingsBlock";
 import { DetailedExpensesBarPlot } from "./-plots/DetailedExpensesBarPlot";
 import { MonthDetailedExpensesPiePlot } from "./-plots/MonthDetailedExpensesPiePlot ";

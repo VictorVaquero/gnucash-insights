@@ -95,6 +95,7 @@ const Analysis = () => {
         gap-x-6 gap-y-6
         "
     >
+      <h1 className="sr-only">{t("routes.analysis.title")}</h1>
       <div className="md:row-start-1 md:row-end-1">
         {filteredTransactions.length !== 0 ? (
           <TransactsPlot data={filteredTransactions} periodicity={chartPeriodicity} />

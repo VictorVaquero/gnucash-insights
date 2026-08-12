@@ -45,6 +45,9 @@ const Metadata = () => {
 
   return (
     <div className="p-4 md:p-10 flex flex-col gap-y-4">
+      <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        {t("routes.metadata.title")}
+      </h1>
       <DropDownForm
         id="books"
         label={t("metadata.bookId")}

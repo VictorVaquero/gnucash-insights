@@ -1,9 +1,10 @@
 import { formatCurrency, formatNumber } from "@/common/utils.ts";
-import { KpiCard } from "@/components/KpiCard.tsx";
+import { KpiRow } from "@/components/KpiRow.tsx";
 import { useAuth } from "@/contexts/useAuthContext";
 import { uniqueTravelsOptions, useGetTravelExpensesKPIs } from "@/db/queries/travel";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
 import { useLocale } from "@/hooks/useLocale";
+import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
@@ -74,43 +75,61 @@ export const KpiBlock = (props: { className?: string }) => {
   const meanTravel = safeDivide(expense_all, travelCount);
 
   return (
-    <>
-      <section
-        className={
-          "grid grid-cols-3 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2" +
-          (props.className ? " " + props.className : "")
-        }
-      >
-        <KpiCard name={t("travel.kpi.tripsTotal")} value={travelNum} />
-        <KpiCard
-          name={t("travel.kpi.tripsPerYear")}
-          value={formatNumber(travelYearNum, locale, { digits: 2 })}
-        />
-        <KpiCard
-          name={t("travel.kpi.meanTripCost")}
-          value={formatCurrency(meanTravel, locale, { compact: true })}
-        />
-      </section>
-      <section
-        className={
-          "grid grid-cols-3 grid-rows-[min-content_min-content_min-content] gap-x-2 gap-y-2" +
-          (props.className ? " " + props.className : "")
-        }
-      >
-        <KpiCard name={t("travel.kpi.meanExpenses")} value={allTime.value} title={allTime.title} />
-        <KpiCard name={t("travel.kpi.lastMonth")} value={lastMonth.value} title={lastMonth.title} />
-        <KpiCard
-          name={t("travel.kpi.last3")}
-          value={lastThreeMonths.value}
-          title={lastThreeMonths.title}
-        />
-        <KpiCard
-          name={t("travel.kpi.last6")}
-          value={lastSixMonths.value}
-          title={lastSixMonths.title}
-        />
-        <KpiCard name={t("travel.kpi.lastYear")} value={lastYear.value} title={lastYear.title} />
-      </section>
-    </>
+    <div className={cn("flex flex-col gap-4", props.className)}>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-1">
+          {t("travel.kpi.overviewHeading")}
+        </p>
+        <section className="flex flex-col">
+          <KpiRow name={t("travel.kpi.tripsTotal")} value={travelNum} />
+          <KpiRow
+            name={t("travel.kpi.tripsPerYear")}
+            value={formatNumber(travelYearNum, locale, { digits: 2 })}
+          />
+          <KpiRow
+            name={t("travel.kpi.meanTripCost")}
+            value={formatCurrency(meanTravel, locale, { compact: true })}
+            color="text-red-600"
+          />
+        </section>
+      </div>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-1">
+          {t("travel.kpi.expensesHeading")}
+        </p>
+        <section className="flex flex-col">
+          <KpiRow
+            name={t("travel.kpi.meanExpenses")}
+            value={allTime.value}
+            title={allTime.title}
+            color="text-red-600"
+          />
+          <KpiRow
+            name={t("travel.kpi.lastMonth")}
+            value={lastMonth.value}
+            title={lastMonth.title}
+            color="text-red-600"
+          />
+          <KpiRow
+            name={t("travel.kpi.last3")}
+            value={lastThreeMonths.value}
+            title={lastThreeMonths.title}
+            color="text-red-600"
+          />
+          <KpiRow
+            name={t("travel.kpi.last6")}
+            value={lastSixMonths.value}
+            title={lastSixMonths.title}
+            color="text-red-600"
+          />
+          <KpiRow
+            name={t("travel.kpi.lastYear")}
+            value={lastYear.value}
+            title={lastYear.title}
+            color="text-red-600"
+          />
+        </section>
+      </div>
+    </div>
   );
 };

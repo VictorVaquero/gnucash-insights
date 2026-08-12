@@ -58,6 +58,7 @@ export const LoginPage = () => {
   return (
     <div className="h-full min-h-fit flex justify-center items-center overflow-y-auto py-6">
       <div className="text-secondary-foreground p-10 py-6 bg-secondary rounded">
+        <h1 className="sr-only">{t("routes.login.title")}</h1>
         <form className="pt-4" onSubmit={handleSignIn}>
           <div>
             <label htmlFor="user" className="sr-only">
