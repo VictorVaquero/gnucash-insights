@@ -23,6 +23,10 @@
     // scripts/*.sh, never imported as a module — knip only tracks JS/TS imports, not
     // shell-script CLI invocations.
     "vercel",
+    // Used by scripts/generate-icons.mjs, a one-off asset generator run manually and
+    // outside the `project` glob (which only covers src/** and api/**).
+    "sharp",
+    "png-to-ico",
   ],
   // Individual unused-export/unused-type false positives (vendored Tremor chart utils,
   // Drizzle ORM row types kept for schema completeness, the parked Cognito self-signup
