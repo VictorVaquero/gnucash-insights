@@ -361,17 +361,29 @@ const Legend = React.forwardRef<HTMLOListElement, LegendProps>((props, ref) => {
 
 Legend.displayName = "Legend";
 
-const ChartLegend = (
-  { payload }: any,
-  categoryColors: Map<string, AvailableChartColorsKeys>,
-  setLegendHeight: React.Dispatch<React.SetStateAction<number>>,
-  activeLegend: string | undefined,
-  containerRef: React.RefObject<HTMLDivElement | null>,
-  onClick?: (category: string, color: string) => void,
-  enableLegendSlider?: boolean,
-  legendPosition?: "left" | "center" | "right",
-  yAxisWidth?: number,
-) => {
+interface ChartLegendProps {
+  payload: any;
+  categoryColors: Map<string, AvailableChartColorsKeys>;
+  setLegendHeight: React.Dispatch<React.SetStateAction<number>>;
+  activeLegend: string | undefined;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  onClick?: (category: string, color: string) => void;
+  enableLegendSlider?: boolean;
+  legendPosition?: "left" | "center" | "right";
+  yAxisWidth?: number;
+}
+
+const ChartLegend = ({
+  payload,
+  categoryColors,
+  setLegendHeight,
+  activeLegend,
+  containerRef,
+  onClick,
+  enableLegendSlider,
+  legendPosition,
+  yAxisWidth,
+}: ChartLegendProps) => {
   const legendRef = React.useRef<HTMLDivElement>(null);
   // Recalculates off the *outer chart container*'s size (via ResizeObserver, not just
   // `window.resize`), not the legend's own box -- observing the legend's own height would
@@ -498,7 +510,216 @@ const ChartTooltip = ({ active, payload, label, valueFormatter }: ChartTooltipPr
   return null;
 };
 
+interface BarTooltipContentProps {
+  active: boolean;
+  payload: any;
+  label: string | number | undefined;
+  index: string;
+  categoryColors: Map<string, AvailableChartColorsKeys>;
+  tooltipCallback?: (tooltipCallbackContent: TooltipProps) => void;
+  showTooltip: boolean;
+  valueFormatter: (value: number) => string;
+  CustomTooltip?: React.ComponentType<TooltipProps>;
+}
+
+const BarTooltipContent = ({
+  active,
+  payload,
+  label,
+  index,
+  categoryColors,
+  tooltipCallback,
+  showTooltip,
+  valueFormatter,
+  CustomTooltip,
+}: BarTooltipContentProps) => {
+  const toCleanPayload = React.useCallback(
+    (rawPayload: any): TooltipProps["payload"] =>
+      rawPayload
+        ? rawPayload.map((item: any) => ({
+            category: item.dataKey,
+            value: item.value,
+            index: item.payload[index],
+            color: categoryColors.get(item.dataKey) as AvailableChartColorsKeys,
+            type: item.type,
+            payload: item.payload,
+          }))
+        : [],
+    [index, categoryColors],
+  );
+
+  // Recharts invokes `content` as a plain render function on every hover-position update;
+  // notify the tooltipCallback consumer (an external subscriber) whenever the resolved
+  // active/label/payload changes.
+  React.useEffect(() => {
+    tooltipCallback?.({ active, payload: toCleanPayload(payload), label });
+  }, [active, label, payload, tooltipCallback, toCleanPayload]);
+
+  if (!showTooltip) return null;
+
+  return (
+    <TouchChartTooltip active={active} payload={payload} label={label}>
+      {({ payload: pinnedPayload, label: pinnedLabel }) => {
+        const cleanPayload = toCleanPayload(pinnedPayload);
+        return CustomTooltip ? (
+          <CustomTooltip active={true} payload={cleanPayload} label={pinnedLabel} />
+        ) : (
+          <ChartTooltip
+            active={true}
+            payload={cleanPayload}
+            label={pinnedLabel}
+            valueFormatter={valueFormatter}
+          />
+        );
+      }}
+    </TouchChartTooltip>
+  );
+};
+
+//#region Axes
+
+interface SharedAxisProps {
+  layout: "vertical" | "horizontal";
+  yAxisDomain: AxisDomain;
+  valueFormatter: (value: number) => string;
+  allowDecimals: boolean;
+}
+
+function valueToPercent(value: number) {
+  return `${(value * 100).toFixed(0)}%`;
+}
+
+function getNumericAxisProps({
+  layout,
+  yAxisDomain,
+  valueFormatter,
+  allowDecimals,
+  type,
+}: SharedAxisProps & { type: "default" | "stacked" | "percent" }) {
+  if (layout === "vertical") return undefined;
+  return {
+    type: "number" as const,
+    domain: yAxisDomain,
+    tickFormatter: type === "percent" ? valueToPercent : valueFormatter,
+    allowDecimals,
+  };
+}
+
+interface BarXAxisProps extends SharedAxisProps {
+  index: string;
+  data: Record<string, any>[];
+  startEndOnly: boolean;
+  intervalType: "preserveStartEnd" | "equidistantPreserveStart";
+  tickGap: number;
+  showXAxis: boolean;
+  xAxisLabel: string | undefined;
+  paddingValue: number;
+  type: "default" | "stacked" | "percent";
+}
+
+const BarXAxis = ({
+  layout,
+  index,
+  data,
+  startEndOnly,
+  intervalType,
+  tickGap,
+  showXAxis,
+  xAxisLabel,
+  paddingValue,
+  yAxisDomain,
+  valueFormatter,
+  allowDecimals,
+  type,
+}: BarXAxisProps) => (
+  <XAxis
+    hide={!showXAxis}
+    tick={{
+      transform: layout !== "vertical" ? "translate(0, 6)" : undefined,
+    }}
+    className={cn("text-xs", "fill-gray-500 dark:fill-gray-500", { "mt-4": layout !== "vertical" })}
+    tickLine={false}
+    axisLine={false}
+    minTickGap={tickGap}
+    {...(layout !== "vertical"
+      ? {
+          padding: { left: paddingValue, right: paddingValue },
+          dataKey: index,
+          interval: startEndOnly ? "preserveStartEnd" : intervalType,
+          ticks: startEndOnly ? [data[0][index], data[data.length - 1][index]] : undefined,
+        }
+      : getNumericAxisProps({ layout, yAxisDomain, valueFormatter, allowDecimals, type }))}
+  >
+    {xAxisLabel && (
+      <Label
+        position="insideBottom"
+        offset={-20}
+        className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
+      >
+        {xAxisLabel}
+      </Label>
+    )}
+  </XAxis>
+);
+
+interface BarYAxisProps extends SharedAxisProps {
+  index: string;
+  data: Record<string, any>[];
+  startEndOnly: boolean;
+  showYAxis: boolean;
+  yAxisLabel: string | undefined;
+  yAxisWidth: number;
+  type: "default" | "stacked" | "percent";
+}
+
+const BarYAxis = ({
+  layout,
+  index,
+  data,
+  startEndOnly,
+  showYAxis,
+  yAxisLabel,
+  yAxisWidth,
+  yAxisDomain,
+  valueFormatter,
+  allowDecimals,
+  type,
+}: BarYAxisProps) => (
+  <YAxis
+    width={yAxisWidth}
+    hide={!showYAxis}
+    axisLine={false}
+    tickLine={false}
+    className={cn("text-xs", "fill-gray-500 dark:fill-gray-500")}
+    tick={{
+      transform: layout !== "vertical" ? "translate(-3, 0)" : "translate(0, 0)",
+    }}
+    {...(layout !== "vertical"
+      ? getNumericAxisProps({ layout, yAxisDomain, valueFormatter, allowDecimals, type })
+      : {
+          dataKey: index,
+          ticks: startEndOnly ? [data[0][index], data[data.length - 1][index]] : undefined,
+          type: "category" as const,
+          interval: "equidistantPreserveStart" as const,
+        })}
+  >
+    {yAxisLabel && (
+      <Label
+        position="insideLeft"
+        style={{ textAnchor: "middle" }}
+        angle={-90}
+        offset={-15}
+        className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
+      >
+        {yAxisLabel}
+      </Label>
+    )}
+  </YAxis>
+);
+
 //#region BarChart
+
+const TOOLTIP_CURSOR = { fill: "var(--color-shark-400)", opacity: "0.15" };
 
 interface BaseEventProps {
   eventType: "category" | "bar";
@@ -539,13 +760,17 @@ interface BarChartProps extends React.HTMLAttributes<HTMLDivElement> {
   customTooltip?: React.ComponentType<TooltipProps>;
 }
 
+const EMPTY_DATA: Record<string, any>[] = [];
+const EMPTY_CATEGORIES: string[] = [];
+const defaultValueFormatter = (value: number) => value.toString();
+
 const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forwardedRef) => {
   const {
-    data = [],
-    categories = [],
+    data = EMPTY_DATA,
+    categories = EMPTY_CATEGORIES,
     index,
     colors = AvailableChartColors,
-    valueFormatter = (value: number) => value.toString(),
+    valueFormatter = defaultValueFormatter,
     startEndOnly = false,
     showXAxis = true,
     showYAxis = true,
@@ -599,9 +824,6 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
     ? categories.reduce((acc, category) => acc + (Number(latestRow[category]) || 0), 0)
     : undefined;
 
-  const prevActiveRef = React.useRef<boolean | undefined>(undefined);
-  const prevLabelRef = React.useRef<string | number | undefined>(undefined);
-
   // Mirrors the RechartsBarChart `margin` prop below, plus the YAxis's own width (which
   // eats into the plot area whenever it's shown) -- the vertical `layout` variant has no
   // live callers in this codebase (confirmed via a repo-wide grep), so only the default
@@ -616,45 +838,147 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
   const scrubbedLabel =
     layout !== "vertical" && activeIndex != null ? data[activeIndex]?.[index] : undefined;
 
-  function valueToPercent(value: number) {
-    return `${(value * 100).toFixed(0)}%`;
-  }
+  const onBarClick = React.useCallback(
+    (barData: any, _: any, event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (!onValueChange) return;
+      if (deepEqual(activeBar, { ...barData.payload, value: barData.value })) {
+        setActiveLegend(undefined);
+        setActiveBar(undefined);
+        onValueChange?.(null);
+      } else {
+        setActiveLegend(barData.tooltipPayload?.[0]?.dataKey);
+        setActiveBar({
+          ...barData.payload,
+          value: barData.value,
+        });
+        onValueChange?.({
+          eventType: "bar",
+          categoryClicked: barData.tooltipPayload?.[0]?.dataKey,
+          ...barData.payload,
+        });
+      }
+    },
+    [onValueChange, activeBar],
+  );
 
-  function onBarClick(data: any, _: any, event: React.MouseEvent) {
-    event.stopPropagation();
-    if (!onValueChange) return;
-    if (deepEqual(activeBar, { ...data.payload, value: data.value })) {
-      setActiveLegend(undefined);
+  const onCategoryClick = React.useCallback(
+    (dataKey: string) => {
+      if (!hasOnValueChange) return;
+      if (dataKey === activeLegend && !activeBar) {
+        setActiveLegend(undefined);
+        onValueChange?.(null);
+      } else {
+        setActiveLegend(dataKey);
+        onValueChange?.({
+          eventType: "category",
+          categoryClicked: dataKey,
+        });
+      }
       setActiveBar(undefined);
-      onValueChange?.(null);
-    } else {
-      setActiveLegend(data.tooltipPayload?.[0]?.dataKey);
-      setActiveBar({
-        ...data.payload,
-        value: data.value,
-      });
-      onValueChange?.({
-        eventType: "bar",
-        categoryClicked: data.tooltipPayload?.[0]?.dataKey,
-        ...data.payload,
-      });
-    }
-  }
+    },
+    [hasOnValueChange, activeLegend, activeBar, onValueChange],
+  );
 
-  function onCategoryClick(dataKey: string) {
-    if (!hasOnValueChange) return;
-    if (dataKey === activeLegend && !activeBar) {
-      setActiveLegend(undefined);
-      onValueChange?.(null);
-    } else {
-      setActiveLegend(dataKey);
-      onValueChange?.({
-        eventType: "category",
-        categoryClicked: dataKey,
-      });
-    }
+  const clearActiveSelection = React.useCallback(() => {
     setActiveBar(undefined);
-  }
+    setActiveLegend(undefined);
+    onValueChange?.(null);
+  }, [onValueChange]);
+
+  const chartMargin = React.useMemo(
+    () => ({
+      bottom: xAxisLabel ? 30 : undefined,
+      left: yAxisLabel ? 20 : undefined,
+      right: yAxisLabel ? 5 : undefined,
+      top: 5,
+    }),
+    [xAxisLabel, yAxisLabel],
+  );
+
+  const tooltipWrapperStyle = React.useMemo(
+    () => ({
+      outline: "none",
+      // Anchoring the tooltip to a fixed spot (below) keeps it out of the way of the
+      // cursor, but with many stacked categories its content can still be wider than
+      // this chart's own box -- cap it to what's actually left so it never spills
+      // into whatever is rendered beside this chart (e.g. a sibling pie chart sharing
+      // the same card). Capping width forces more rows to wrap, so also cap height to
+      // the chart's own box and let the category list scroll instead of overflowing
+      // past the bottom of the chart.
+      maxWidth:
+        layout === "horizontal" && containerWidth
+          ? Math.max(containerWidth - (showYAxis ? yAxisWidth : 0) - 8, 160)
+          : undefined,
+      maxHeight:
+        layout === "horizontal" && containerHeight ? Math.max(containerHeight - 8, 120) : undefined,
+      overflowY: "auto" as const,
+    }),
+    [layout, containerWidth, containerHeight, showYAxis, yAxisWidth],
+  );
+
+  const tooltipPosition = React.useMemo(
+    () => ({
+      y: layout === "horizontal" ? 0 : undefined,
+      x: layout === "horizontal" ? (showYAxis ? yAxisWidth : 0) : yAxisWidth + 20,
+    }),
+    [layout, showYAxis, yAxisWidth],
+  );
+
+  const renderTooltipContent = React.useCallback(
+    ({
+      active = false,
+      payload,
+      label,
+    }: {
+      active?: boolean;
+      payload?: any;
+      label?: string | number;
+    }) => (
+      <BarTooltipContent
+        active={active}
+        payload={payload}
+        label={label}
+        index={index}
+        categoryColors={categoryColors}
+        tooltipCallback={tooltipCallback}
+        showTooltip={showTooltip}
+        valueFormatter={valueFormatter}
+        CustomTooltip={CustomTooltip}
+      />
+    ),
+    [index, categoryColors, tooltipCallback, showTooltip, valueFormatter, CustomTooltip],
+  );
+
+  const renderLegendContent = React.useCallback(
+    ({ payload }: { payload?: any }) => (
+      <ChartLegend
+        payload={payload}
+        categoryColors={categoryColors}
+        setLegendHeight={setLegendHeight}
+        activeLegend={activeLegend}
+        containerRef={containerRef}
+        onClick={hasOnValueChange ? onCategoryClick : undefined}
+        enableLegendSlider={enableLegendSlider}
+        legendPosition={legendPosition}
+        yAxisWidth={yAxisWidth}
+      />
+    ),
+    [
+      categoryColors,
+      activeLegend,
+      hasOnValueChange,
+      onCategoryClick,
+      enableLegendSlider,
+      legendPosition,
+      yAxisWidth,
+    ],
+  );
+
+  const renderBarShape = React.useCallback(
+    (shapeProps: any) => renderShape(shapeProps, activeBar, activeLegend, layout),
+    [activeBar, activeLegend, layout],
+  );
 
   return (
     <div
@@ -675,20 +999,9 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
           accessibilityLayer
           data={data}
           onClick={
-            hasOnValueChange && (activeLegend || activeBar)
-              ? () => {
-                  setActiveBar(undefined);
-                  setActiveLegend(undefined);
-                  onValueChange?.(null);
-                }
-              : undefined
+            hasOnValueChange && (activeLegend || activeBar) ? clearActiveSelection : undefined
           }
-          margin={{
-            bottom: xAxisLabel ? 30 : undefined,
-            left: yAxisLabel ? 20 : undefined,
-            right: yAxisLabel ? 5 : undefined,
-            top: 5,
-          }}
+          margin={chartMargin}
           stackOffset={type === "percent" ? "expand" : undefined}
           layout={layout}
           barCategoryGap={barCategoryGap}
@@ -708,173 +1021,48 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
               ifOverflow="extendDomain"
             />
           )}
-          <XAxis
-            hide={!showXAxis}
-            tick={{
-              transform: layout !== "vertical" ? "translate(0, 6)" : undefined,
-            }}
-            className={cn(
-              // base
-              "text-xs",
-              // text fill
-              "fill-gray-500 dark:fill-gray-500",
-              { "mt-4": layout !== "vertical" },
-            )}
-            tickLine={false}
-            axisLine={false}
-            minTickGap={tickGap}
-            {...(layout !== "vertical"
-              ? {
-                  padding: {
-                    left: paddingValue,
-                    right: paddingValue,
-                  },
-                  dataKey: index,
-                  interval: startEndOnly ? "preserveStartEnd" : intervalType,
-                  ticks: startEndOnly ? [data[0][index], data[data.length - 1][index]] : undefined,
-                }
-              : {
-                  type: "number",
-                  domain: yAxisDomain as AxisDomain,
-                  tickFormatter: type === "percent" ? valueToPercent : valueFormatter,
-                  allowDecimals: allowDecimals,
-                })}
-          >
-            {xAxisLabel && (
-              <Label
-                position="insideBottom"
-                offset={-20}
-                className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
-              >
-                {xAxisLabel}
-              </Label>
-            )}
-          </XAxis>
-          <YAxis
-            width={yAxisWidth}
-            hide={!showYAxis}
-            axisLine={false}
-            tickLine={false}
-            className={cn("text-xs", "fill-gray-500 dark:fill-gray-500")}
-            tick={{
-              transform: layout !== "vertical" ? "translate(-3, 0)" : "translate(0, 0)",
-            }}
-            {...(layout !== "vertical"
-              ? {
-                  type: "number",
-                  domain: yAxisDomain as AxisDomain,
-                  tickFormatter: type === "percent" ? valueToPercent : valueFormatter,
-                  allowDecimals: allowDecimals,
-                }
-              : {
-                  dataKey: index,
-                  ticks: startEndOnly ? [data[0][index], data[data.length - 1][index]] : undefined,
-                  type: "category",
-                  interval: "equidistantPreserveStart",
-                })}
-          >
-            {yAxisLabel && (
-              <Label
-                position="insideLeft"
-                style={{ textAnchor: "middle" }}
-                angle={-90}
-                offset={-15}
-                className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
-              >
-                {yAxisLabel}
-              </Label>
-            )}
-          </YAxis>
+          <BarXAxis
+            layout={layout}
+            index={index}
+            data={data}
+            startEndOnly={startEndOnly}
+            intervalType={intervalType}
+            tickGap={tickGap}
+            showXAxis={showXAxis}
+            xAxisLabel={xAxisLabel}
+            paddingValue={paddingValue}
+            yAxisDomain={yAxisDomain as AxisDomain}
+            valueFormatter={valueFormatter}
+            allowDecimals={allowDecimals}
+            type={type}
+          />
+          <BarYAxis
+            layout={layout}
+            index={index}
+            data={data}
+            startEndOnly={startEndOnly}
+            showYAxis={showYAxis}
+            yAxisLabel={yAxisLabel}
+            yAxisWidth={yAxisWidth}
+            yAxisDomain={yAxisDomain as AxisDomain}
+            valueFormatter={valueFormatter}
+            allowDecimals={allowDecimals}
+            type={type}
+          />
           <Tooltip
-            wrapperStyle={{
-              outline: "none",
-              // Anchoring the tooltip to a fixed spot (below) keeps it out of the way of the
-              // cursor, but with many stacked categories its content can still be wider than
-              // this chart's own box -- cap it to what's actually left so it never spills
-              // into whatever is rendered beside this chart (e.g. a sibling pie chart sharing
-              // the same card). Capping width forces more rows to wrap, so also cap height to
-              // the chart's own box and let the category list scroll instead of overflowing
-              // past the bottom of the chart.
-              maxWidth:
-                layout === "horizontal" && containerWidth
-                  ? Math.max(containerWidth - (showYAxis ? yAxisWidth : 0) - 8, 160)
-                  : undefined,
-              maxHeight:
-                layout === "horizontal" && containerHeight
-                  ? Math.max(containerHeight - 8, 120)
-                  : undefined,
-              overflowY: "auto",
-            }}
+            wrapperStyle={tooltipWrapperStyle}
             isAnimationActive={true}
             animationDuration={100}
-            cursor={{ fill: "var(--color-shark-400)", opacity: "0.15" }}
+            cursor={TOOLTIP_CURSOR}
             offset={20}
-            position={{
-              y: layout === "horizontal" ? 0 : undefined,
-              x: layout === "horizontal" ? (showYAxis ? yAxisWidth : 0) : yAxisWidth + 20,
-            }}
-            content={({ active, payload, label }) => {
-              const toCleanPayload = (rawPayload: any): TooltipProps["payload"] =>
-                rawPayload
-                  ? rawPayload.map((item: any) => ({
-                      category: item.dataKey,
-                      value: item.value,
-                      index: item.payload[index],
-                      color: categoryColors.get(item.dataKey) as AvailableChartColorsKeys,
-                      type: item.type,
-                      payload: item.payload,
-                    }))
-                  : [];
-
-              if (
-                tooltipCallback &&
-                (active !== prevActiveRef.current || label !== prevLabelRef.current)
-              ) {
-                tooltipCallback({ active, payload: toCleanPayload(payload), label });
-                prevActiveRef.current = active;
-                prevLabelRef.current = label;
-              }
-
-              if (!showTooltip) return null;
-
-              return (
-                <TouchChartTooltip active={active} payload={payload} label={label}>
-                  {({ payload: pinnedPayload, label: pinnedLabel }) => {
-                    const cleanPayload = toCleanPayload(pinnedPayload);
-                    return CustomTooltip ? (
-                      <CustomTooltip active={true} payload={cleanPayload} label={pinnedLabel} />
-                    ) : (
-                      <ChartTooltip
-                        active={true}
-                        payload={cleanPayload}
-                        label={pinnedLabel}
-                        valueFormatter={valueFormatter}
-                      />
-                    );
-                  }}
-                </TouchChartTooltip>
-              );
-            }}
+            position={tooltipPosition}
+            content={renderTooltipContent}
           />
           {showLegend ? (
             <RechartsLegend
               verticalAlign="top"
               height={legendHeight}
-              content={({ payload }) =>
-                ChartLegend(
-                  { payload },
-                  categoryColors,
-                  setLegendHeight,
-                  activeLegend,
-                  containerRef,
-                  hasOnValueChange
-                    ? (clickedLegendItem: string) => onCategoryClick(clickedLegendItem)
-                    : undefined,
-                  enableLegendSlider,
-                  legendPosition,
-                  yAxisWidth,
-                )
-              }
+              content={renderLegendContent}
             />
           ) : null}
           {categories.map((category) => (
@@ -889,7 +1077,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
               dataKey={category}
               stackId={stacked ? "stack" : undefined}
               isAnimationActive={false}
-              shape={(props: any) => renderShape(props, activeBar, activeLegend, layout)}
+              shape={renderBarShape}
               onClick={onBarClick}
             />
           ))}
