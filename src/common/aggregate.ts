@@ -1,3 +1,14 @@
+// Every GnuCash transaction is double-entry: a split's `value` follows debit/credit sign, not
+// income/expense sign -- EXPENSE splits are positive (a debit), INCOME splits are negative (a
+// credit), and every other split (BANK, ASSET, LIABILITY, ...) is just the offsetting leg of the
+// same transaction. Naively summing raw `value` across a full transaction set mostly cancels to
+// ~0 (every transaction's legs balance by construction). This flips EXPENSE/INCOME splits to the
+// intuitive "income positive, expense negative" sign and zeroes out every other leg so sums only
+// count money actually earned or spent, once.
+export function netTransactionValue(row: { accountType: string; value: number }): number {
+  return row.accountType === "EXPENSE" || row.accountType === "INCOME" ? -row.value : 0;
+}
+
 export function sum<T>(data: T[], f: (d: T) => number): number {
   let total = 0;
   for (const d of data) total += f(d);

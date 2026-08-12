@@ -190,11 +190,16 @@
   },
   "analysis": {
     "filters": {
-      "title": "Lista de filtros",
+      "searchLabel": "Buscar transacciones",
+      "searchPlaceholder": "Buscar descripción, notas, categoría…",
+      "typeAll": "Todo",
+      "typeExpense": "Gastos",
+      "typeIncome": "Ingresos",
       "expenses": "Gastos",
       "tobacco": "Tabaco",
       "trips": "Viajes",
-      "sport": "Deporte"
+      "sport": "Deporte",
+      "export": "Exportar CSV"
     },
     "kpi": {
       "mean": "Media",
@@ -202,9 +207,21 @@
       "last3": "Últimos 3",
       "last6": "Últimos 6",
       "lastYear": "Último año",
-      "total": "Total"
+      "total": "Total",
+      "deltaFlat": "Sin cambios",
+      "vsPreviousPeriod": "vs. periodo anterior"
+    },
+    "chart": {
+      "income": "Ingresos",
+      "expense": "Gastos",
+      "analyzing": "Analizando {{count}} de {{total}} transacciones",
+      "resetSelection": "Restablecer a lo filtrado"
+    },
+    "selection": {
+      "sum": "Suma {{amount}}"
     },
     "table": {
+      "title": "Transacciones",
       "headers": {
         "splitId": "Id de desglose",
         "description": "Descripción",
@@ -213,11 +230,14 @@
         "accountType": "Tipo de cuenta",
         "accountName": "Nombre de cuenta",
         "accountId": "Id de cuenta",
+        "transactionId": "Id de transacción",
         "value": "Valor"
       },
-      "toggle": "Alternar",
+      "detailsColumn": "Detalles",
       "selectAllRows": "Seleccionar todas las filas",
       "selectRow": "Seleccionar fila: {{description}}",
+      "expandRow": "Mostrar detalles de {{description}}",
+      "collapseRow": "Ocultar detalles de {{description}}",
       "page": "Página",
       "of": "de",
       "goToPage": "| Ir a la página:",
@@ -225,9 +245,7 @@
       "showPageSize": "Mostrar {{pageSize}}",
       "showing": "Mostrando",
       "rows": "Filas",
-      "min": "Mín",
-      "max": "Máx",
-      "search": "Buscar..."
+      "empty": "Ninguna transacción coincide con tus filtros"
     }
   },
   "metadata": {

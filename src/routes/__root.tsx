@@ -49,6 +49,7 @@ const TanStackRouterDevtools = import.meta.env.PROD
 const RootComponent = () => {
   const matches = useRouterState({ select: (s) => s.matches });
   const selected = useRouterState({ select: (state) => state.location.href });
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [isCollapsed, setCollapse] = useState(true);
   const [prevSelected, setPrevSelected] = useState(selected);
   const mainRef = useRef<HTMLElement>(null);
@@ -70,9 +71,12 @@ const RootComponent = () => {
     setPrevSelected(selected);
     setCollapse(true);
   }
+  // Scoped to pathname (not the full href/`selected`) so that in-place search-param updates --
+  // e.g. the analysis page's debounced filter sync -- don't yank focus out from under whatever
+  // the user is typing into every time the URL's query string changes.
   useEffect(() => {
     mainRef.current?.focus({ preventScroll: true });
-  }, [selected]);
+  }, [pathname]);
 
   // Once signed in, account config/db/book loading is async (Turso token fetch, default book
   // lookup). Routes read that state unconditionally, so rendering the Outlet before it's ready

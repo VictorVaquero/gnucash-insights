@@ -1,22 +1,12 @@
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "vitest-axe";
 import { DateTime } from "luxon";
-import type { ColumnFiltersState, RowSelectionState } from "@tanstack/react-table";
+import type { RowSelectionState } from "@tanstack/react-table";
 import type { FullTransaction } from "..";
 import { TransactTable } from "./TransactsTable";
-
-// TransactTable's own useColumnFilters syncs to the "/analysis/" route's search params, which
-// requires a real router match for that route id. Pagination is independent of that syncing, so
-// it's stubbed here with plain local state to keep this test focused on pagination behavior.
-vi.mock("./useColumnFilters", () => ({
-  useColumnFilters: () => {
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    return { columnFilters, setColumnFilters };
-  },
-}));
 
 // TransactTable now takes controlled row-selection state instead of an internal effect that
 // reports selected rows to the parent, so tests render it via a small wrapper that owns that
@@ -85,5 +75,32 @@ describe("TransactTable", () => {
 
     for (let i = 0; i < 8; i++) expect(screen.queryByText(`Row ${i}`)).not.toBeInTheDocument();
     for (let i = 8; i < ROW_COUNT; i++) expect(screen.getByText(`Row ${i}`)).toBeInTheDocument();
+  });
+
+  it("expands a row to reveal its detail fields on click", async () => {
+    const user = userEvent.setup();
+    render(<TestTransactTable data={data} />);
+
+    expect(screen.queryByText("split-0")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /show details for row 0/i }));
+    expect(screen.getByText("split-0")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /hide details for row 0/i }));
+    expect(screen.queryByText("split-0")).not.toBeInTheDocument();
+  });
+
+  it("sorts rows when a sortable column header is clicked", async () => {
+    const user = userEvent.setup();
+    render(<TestTransactTable data={data} />);
+
+    const valueHeader = screen.getByRole("button", { name: /value/i });
+    // Numeric columns sort descending first, which happens to match this fixture's already-
+    // descending insertion order, so the second click (ascending) is the one that visibly moves
+    // rows -- the most negative value (Row 11) rises to the top.
+    await user.click(valueHeader);
+    await user.click(valueHeader);
+
+    const rows = screen.getAllByText(/^Row \d+$/);
+    expect(rows[0]).toHaveTextContent("Row 11");
   });
 });
