@@ -32,8 +32,7 @@ export default tseslint.config(
     files: ["**/*.{ts,tsx}"],
     plugins: { "react-compiler": reactCompiler },
     rules: {
-      // "warn" while the React Compiler migration is in progress; tighten to "error" once landed.
-      "react-compiler/react-compiler": "warn",
+      "react-compiler/react-compiler": "error",
     },
   },
   {
