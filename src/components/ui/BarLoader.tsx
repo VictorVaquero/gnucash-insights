@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 
 const GLOBAL_START_TIME = performance.now();
 const ANIMATION_DURATION_MS = 1000; // Matches the 1s in your CSS
@@ -12,26 +12,30 @@ export const BarLoader = ({
   className?: string;
   sync?: boolean;
 }) => {
-  const syncStyle = useMemo(() => {
-    if (!sync) return {};
+  const barRef = useRef<HTMLDivElement>(null);
 
-    // Calculate how far into the loop we currently are
+  // Reads the wall clock to phase-sync the animation across instances -- inherently impure, so
+  // it's set imperatively here (after render, via a ref) rather than computed as a style value
+  // during render.
+  useLayoutEffect(() => {
+    if (!sync || !barRef.current) return;
     const elapsed = performance.now() - GLOBAL_START_TIME;
     const delay = elapsed % ANIMATION_DURATION_MS;
-
-    return {
-      // Negative delay "fast-forwards" the animation to the current global state
-      animationDelay: `-${delay}ms`,
-    };
+    // Negative delay "fast-forwards" the animation to the current global state
+    barRef.current.style.animationDelay = `-${delay}ms`;
   }, [sync]);
 
   const trackStyle = useMemo(() => ({ backgroundColor: `${color}33` }), [color]); // 20% opacity track
-  const barStyle = useMemo(() => ({ backgroundColor: color, ...syncStyle }), [color, syncStyle]);
+  const barStyle = useMemo(() => ({ backgroundColor: color }), [color]);
 
   return (
     <div className="flex w-full justify-center">
       <div className={`relative overflow-hidden rounded-sm ${className}`} style={trackStyle}>
-        <div className="animate-bar-slide absolute h-full rounded-sm" style={barStyle} />
+        <div
+          ref={barRef}
+          className="animate-bar-slide absolute h-full rounded-sm"
+          style={barStyle}
+        />
       </div>
     </div>
   );

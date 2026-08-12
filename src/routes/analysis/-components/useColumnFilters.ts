@@ -21,10 +21,14 @@ export function useColumnFilters(delay = 400) {
   // 2. Local state (The "snappy" truth for immediate rendering)
   const [localFilters, setLocalFilters] = useState<ColumnFiltersState>(urlFilters);
 
-  // 3. Sync Local state if URL changes (e.g., browser back button or reset)
-  useEffect(() => {
+  // 3. Sync Local state if URL changes (e.g., browser back button or reset). Adjusted during
+  // render (rather than in an effect) per React's guidance on resetting state when a prop
+  // changes, so it takes effect in the same render pass as the URL change.
+  const [prevUrlFilters, setPrevUrlFilters] = useState(urlFilters);
+  if (urlFilters !== prevUrlFilters) {
+    setPrevUrlFilters(urlFilters);
     setLocalFilters(urlFilters);
-  }, [urlFilters]);
+  }
 
   // 4. Debounce Local state -> URL
   useEffect(() => {

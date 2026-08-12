@@ -142,15 +142,18 @@ const GlobalCOntextProvider = () => {
   );
 };
 
+const noopReset = () => {
+  // reset the state of your app here
+};
+const errorBoundaryResetKeys = ["someKey"];
+
 const App = () => {
   return (
     <React.StrictMode>
       <ErrorBoundary
         FallbackComponent={ErrorPage}
-        onReset={() => {
-          // reset the state of your app here
-        }}
-        resetKeys={["someKey"]}
+        onReset={noopReset}
+        resetKeys={errorBoundaryResetKeys}
       >
         <QueryClientProvider client={queryClient}>
           <GlobalCOntextProvider />

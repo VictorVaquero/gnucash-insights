@@ -96,7 +96,7 @@ const Expenses = () => {
   const yearRange = useMemo(() => {
     if (from?.year == null || numYears == null) return [];
     return Array.from({ length: numYears + 1 }, (_, i) => from.year + i);
-  }, [from?.year, numYears]);
+  }, [from, numYears]);
 
   // 2. Loading State
   if (!isSuccess || !data || !from || numMonths == null) {

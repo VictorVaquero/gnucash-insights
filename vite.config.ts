@@ -96,7 +96,12 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ""));
 
   return {
-    plugins: [tailwindcss(), tanstackRouter(), react(), devGuestApiPlugin()],
+    plugins: [
+      tailwindcss(),
+      tanstackRouter(),
+      react({ babel: { plugins: [["babel-plugin-react-compiler", {}]] } }),
+      devGuestApiPlugin(),
+    ],
     resolve: {
       alias: [{ find: "@", replacement: path.resolve(__dirname, "src") }],
     },

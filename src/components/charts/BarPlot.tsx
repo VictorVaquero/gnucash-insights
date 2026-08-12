@@ -1,6 +1,4 @@
 // Tremor BarChart [v1.0.0]
-/* eslint-disable */
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { RechartsDevtools } from "@recharts/devtools";
@@ -27,6 +25,7 @@ import { ChartTooltip as TouchChartTooltip } from "@/components/charts/ChartTool
 import { useChartScrubber } from "@/hooks/useChartScrubber";
 import {
   AvailableChartColors,
+  AvailableChartColorsKeys,
   constructCategoryColors,
   getColorClassName,
   getYAxisDomain,
@@ -147,6 +146,15 @@ const ScrollButton = ({ icon, onClick, disabled }: ScrollButtonProps) => {
   const [isPressed, setIsPressed] = React.useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
+  // Adjusted during render (rather than in an effect) per React's guidance on resetting state
+  // when a prop changes. Setting `isPressed` false here is picked up by the effect below on
+  // the next render, which clears the interval as a normal consequence of `isPressed` changing.
+  const [prevDisabled, setPrevDisabled] = React.useState(disabled);
+  if (disabled !== prevDisabled) {
+    setPrevDisabled(disabled);
+    if (disabled) setIsPressed(false);
+  }
+
   React.useEffect(() => {
     if (isPressed) {
       intervalRef.current = setInterval(() => {
@@ -157,13 +165,6 @@ const ScrollButton = ({ icon, onClick, disabled }: ScrollButtonProps) => {
     }
     return () => clearInterval(intervalRef.current as NodeJS.Timeout);
   }, [isPressed, onClick]);
-
-  React.useEffect(() => {
-    if (disabled) {
-      clearInterval(intervalRef.current as NodeJS.Timeout);
-      setIsPressed(false);
-    }
-  }, [disabled]);
 
   return (
     <button
@@ -426,7 +427,7 @@ interface PayloadItem {
 interface ChartTooltipProps {
   active: boolean | undefined;
   payload: PayloadItem[];
-  label: string;
+  label: string | number | undefined;
   valueFormatter: (value: number) => string;
 }
 
@@ -599,7 +600,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
     : undefined;
 
   const prevActiveRef = React.useRef<boolean | undefined>(undefined);
-  const prevLabelRef = React.useRef<string | undefined>(undefined);
+  const prevLabelRef = React.useRef<string | number | undefined>(undefined);
 
   // Mirrors the RechartsBarChart `margin` prop below, plus the YAxis's own width (which
   // eats into the plot area whenever it's shown) -- the vertical `layout` variant has no

@@ -50,6 +50,7 @@ const RootComponent = () => {
   const matches = useRouterState({ select: (s) => s.matches });
   const selected = useRouterState({ select: (state) => state.location.href });
   const [isCollapsed, setCollapse] = useState(true);
+  const [prevSelected, setPrevSelected] = useState(selected);
   const mainRef = useRef<HTMLElement>(null);
   const { auth, db, bookId } = useRouteContext({ from: "__root__" });
   const { t, i18n } = useTranslation();
@@ -62,9 +63,14 @@ const RootComponent = () => {
     document.title = titleKey ? t(titleKey) : "CashPy";
   }, [titleKey, t, i18n.language]);
 
-  // The drawer now overlays content on every viewport, so close it whenever navigation happens
-  useEffect(() => {
+  // The drawer now overlays content on every viewport, so close it whenever navigation happens.
+  // Adjusted during render (rather than in an effect) per React's guidance on resetting state
+  // when a prop changes, so it takes effect in the same render pass as the navigation.
+  if (selected !== prevSelected) {
+    setPrevSelected(selected);
     setCollapse(true);
+  }
+  useEffect(() => {
     mainRef.current?.focus({ preventScroll: true });
   }, [selected]);
 
