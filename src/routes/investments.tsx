@@ -10,5 +10,12 @@ export const Route = createFileRoute("/investments")({
 
 function RouteComponent() {
   const { t } = useTranslation();
-  return <div>{t("investments.placeholder")}</div>;
+  return (
+    <div className="w-full p-4 pt-10 lg:p-10">
+      <h1 className="text-xl font-semibold tracking-tight text-foreground mb-6">
+        {t("routes.investments.title")}
+      </h1>
+      {t("investments.placeholder")}
+    </div>
+  );
 }

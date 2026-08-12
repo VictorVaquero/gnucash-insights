@@ -1,5 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
+import { ChartCard } from "@/components/charts/ChartCard";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import {
   travelExpensesByAccountOptions,
   travelExpensesDetailedOptions,
@@ -14,26 +17,33 @@ import { TravelExpensesPiePlot } from "./-components/TravelExpensesPiePlot ";
 import { TravelExpensesPlot } from "./-components/TravelExpensesPlot";
 
 const Expenses = () => {
+  const { t } = useTranslation();
   return (
-    <div
-      className="
-        w-full md:h-full p-4 md:p-0
-        flex flex-col md:grid md:grid-cols-[max-content_1fr] md:grid-rows-[1fr_1fr_2fr]
-        gap-x-6 gap-y-6
-        "
-    >
-      <div className="md:row-start-1 md:row-end-4 flex flex-col gap-y-6">
-        <KpiBlock />
-        <TravelExpensesPiePlot />
-      </div>
-      <div className="md:col-start-2 md:row-start-1">
-        <TravelExpensesMonthlyPlot />
-      </div>
-      <div className="md:col-start-2 md:row-start-2">
-        <TravelExpensesDetailedPlot />
-      </div>
-      <div className="md:col-start-2 md:row-start-3">
-        <TravelExpensesPlot />
+    <div className="w-full md:h-full p-4 sm:p-10 pt-6 flex flex-col gap-y-6">
+      <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        {t("routes.travels.title")}
+      </h1>
+      <div className="flex flex-col md:flex-row gap-6 md:flex-1 md:min-h-0">
+        <CollapsibleSection
+          title={t("travel.sections.details")}
+          className="md:w-72 md:shrink-0 md:self-start"
+        >
+          <KpiBlock />
+        </CollapsibleSection>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:grid-rows-2 md:flex-1 md:min-w-0 md:min-h-0">
+          <ChartCard title={t("travel.charts.byAccount")}>
+            <TravelExpensesPiePlot />
+          </ChartCard>
+          <ChartCard title={t("travel.charts.monthly")}>
+            <TravelExpensesMonthlyPlot />
+          </ChartCard>
+          <ChartCard title={t("travel.charts.detailed")}>
+            <TravelExpensesDetailedPlot />
+          </ChartCard>
+          <ChartCard title={t("travel.charts.timeline")}>
+            <TravelExpensesPlot />
+          </ChartCard>
+        </div>
       </div>
     </div>
   );
