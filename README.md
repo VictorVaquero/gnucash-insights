@@ -4,7 +4,7 @@
 > clear, interactive charts — net worth, budgets, spending trends, trips, and transaction
 > analysis, all in your browser.
 
-![GnuCash Insights preview](public/og-image.png)
+![GnuCash Insights — Summary page with sample data](docs/assets/summary-guest.png)
 
 **Live demo:** [victorvaquero.com/dashboard](https://victorvaquero.com/dashboard) — click
 **Try as Guest** to explore with sample data, no sign-up required.
