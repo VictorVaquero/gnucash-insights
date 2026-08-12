@@ -9,7 +9,6 @@ import {
   faMagnifyingGlass,
   faPiggyBank,
   faPlane,
-  faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { createLink, useRouterState } from "@tanstack/react-router";
@@ -25,7 +24,6 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: "/home", icon: faWallet, labelKey: "nav.home" },
   { to: "/metadata", icon: faBook, labelKey: "nav.metadata" },
   { to: "/summary", icon: faChartPie, labelKey: "nav.summary" },
   { to: "/expenses", icon: faCoins, labelKey: "nav.expenses" },
@@ -173,13 +171,13 @@ export const SideBar = ({
             ) : (
               <motion.span
                 className="overflow-hidden whitespace-nowrap text-lg font-semibold text-secondary-foreground"
-                key="cashpy-wordmark"
+                key="gnucash-insights-wordmark"
                 initial={wordmarkInitial}
                 animate={wordmarkAnimate}
                 exit={wordmarkExit}
                 transition={wordmarkTransition}
               >
-                CashPy
+                GnuCash Insights
               </motion.span>
             )}
           </AnimatePresence>

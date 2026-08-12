@@ -116,7 +116,7 @@ const Home = () => {
         <motion.div initial={MOTION_INITIAL} animate={MOTION_ANIMATE} transition={HERO_TRANSITION}>
           <div className="flex items-center gap-2 text-brand">
             <FontAwesomeIcon icon={faWallet} className="h-5 w-5" />
-            <span className="text-sm font-medium tracking-wide">CashPy</span>
+            <span className="text-sm font-medium tracking-wide">GnuCash Insights</span>
           </div>
 
           <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
