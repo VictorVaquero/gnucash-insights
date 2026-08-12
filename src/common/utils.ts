@@ -52,6 +52,19 @@ export const formatNumber = (
     maximumFractionDigits: options.digits ?? 2,
   }).format(value);
 
+// Maps a value's position within [min, max] to a brand-tinted background (light = low,
+// dark = high) plus a matching foreground, for heatmap-style intensity cells. Mixing against
+// `--background`/`--brand` keeps it theme-aware instead of hardcoding a light-mode ramp.
+export const intensityCellStyle = (value: number, min: number, max: number) => {
+  const range = max - min;
+  const ratio = range > 0 ? (value - min) / range : max > 0 ? 1 : 0;
+  const mixPct = Math.round(12 + ratio * 66);
+  return {
+    backgroundColor: `color-mix(in srgb, var(--brand) ${mixPct}%, var(--background))`,
+    color: ratio > 0.45 ? "white" : "var(--foreground)",
+  };
+};
+
 export const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return `Type ${error.name}: ${error.message}`;
   return String(error);

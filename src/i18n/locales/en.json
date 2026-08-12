@@ -145,10 +145,33 @@
       "category": "Category",
       "total": "Total",
       "mean": "Mean"
-    }
+    },
+    "kpi": {
+      "thisYear": "{{year}} spend",
+      "vsLastYear": "vs last year",
+      "topCategory": "Top category",
+      "topCategoryTooltip": "Highest-spending category this year",
+      "avgMonthly": "Avg. monthly"
+    },
+    "sections": {
+      "thisYear": "{{year}} breakdown",
+      "allYears": "All years"
+    },
+    "mobileYearWindow": "Showing the last {{count}} years. Rotate or use a wider screen to see the full history."
   },
   "travel": {
+    "sections": {
+      "details": "Details"
+    },
+    "charts": {
+      "byAccount": "By Account",
+      "monthly": "Monthly Expenses",
+      "detailed": "Expenses by Category",
+      "timeline": "Trips Timeline"
+    },
     "kpi": {
+      "overviewHeading": "Trips",
+      "expensesHeading": "Average Expenses",
       "tripsTotal": "Trips total",
       "tripsPerYear": "Trips per year",
       "meanTripCost": "Mean trip cost",

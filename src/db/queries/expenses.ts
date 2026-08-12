@@ -19,10 +19,19 @@ export const getExpensesYearlyQuery = async <TDB extends AnyDB>({
     min: DateTime<boolean>;
     max: DateTime<boolean>;
   };
+  // Calendar-year span, not a fractional Luxon year-diff: a range like 2023-08 to
+  // 2026-07 covers 4 distinct calendar years but is under 3.0 elapsed years, so
+  // diffing in ["years"] would silently drop the final (partial) year.
   const yearRange = Array.from(
-    { length: max.diff(min, ["years"]).years + 1 },
+    { length: max.year - min.year + 1 },
     (_value, index) => min.year + index,
   );
+
+  // timetable.year is stored as TEXT in the DB despite its integer() schema type; a bound
+  // numeric parameter compared against it silently matches nothing over the libsql wire
+  // protocol, so the column must be cast explicitly rather than relying on SQLite's
+  // literal-only type-affinity coercion.
+  const yearCol = sql`CAST(${timeTable.year} AS INTEGER)`;
 
   return db
     .select({
@@ -30,11 +39,11 @@ export const getExpensesYearlyQuery = async <TDB extends AnyDB>({
       id: accounts.parent,
       parentId: accountsTable.parent,
       total: sql<number>`sum(${ft.value})`,
-      last: sql<number>`sum(CASE WHEN ${timeTable.year} = ${max.year} THEN ${ft.value} ELSE 0 END) `,
+      last: sql<number>`sum(CASE WHEN ${yearCol} = ${max.year} THEN ${ft.value} ELSE 0 END) `,
       ...yearRange.reduce(
         (prev, y) => ({
           ...prev,
-          [y.toString()]: sql<number>`sum(CASE WHEN ${timeTable.year} = ${y} THEN ${ft.value} ELSE 0 END) `,
+          [y.toString()]: sql<number>`sum(CASE WHEN ${yearCol} = ${y} THEN ${ft.value} ELSE 0 END) `,
         }),
         {},
       ),
