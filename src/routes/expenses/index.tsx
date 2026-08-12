@@ -98,7 +98,23 @@ const Expenses = () => {
     return Array.from({ length: numYears + 1 }, (_, i) => from.year + i);
   }, [from, numYears]);
 
-  // 2. Loading State
+  // 2. Process Hierarchy
+  const hierarchyList = useMemo(() => {
+    if (!isSuccess || !data || !from || numMonths == null) return undefined;
+    const head = data.find((d: ExpensesYearlyRow) => d.id === dbConfig.expenses);
+    const others = data.filter((d: ExpensesYearlyRow) => d.id !== head?.id);
+    if (!head) return null;
+    const hierarchy = toHierarchy(head, others, {
+      key: (d) => d.id ?? "",
+      header: (d) => d.name ?? "",
+      parent: (d) => d.parentId ?? "",
+      sort: (a, b) => b.total - a.total, // Simplified sort
+      func: (d: ExpenseData) => <ExpenseRow item={d} yearRange={yearRange} numMonths={numMonths} />,
+    });
+    return [hierarchy];
+  }, [isSuccess, data, from, numMonths, dbConfig.expenses, yearRange]);
+
+  // 3. Loading State
   if (!isSuccess || !data || !from || numMonths == null) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -107,22 +123,7 @@ const Expenses = () => {
     );
   }
 
-  // 3. Process Hierarchy
-  const head = data.find((d: ExpensesYearlyRow) => d.id === dbConfig.expenses);
-  const others = data.filter((d: ExpensesYearlyRow) => d.id !== head?.id);
-
-  if (!head) return null;
-
-  const hierarchy = toHierarchy(
-    head,
-    others,
-    (d) => d.id ?? "",
-    (d) => d.name ?? "",
-    (d) => d.parentId ?? "",
-    (a, b) => b.total - a.total, // Simplified sort
-    (d: ExpenseData) => <ExpenseRow item={d} yearRange={yearRange} numMonths={numMonths} />,
-    0,
-  );
+  if (!hierarchyList) return null;
 
   return (
     <div className="w-full p-4 pt-10 lg:p-10 overflow-x-auto">
@@ -149,7 +150,7 @@ const Expenses = () => {
           ))}
         </div>
         <TreeList
-          data={[hierarchy]}
+          data={hierarchyList}
           className="text-foreground w-full grid grid-cols-subgrid col-span-full"
         />
       </div>
