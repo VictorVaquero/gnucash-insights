@@ -458,8 +458,11 @@ const ChartTooltip = ({ active, payload, label, valueFormatter }: ChartTooltipPr
         </div>
         <div className={cn("grid grid-cols-2 gap-y-1 gap-x-4 px-4 py-2")}>
           {payload.map(({ value, category, color }, index) => (
-            <div key={`id-${index}`} className="flex items-center justify-between space-x-8">
-              <div className="flex items-center space-x-2">
+            <div
+              key={`id-${index}`}
+              className="flex min-w-0 items-center justify-between space-x-2"
+            >
+              <div className="flex min-w-0 items-center space-x-2">
                 <span
                   aria-hidden="true"
                   className={cn("size-2 shrink-0 rounded-xs", getColorClassName(color, "bg"))}
@@ -467,7 +470,7 @@ const ChartTooltip = ({ active, payload, label, valueFormatter }: ChartTooltipPr
                 <p
                   className={cn(
                     // base
-                    "text-right whitespace-nowrap",
+                    "min-w-0 text-right",
                     // text color
                     "text-gray-700 dark:text-gray-300",
                   )}
@@ -478,7 +481,7 @@ const ChartTooltip = ({ active, payload, label, valueFormatter }: ChartTooltipPr
               <p
                 className={cn(
                   // base
-                  "text-right font-medium whitespace-nowrap tabular-nums",
+                  "shrink-0 text-right font-medium whitespace-nowrap tabular-nums",
                   // text color
                   "text-shark-900 dark:text-gray-50",
                 )}
@@ -579,6 +582,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
     [forwardedRef],
   );
   const paddingValue = (!showXAxis && !showYAxis) || (startEndOnly && !showYAxis) ? 0 : 20;
+  const [containerWidth, containerHeight] = useWindowSize(containerRef);
   const [legendHeight, setLegendHeight] = React.useState(60);
   const [activeLegend, setActiveLegend] = React.useState<string | undefined>(undefined);
   const categoryColors = constructCategoryColors(categories, colors);
@@ -781,7 +785,25 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
             )}
           </YAxis>
           <Tooltip
-            wrapperStyle={{ outline: "none" }}
+            wrapperStyle={{
+              outline: "none",
+              // Anchoring the tooltip to a fixed spot (below) keeps it out of the way of the
+              // cursor, but with many stacked categories its content can still be wider than
+              // this chart's own box -- cap it to what's actually left so it never spills
+              // into whatever is rendered beside this chart (e.g. a sibling pie chart sharing
+              // the same card). Capping width forces more rows to wrap, so also cap height to
+              // the chart's own box and let the category list scroll instead of overflowing
+              // past the bottom of the chart.
+              maxWidth:
+                layout === "horizontal" && containerWidth
+                  ? Math.max(containerWidth - (showYAxis ? yAxisWidth : 0) - 8, 160)
+                  : undefined,
+              maxHeight:
+                layout === "horizontal" && containerHeight
+                  ? Math.max(containerHeight - 8, 120)
+                  : undefined,
+              overflowY: "auto",
+            }}
             isAnimationActive={true}
             animationDuration={100}
             cursor={{ fill: "var(--color-shark-400)", opacity: "0.15" }}
