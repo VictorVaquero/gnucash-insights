@@ -27,18 +27,23 @@
     }
   },
   "login": {
+    "heading": "Welcome back",
+    "subtitle": "Sign in to see your dashboard.",
     "form": {
       "email": "Email",
-      "password": "Password"
+      "password": "Password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     },
     "actions": {
-      "guest": "Guest",
-      "signIn": "Sign In"
+      "guest": "Try as Guest",
+      "signIn": "Sign In",
+      "backHome": "Back to home"
+    },
+    "divider": "or",
+    "error": {
+      "heading": "Sign-in failed"
     }
-  },
-  "errorModal": {
-    "title": "Logging Failure",
-    "close": "Close"
   },
   "home": {
     "hero": {
@@ -248,15 +253,61 @@
     }
   },
   "metadata": {
-    "bookId": "Book Id",
+    "subtitle": "Overview of the imported GnuCash book: what it contains and where it came from.",
+    "sections": {
+      "ledger": "Ledger contents",
+      "dateRange": "Date range",
+      "source": "Source file"
+    },
+    "bookId": "Book ID",
     "accounts": "Accounts",
     "transactions": "Transactions",
+    "scheduledTransactions": "Scheduled transactions",
     "currencies": "Currencies",
-    "initialDate": "Initial Date",
-    "finalDate": "Final Date"
+    "priceRecords": "Price records",
+    "initialDate": "Initial date",
+    "finalDate": "Final date",
+    "span": "Span",
+    "spanMonths": "{{value}} months",
+    "gnucashVersion": "GnuCash file version"
   },
   "investments": {
-    "placeholder": "Investments coming soon."
+    "deflate": {
+      "toggle": "Adjust for inflation",
+      "tooltip": "Rescales past periods to {{year}} euros using Spain's annual CPI, so amounts are comparable to today's purchasing power."
+    },
+    "kpi": {
+      "totalValue": "Total value",
+      "totalGain": "Total gain",
+      "annualized": "Annualized",
+      "annualizedReal": "Annualized (real)",
+      "best": "Best performer",
+      "worst": "Worst performer"
+    },
+    "chart": {
+      "growth": "Growth comparison",
+      "growthHint": "Indexed to 100 at each holding's first price · click a series to isolate it",
+      "total": "Total"
+    },
+    "table": {
+      "holding": "Holding",
+      "quantity": "Units",
+      "price": "Price",
+      "value": "Value",
+      "gain": "Gain",
+      "annualized": "Annualized",
+      "empty": "No investment holdings found."
+    },
+    "detail": {
+      "close": "Close",
+      "lots": "Purchases",
+      "date": "Date",
+      "units": "Units",
+      "cost": "Cost",
+      "nominal": "Annualized",
+      "real": "Annualized (real)",
+      "noHistory": "No price history available."
+    }
   },
   "accountsDropdown": {
     "selectedCount": "{{count}} selected",

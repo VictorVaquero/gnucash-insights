@@ -10,6 +10,14 @@ import { queryOptions, skipToken, useQuery, useQueryClient } from "@tanstack/rea
 
 const TURSO_TOKEN_STALE_MS = 55 * 60 * 1000; // Turso tokens expire in 1h
 
+// A 401/403 here means the caller's Cognito session is dead (expired refresh token, revoked
+// session, etc.) -- retrying with the same credentials can't succeed, and react-query's
+// default retry+backoff would leave the UI stuck on a spinner for several seconds before
+// giving up. Fail immediately so the isError-driven sign-out in main.tsx fires right away.
+// Other failures (network blips, 429, 5xx) are still worth a couple of retries.
+const isUnrecoverableAuthError = (error: unknown) =>
+  error instanceof Error && /Turso token request failed: (401|403)/.test(error.message);
+
 const tursoTokenOptions = ({
   user,
   getIdToken,
@@ -29,6 +37,7 @@ const tursoTokenOptions = ({
         },
     enabled,
     staleTime: TURSO_TOKEN_STALE_MS,
+    retry: (failureCount, error) => !isUnrecoverableAuthError(error) && failureCount < 2,
   });
 };
 

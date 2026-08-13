@@ -15,6 +15,7 @@ import { Footer } from "@/components/Footer.tsx";
 import { SideBar } from "@/components/SideBar.tsx";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuthSetup } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import ErrorPage from "@/layout/ErrorPage";
 import { cn } from "@/lib/utils";
 import { NotFoundPage } from "@/layout/NotFoundPage";
@@ -56,6 +57,11 @@ const RootComponent = () => {
   const mainRef = useRef<HTMLElement>(null);
   const { auth, db, bookId } = useRouteContext({ from: "__root__" });
   const { t, i18n } = useTranslation();
+  // ThemeToggle (which owns the `dark` class side effect) only mounts inside SideBar,
+  // which is gated behind auth -- so a signed-out visitor on a public page (/login,
+  // /home) with a fresh session never gets the class applied, even with the OS set to
+  // dark. Calling the hook here too runs that effect on every route, auth or not.
+  useTheme();
 
   const matchWithTitle = [...matches].reverse().find((d) => d.context.title);
   const titleKey = matchWithTitle?.context.title;

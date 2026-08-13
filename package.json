@@ -35,7 +35,7 @@
       "name": "main bundle",
       "path": "dist/dashboard/assets/main-*.js",
       "gzip": true,
-      "limit": "350 KB"
+      "limit": "355 KB"
     },
     {
       "name": "chart route chunk",

@@ -27,18 +27,23 @@
     }
   },
   "login": {
+    "heading": "Bienvenido de nuevo",
+    "subtitle": "Inicia sesión para ver tu panel.",
     "form": {
       "email": "Correo electrónico",
-      "password": "Contraseña"
+      "password": "Contraseña",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña"
     },
     "actions": {
-      "guest": "Invitado",
-      "signIn": "Iniciar sesión"
+      "guest": "Probar como invitado",
+      "signIn": "Iniciar sesión",
+      "backHome": "Volver al inicio"
+    },
+    "divider": "o",
+    "error": {
+      "heading": "No se pudo iniciar sesión"
     }
-  },
-  "errorModal": {
-    "title": "Fallo de registro",
-    "close": "Cerrar"
   },
   "home": {
     "hero": {
@@ -248,15 +253,61 @@
     }
   },
   "metadata": {
-    "bookId": "Id de libro",
+    "subtitle": "Resumen del libro de GnuCash importado: qué contiene y de dónde viene.",
+    "sections": {
+      "ledger": "Contenido del libro",
+      "dateRange": "Rango de fechas",
+      "source": "Archivo origen"
+    },
+    "bookId": "ID de libro",
     "accounts": "Cuentas",
     "transactions": "Transacciones",
+    "scheduledTransactions": "Transacciones programadas",
     "currencies": "Divisas",
+    "priceRecords": "Registros de precio",
     "initialDate": "Fecha inicial",
-    "finalDate": "Fecha final"
+    "finalDate": "Fecha final",
+    "span": "Duración",
+    "spanMonths": "{{value}} meses",
+    "gnucashVersion": "Versión del archivo GnuCash"
   },
   "investments": {
-    "placeholder": "Inversiones próximamente."
+    "deflate": {
+      "toggle": "Ajustar por inflación",
+      "tooltip": "Reescala periodos pasados a euros de {{year}} usando el IPC anual de España, para que los importes sean comparables al poder adquisitivo actual."
+    },
+    "kpi": {
+      "totalValue": "Valor total",
+      "totalGain": "Ganancia total",
+      "annualized": "Anualizado",
+      "annualizedReal": "Anualizado (real)",
+      "best": "Mejor activo",
+      "worst": "Peor activo"
+    },
+    "chart": {
+      "growth": "Comparativa de crecimiento",
+      "growthHint": "Indexado a 100 en el primer precio de cada activo · pulsa una serie para aislarla",
+      "total": "Total"
+    },
+    "table": {
+      "holding": "Activo",
+      "quantity": "Unidades",
+      "price": "Precio",
+      "value": "Valor",
+      "gain": "Ganancia",
+      "annualized": "Anualizado",
+      "empty": "No se han encontrado inversiones."
+    },
+    "detail": {
+      "close": "Cerrar",
+      "lots": "Compras",
+      "date": "Fecha",
+      "units": "Unidades",
+      "cost": "Coste",
+      "nominal": "Anualizado",
+      "real": "Anualizado (real)",
+      "noHistory": "No hay historial de precios disponible."
+    }
   },
   "accountsDropdown": {
     "selectedCount": "{{count}} seleccionadas",
