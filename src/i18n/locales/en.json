@@ -272,7 +272,42 @@
     "gnucashVersion": "GnuCash file version"
   },
   "investments": {
-    "placeholder": "Investments coming soon."
+    "deflate": {
+      "toggle": "Adjust for inflation",
+      "tooltip": "Rescales past periods to {{year}} euros using Spain's annual CPI, so amounts are comparable to today's purchasing power."
+    },
+    "kpi": {
+      "totalValue": "Total value",
+      "totalGain": "Total gain",
+      "annualized": "Annualized",
+      "annualizedReal": "Annualized (real)",
+      "best": "Best performer",
+      "worst": "Worst performer"
+    },
+    "chart": {
+      "growth": "Growth comparison",
+      "growthHint": "Indexed to 100 at each holding's first price · click a series to isolate it",
+      "total": "Total"
+    },
+    "table": {
+      "holding": "Holding",
+      "quantity": "Units",
+      "price": "Price",
+      "value": "Value",
+      "gain": "Gain",
+      "annualized": "Annualized",
+      "empty": "No investment holdings found."
+    },
+    "detail": {
+      "close": "Close",
+      "lots": "Purchases",
+      "date": "Date",
+      "units": "Units",
+      "cost": "Cost",
+      "nominal": "Annualized",
+      "real": "Annualized (real)",
+      "noHistory": "No price history available."
+    }
   },
   "accountsDropdown": {
     "selectedCount": "{{count}} selected",

@@ -272,7 +272,42 @@
     "gnucashVersion": "Versión del archivo GnuCash"
   },
   "investments": {
-    "placeholder": "Inversiones próximamente."
+    "deflate": {
+      "toggle": "Ajustar por inflación",
+      "tooltip": "Reescala periodos pasados a euros de {{year}} usando el IPC anual de España, para que los importes sean comparables al poder adquisitivo actual."
+    },
+    "kpi": {
+      "totalValue": "Valor total",
+      "totalGain": "Ganancia total",
+      "annualized": "Anualizado",
+      "annualizedReal": "Anualizado (real)",
+      "best": "Mejor activo",
+      "worst": "Peor activo"
+    },
+    "chart": {
+      "growth": "Comparativa de crecimiento",
+      "growthHint": "Indexado a 100 en el primer precio de cada activo · pulsa una serie para aislarla",
+      "total": "Total"
+    },
+    "table": {
+      "holding": "Activo",
+      "quantity": "Unidades",
+      "price": "Precio",
+      "value": "Valor",
+      "gain": "Ganancia",
+      "annualized": "Anualizado",
+      "empty": "No se han encontrado inversiones."
+    },
+    "detail": {
+      "close": "Cerrar",
+      "lots": "Compras",
+      "date": "Fecha",
+      "units": "Unidades",
+      "cost": "Coste",
+      "nominal": "Anualizado",
+      "real": "Anualizado (real)",
+      "noHistory": "No hay historial de precios disponible."
+    }
   },
   "accountsDropdown": {
     "selectedCount": "{{count}} seleccionadas",

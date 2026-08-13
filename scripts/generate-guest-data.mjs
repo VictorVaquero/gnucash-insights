@@ -119,6 +119,14 @@ const otherExpenses = addAccount("Other Expenses", "EXPENSE", expenses);
 
 const openingBalances = addAccount("Opening Balances", "EQUITY", equity);
 
+// Two more holdings alongside the index fund, with deliberately different performance
+// profiles (see buildMonthlyPriceSeries calls below) so the /investments page has
+// something to compare, rank, and chart. Added after all the ID()-sensitive accounts
+// above so GUEST_ACCOUNT_CONFIG's hardcoded IDs in api/turso-token.ts / vite.config.ts
+// never shift.
+const novaStock = addAccount("Nova Robotics", "STOCK", investments, { commodity: "NOVA" });
+const bondFund = addAccount("Bond Fund", "MUTUAL", investments, { commodity: "BONDFUND" });
+
 // --- Guest AccountConfig (mirrors AccountConfig in src/services/tursoService.ts) ---
 const GUEST_ACCOUNT_CONFIG = {
   expenses,
@@ -164,6 +172,28 @@ const TRIP_NAMES = [
 const startDate = addMonths(END_DATE, -MONTHS);
 startDate.setUTCDate(1);
 
+// --- Holding price series: one point per month (index m, aligned with the monthly
+// transaction loop below) so each holding's purchases can be quantity = eurAmount /
+// price[m], giving genuinely varying market values instead of a flat 1:1 price. Each
+// holding gets its own drift/volatility so the /investments page has a clear best and
+// worst performer to rank and a visibly different comparison-chart shape. ---
+const buildMonthlyPriceSeries = (startPrice, monthlyDriftPct, monthlyVolPct) => {
+  const prices = [];
+  let price = startPrice;
+  for (let m = 0; m <= MONTHS; m++) {
+    prices.push(Math.max(0.5, Math.round(price * 10000) / 10000));
+    const shock = randFloat(-monthlyVolPct, monthlyVolPct, 4) / 100;
+    price = price * (1 + monthlyDriftPct / 100 + shock);
+  }
+  return prices;
+};
+
+const HOLDING_PRICES = {
+  [indexFund]: { commodity: "IDXFUND", series: buildMonthlyPriceSeries(100, 0.8, 3.5) },
+  [novaStock]: { commodity: "NOVA", series: buildMonthlyPriceSeries(40, 1.7, 8) },
+  [bondFund]: { commodity: "BONDFUND", series: buildMonthlyPriceSeries(100, -0.3, 1.5) },
+};
+
 // --- Generators ---
 const transactions = [];
 const splits = [];
@@ -183,7 +213,7 @@ const addTransaction = ({ date, description, slNotes = null, legs }) => {
       transactionId: txId,
       account: leg.account,
       value: leg.value,
-      quantity: leg.value,
+      quantity: leg.quantity ?? leg.value,
     });
   }
   return txId;
@@ -280,18 +310,24 @@ for (let m = 0; m <= MONTHS; m++) {
     ],
   });
 
-  // Monthly investment contribution
-  if (chance(0.85)) {
-    const investAmount = randFloat(100, 300);
+  // Monthly investment contributions: each holding buys at its own price for month `m`,
+  // so quantity (units bought) genuinely diverges from value (EUR paid) over time.
+  const buyHolding = (account, description, chanceOfBuy, min, max) => {
+    if (!chance(chanceOfBuy)) return;
+    const investAmount = randFloat(min, max);
+    const price = HOLDING_PRICES[account].series[m];
     addTransaction({
       date: new Date(Date.UTC(monthDate.getUTCFullYear(), monthDate.getUTCMonth(), 15, 10, 59)),
-      description: "Index fund purchase",
+      description,
       legs: [
         { account: checking, value: -investAmount },
-        { account: indexFund, value: investAmount },
+        { account, value: investAmount, quantity: investAmount / price },
       ],
     });
-  }
+  };
+  buyHolding(indexFund, "Index fund purchase", 0.85, 100, 300);
+  buyHolding(novaStock, "Nova Robotics purchase", 0.5, 50, 250);
+  buyHolding(bondFund, "Bond fund purchase", 0.6, 80, 200);
 
   // Daily-ish discretionary spending across the month
   const daysInMonth = new Date(
@@ -430,15 +466,21 @@ for (const t of RAW_TABLES) p(`DELETE FROM "${t}";`);
 p(
   `INSERT INTO books (id, version, count_account, count_budget, count_commodity, count_price, count_schedxaction, count_transaction) VALUES (${sqlStr(
     bookId,
-  )}, '2.0.0', ${accounts.length}, NULL, 2, 0, 0, ${transactions.length});`,
+  )}, '2.0.0', ${accounts.length}, NULL, 4, 0, 0, ${transactions.length});`,
 );
 
 // commodities
 p(
-  `INSERT INTO commodities (book_id, id, space, name, fraction, version, code) VALUES (${sqlStr(bookId)}, 'EUR', 'CURRENCY', NULL, NULL, '2.0.0', NULL);`,
+  `INSERT INTO commodities (book_id, id, space, name, fraction, version, code) VALUES (${sqlStr(bookId)}, 'EUR', 'ISO4217', NULL, NULL, '2.0.0', NULL);`,
 );
 p(
-  `INSERT INTO commodities (book_id, id, space, name, fraction, version, code) VALUES (${sqlStr(bookId)}, 'IDXFUND', 'FUND', 'Synthetic Index Fund', 10000, '2.0.0', NULL);`,
+  `INSERT INTO commodities (book_id, id, space, name, fraction, version, code) VALUES (${sqlStr(bookId)}, 'IDXFUND', 'FUND', 'Synthetic Index Fund', 10000, '2.0.0', 'IDXF');`,
+);
+p(
+  `INSERT INTO commodities (book_id, id, space, name, fraction, version, code) VALUES (${sqlStr(bookId)}, 'NOVA', 'NASDAQ', 'Nova Robotics Inc.', 10000, '2.0.0', 'NOVA');`,
+);
+p(
+  `INSERT INTO commodities (book_id, id, space, name, fraction, version, code) VALUES (${sqlStr(bookId)}, 'BONDFUND', 'FUND', 'Steady Bond Fund', 10000, '2.0.0', 'BOND');`,
 );
 
 // accounts
@@ -472,17 +514,26 @@ for (const s of splits) {
   );
 }
 
-// prices: a flat EUR/IDXFUND price series so fullTransactions math (value * price) stays 1:1
-// in EUR, and one self-price row for EUR so maxPrices always resolves.
+// prices: a flat EUR self-price series (so fullTransactions math, which only ever looks
+// up the transaction currency's own price, stays 1:1 in EUR and maxPrices always
+// resolves) plus each holding's own monthly price series from HOLDING_PRICES, which
+// /investments actually reads to compute market value, gain, and XIRR.
 {
-  let d = new Date(startDate);
-  while (d <= END_DATE) {
+  for (let m = 0; m <= MONTHS; m++) {
+    const d = addMonths(startDate, m);
+    if (d > END_DATE) break;
     p(
       `INSERT INTO prices (book_id, id, source, price_type, time, commodity, currency, value, ymd_time) VALUES (${sqlStr(
         bookId,
       )}, ${sqlStr(id())}, 'user:price', 'unknown', ${sqlStr(sqlDateTime(d))}, 'EUR', 'EUR', 1, ${sqlStr(ymd(d))});`,
     );
-    d = addMonths(d, 1);
+    for (const { commodity, series } of Object.values(HOLDING_PRICES)) {
+      p(
+        `INSERT INTO prices (book_id, id, source, price_type, time, commodity, currency, value, ymd_time) VALUES (${sqlStr(
+          bookId,
+        )}, ${sqlStr(id())}, 'user:price', 'unknown', ${sqlStr(sqlDateTime(d))}, ${sqlStr(commodity)}, 'EUR', ${series[m]}, ${sqlStr(ymd(d))});`,
+      );
+    }
   }
 }
 
