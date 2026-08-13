@@ -27,18 +27,23 @@
     }
   },
   "login": {
+    "heading": "Welcome back",
+    "subtitle": "Sign in to see your dashboard.",
     "form": {
       "email": "Email",
-      "password": "Password"
+      "password": "Password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     },
     "actions": {
-      "guest": "Guest",
-      "signIn": "Sign In"
+      "guest": "Try as Guest",
+      "signIn": "Sign In",
+      "backHome": "Back to home"
+    },
+    "divider": "or",
+    "error": {
+      "heading": "Sign-in failed"
     }
-  },
-  "errorModal": {
-    "title": "Logging Failure",
-    "close": "Close"
   },
   "home": {
     "hero": {

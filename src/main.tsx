@@ -134,8 +134,12 @@ const GlobalCOntextProvider = () => {
 
   const isAuthenticated = auth.isAuthenticated();
   useEffect(() => {
+    // Signed-in: wait until db/bookId/domain are ready before re-matching routes.
+    // Signed-out: re-match immediately, or the already-matched route (e.g. /home after
+    // sign-out's navigate) keeps serving its stale authenticated context, leaving the
+    // sidebar/account bubble rendered until some unrelated re-render forces a re-match.
     console.info("Invalidate router when context changes.");
-    if (isAuthenticated && !!db && !!bookId && !!domain) router.invalidate();
+    if (!isAuthenticated || (!!db && !!bookId && !!domain)) router.invalidate();
   }, [isAuthenticated, db, bookId, domain]);
 
   console.info(`Current book ${bookId} db ${!!db} user ${auth.user}`);

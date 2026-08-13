@@ -27,18 +27,23 @@
     }
   },
   "login": {
+    "heading": "Bienvenido de nuevo",
+    "subtitle": "Inicia sesión para ver tu panel.",
     "form": {
       "email": "Correo electrónico",
-      "password": "Contraseña"
+      "password": "Contraseña",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña"
     },
     "actions": {
-      "guest": "Invitado",
-      "signIn": "Iniciar sesión"
+      "guest": "Probar como invitado",
+      "signIn": "Iniciar sesión",
+      "backHome": "Volver al inicio"
+    },
+    "divider": "o",
+    "error": {
+      "heading": "No se pudo iniciar sesión"
     }
-  },
-  "errorModal": {
-    "title": "Fallo de registro",
-    "close": "Cerrar"
   },
   "home": {
     "hero": {
