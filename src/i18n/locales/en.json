@@ -253,12 +253,23 @@
     }
   },
   "metadata": {
-    "bookId": "Book Id",
+    "subtitle": "Overview of the imported GnuCash book: what it contains and where it came from.",
+    "sections": {
+      "ledger": "Ledger contents",
+      "dateRange": "Date range",
+      "source": "Source file"
+    },
+    "bookId": "Book ID",
     "accounts": "Accounts",
     "transactions": "Transactions",
+    "scheduledTransactions": "Scheduled transactions",
     "currencies": "Currencies",
-    "initialDate": "Initial Date",
-    "finalDate": "Final Date"
+    "priceRecords": "Price records",
+    "initialDate": "Initial date",
+    "finalDate": "Final date",
+    "span": "Span",
+    "spanMonths": "{{value}} months",
+    "gnucashVersion": "GnuCash file version"
   },
   "investments": {
     "placeholder": "Investments coming soon."
