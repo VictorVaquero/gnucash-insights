@@ -18,6 +18,8 @@
     "investments": { "title": "Inversiones" }
   },
   "common": {
+    "collapseChart": "Reducir {{title}}",
+    "expandChart": "Ampliar {{title}}",
     "collapseSection": "Contraer {{title}}",
     "expandSection": "Expandir {{title}}",
     "periodicity": {
@@ -96,7 +98,9 @@
       "checking": "Corriente",
       "savings": "Ahorros",
       "investment": "Inversión",
-      "taxes": "Impuestos"
+      "taxes": "Impuestos",
+      "assetsTotal": "Total activos",
+      "otherAssets": "Otros"
     },
     "budget": {
       "setPlaceholder": "definir",

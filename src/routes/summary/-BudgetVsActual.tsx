@@ -12,14 +12,32 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "cashpy.budgets.v1";
 
+// Targets live in the browser (the dashboard has no write access to the database), keyed by
+// account id so they survive every re-import of the ledger.
 const readBudgets = (): Record<string, number> => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    if (typeof parsed !== "object" || parsed === null) return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, number] => typeof entry[1] === "number" && entry[1] > 0,
+      ),
+    );
   } catch {
     return {};
   }
 };
+
+const writeBudgets = (budgets: Record<string, number>) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(budgets));
+  } catch {
+    // Storage full or blocked: the target still applies for this session.
+  }
+};
+
+const MAX_UNBUDGETED_ROWS = 8;
 
 interface Row {
   accountId: string;
@@ -85,8 +103,9 @@ export const BudgetVsActual = (props: { className?: string }) => {
 
   const setTarget = useCallback((accountId: string, value: number) => {
     setBudgets((prev) => {
-      const next = { ...prev, [accountId]: value };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      const rest = Object.entries(prev).filter(([id]) => id !== accountId);
+      const next = Object.fromEntries(value > 0 ? [...rest, [accountId, value]] : rest);
+      writeBudgets(next);
       return next;
     });
   }, []);
@@ -98,23 +117,37 @@ export const BudgetVsActual = (props: { className?: string }) => {
   const rows = useMemo<Row[]>(() => {
     if (!rawData || !latestMonth) return [];
     const currentYmd = latestMonth.toISODate();
-    const byAccount = new Map<string, { accountName: string; spent: number }>();
+    const names = new Map<string, string>();
+    const spentByAccount = new Map<string, number>();
     for (const row of rawData) {
+      names.set(row.accountId, row.accountName);
       if (row.date !== currentYmd) continue;
-      const entry = byAccount.get(row.accountId) ?? { accountName: row.accountName, spent: 0 };
-      entry.spent += Math.abs(row.value);
-      byAccount.set(row.accountId, entry);
+      spentByAccount.set(
+        row.accountId,
+        (spentByAccount.get(row.accountId) ?? 0) + Math.abs(row.value),
+      );
     }
-    return Array.from(byAccount.entries())
-      .map(([accountId, { accountName, spent }]) => ({
-        accountId,
-        accountName,
-        spent,
-        target: budgets[accountId] ?? 0,
-      }))
-      .filter((r) => r.spent > 0 || r.target > 0)
+    const toRow = (accountId: string): Row => ({
+      accountId,
+      accountName: names.get(accountId) ?? accountId,
+      spent: spentByAccount.get(accountId) ?? 0,
+      target: budgets[accountId] ?? 0,
+    });
+
+    // Every account with a target stays listed even when nothing was spent on it this month
+    // (a month that has just started would otherwise hide all of them). The remaining room
+    // goes to the biggest spenders so a new target can be set on them.
+    const budgeted = Object.keys(budgets)
+      .filter((id) => names.has(id))
+      .map(toRow)
+      .sort((a, b) => b.spent - a.spent);
+    const unbudgeted = Array.from(spentByAccount.keys())
+      .filter((id) => !(id in budgets))
+      .map(toRow)
+      .filter((r) => r.spent > 0)
       .sort((a, b) => b.spent - a.spent)
-      .slice(0, 8);
+      .slice(0, MAX_UNBUDGETED_ROWS);
+    return [...budgeted, ...unbudgeted];
   }, [rawData, latestMonth, budgets]);
 
   if (rows.length === 0) {

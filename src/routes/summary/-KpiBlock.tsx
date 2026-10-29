@@ -56,43 +56,35 @@ export const KpiBlock = (props: { className?: string }) => {
   const latestDateKey = latestMonth?.toISODate() ?? "";
   const prevDateKey = prevMonth?.toISODate() ?? "";
 
-  const netGain = deflate(
-    useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes]),
+  // GnuCash books income as a credit (negative) and expenses as a debit (positive), so the
+  // raw sums come out with the "wrong" sign for display. Flip them once here: income and
+  // net are positive when you earn / save, expenses are positive when you spend.
+  // The flow KPIs describe the latest month and are compared with the month before it.
+  const latestRange = { startDate: latestMonth };
+  const prevRange = { startDate: prevMonth, endDate: latestMonth };
+  const upToLatest = { endDate: latestMonth };
+
+  const earnings = -deflate(
+    useSum(db, bookId, [dbconf.income, dbconf.taxes], latestRange),
     latestDateKey,
   );
-  const earnings = deflate(useSum(db, bookId, [dbconf.income, dbconf.taxes]), latestDateKey);
-  const costs = deflate(useSum(db, bookId, [dbconf.expenses]), latestDateKey);
-  const checking = deflate(useSum(db, bookId, [dbconf.checking]), latestDateKey);
-  const savings = deflate(useSum(db, bookId, [dbconf.savings]), latestDateKey);
-  const assets = deflate(useSum(db, bookId, [dbconf.assets]), latestDateKey);
-  const investments = deflate(useSum(db, bookId, [dbconf.investments]), latestDateKey);
-
-  const prevRange = { startDate: prevMonth, endDate: latestMonth };
-  const prevNetGain = deflate(
-    useSum(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes], prevRange),
-    prevDateKey,
-  );
-  const prevEarnings = deflate(
+  const costs = deflate(useSum(db, bookId, [dbconf.expenses], latestRange), latestDateKey);
+  const netGain = earnings - costs;
+  const prevEarnings = -deflate(
     useSum(db, bookId, [dbconf.income, dbconf.taxes], prevRange),
     prevDateKey,
   );
   const prevCosts = deflate(useSum(db, bookId, [dbconf.expenses], prevRange), prevDateKey);
-  const prevChecking = deflate(
-    useSum(db, bookId, [dbconf.checking], { endDate: latestMonth }),
-    prevDateKey,
-  );
-  const prevSavings = deflate(
-    useSum(db, bookId, [dbconf.savings], { endDate: latestMonth }),
-    prevDateKey,
-  );
-  const prevAssets = deflate(
-    useSum(db, bookId, [dbconf.assets], { endDate: latestMonth }),
-    prevDateKey,
-  );
-  const prevInvestments = deflate(
-    useSum(db, bookId, [dbconf.investments], { endDate: latestMonth }),
-    prevDateKey,
-  );
+  const prevNetGain = prevEarnings - prevCosts;
+
+  // `assets` is the parent of checking, savings and investments, so adding those on top of
+  // it counted them twice. Liabilities are negative in GnuCash, so adding them nets them off.
+  const assets = deflate(useSum(db, bookId, [dbconf.assets]), latestDateKey);
+  const liabilities = deflate(useSum(db, bookId, [dbconf.liability]), latestDateKey);
+  const checking = deflate(useSum(db, bookId, [dbconf.checking]), latestDateKey);
+  const savings = deflate(useSum(db, bookId, [dbconf.savings]), latestDateKey);
+  const prevAssets = deflate(useSum(db, bookId, [dbconf.assets], upToLatest), prevDateKey);
+  const prevLiabilities = deflate(useSum(db, bookId, [dbconf.liability], upToLatest), prevDateKey);
   const costsLast3 = deflate(
     useSum(db, bookId, [dbconf.expenses], {
       startDate: latestMonth?.minus({ months: 3 }),
@@ -103,8 +95,8 @@ export const KpiBlock = (props: { className?: string }) => {
 
   const savingsRate = earnings ? (netGain / earnings) * 100 : 0;
   const prevSavingsRate = prevEarnings ? (prevNetGain / prevEarnings) * 100 : 0;
-  const netWorth = checking + savings + assets + investments;
-  const prevNetWorth = prevChecking + prevSavings + prevAssets + prevInvestments;
+  const netWorth = assets + liabilities;
+  const prevNetWorth = prevAssets + prevLiabilities;
 
   const avgMonthlyExpense = Math.abs(costsLast3) / 3;
   const liquidFunds = checking + savings;
@@ -117,25 +109,19 @@ export const KpiBlock = (props: { className?: string }) => {
           <KpiCard
             name={t("summary.kpi.net")}
             value={formatCurrency(netGain, locale, { compact: true })}
-            delta={<DeltaChip current={-netGain} previous={-prevNetGain} />}
+            delta={<DeltaChip current={netGain} previous={prevNetGain} />}
           />
           <KpiCard
             name={t("summary.kpi.income")}
             value={formatCurrency(earnings, locale, { compact: true })}
             color="text-green-600"
-            delta={<DeltaChip current={Math.abs(earnings)} previous={Math.abs(prevEarnings)} />}
+            delta={<DeltaChip current={earnings} previous={prevEarnings} />}
           />
           <KpiCard
             name={t("summary.kpi.expenses")}
             value={formatCurrency(costs, locale, { compact: true })}
             color="text-red-600"
-            delta={
-              <DeltaChip
-                current={Math.abs(costs)}
-                previous={Math.abs(prevCosts)}
-                positiveIsGood={false}
-              />
-            }
+            delta={<DeltaChip current={costs} previous={prevCosts} positiveIsGood={false} />}
           />
           <KpiCard
             name={t("summary.kpi.savingsRate")}

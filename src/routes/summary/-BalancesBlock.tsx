@@ -23,6 +23,8 @@ export const BalancesBlock = (props: { className?: string }) => {
   const { data: taxes } = useQuery(splitSumOptions(db, bookId, [dbconf.taxes]));
   const { locale } = useLocale();
   const { t } = useTranslation();
+  // Whatever the total holds that is not checking, savings or investments (cash, other accounts).
+  const otherAssets = (assets ?? 0) - (checking ?? 0) - (savings ?? 0) - (investments ?? 0);
 
   return (
     <div className={cn(props.className)}>
@@ -31,21 +33,32 @@ export const BalancesBlock = (props: { className?: string }) => {
       </p>
       <section className="flex flex-col">
         <KpiRow
-          name={t("summary.balances.assets")}
+          name={t("summary.balances.assetsTotal")}
           value={formatCurrency(assets ?? 0, locale, { compact: true })}
+          emphasis
         />
         <KpiRow
           name={t("summary.balances.checking")}
           value={formatCurrency(checking ?? 0, locale, { compact: true })}
+          indent
         />
         <KpiRow
           name={t("summary.balances.savings")}
           value={formatCurrency(savings ?? 0, locale, { compact: true })}
+          indent
         />
         <KpiRow
           name={t("summary.balances.investment")}
           value={formatCurrency(investments ?? 0, locale, { compact: true })}
+          indent
         />
+        {Math.abs(otherAssets) >= 0.5 && (
+          <KpiRow
+            name={t("summary.balances.otherAssets")}
+            value={formatCurrency(otherAssets, locale, { compact: true })}
+            indent
+          />
+        )}
         <KpiRow
           name={t("summary.balances.taxes")}
           value={formatCurrency(taxes ?? 0, locale, { compact: true })}
