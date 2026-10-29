@@ -80,7 +80,8 @@ const BudgetRow = (props: {
             value={row.target || ""}
             placeholder={t("summary.budget.setPlaceholder")}
             onChange={handleChange}
-            className="w-14 bg-transparent border border-border rounded px-1 py-0.5 text-right text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+            inputMode="decimal"
+            className="w-14 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none bg-transparent border border-border rounded px-1 py-0.5 text-right text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
       </div>

@@ -113,7 +113,7 @@ export const Route = createFileRoute("/summary/")({
         transactsSumOptions({
           db,
           bookId,
-          accountIds: [dbconf.income, dbconf.taxes],
+          accountIds: [dbconf.income],
           periodicity: "monthly",
         }),
       );

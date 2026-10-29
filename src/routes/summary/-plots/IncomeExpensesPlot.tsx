@@ -197,7 +197,7 @@ export const IncomeExpensesPlot = () => {
     transactsSumOptions({
       db,
       bookId,
-      accountIds: [dbconf.income, dbconf.taxes],
+      accountIds: [dbconf.income],
       periodicity: charMode,
       hideAccounts,
     }),
@@ -206,7 +206,7 @@ export const IncomeExpensesPlot = () => {
     transactsSumOptions({
       db,
       bookId,
-      accountIds: [dbconf.expenses, dbconf.income, dbconf.taxes],
+      accountIds: [dbconf.expenses, dbconf.income],
       periodicity: charMode,
       hideAccounts,
     }),

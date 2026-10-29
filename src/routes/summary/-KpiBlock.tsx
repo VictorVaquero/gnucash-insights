@@ -64,16 +64,10 @@ export const KpiBlock = (props: { className?: string }) => {
   const prevRange = { startDate: prevMonth, endDate: latestMonth };
   const upToLatest = { endDate: latestMonth };
 
-  const earnings = -deflate(
-    useSum(db, bookId, [dbconf.income, dbconf.taxes], latestRange),
-    latestDateKey,
-  );
+  const earnings = -deflate(useSum(db, bookId, [dbconf.income], latestRange), latestDateKey);
   const costs = deflate(useSum(db, bookId, [dbconf.expenses], latestRange), latestDateKey);
   const netGain = earnings - costs;
-  const prevEarnings = -deflate(
-    useSum(db, bookId, [dbconf.income, dbconf.taxes], prevRange),
-    prevDateKey,
-  );
+  const prevEarnings = -deflate(useSum(db, bookId, [dbconf.income], prevRange), prevDateKey);
   const prevCosts = deflate(useSum(db, bookId, [dbconf.expenses], prevRange), prevDateKey);
   const prevNetGain = prevEarnings - prevCosts;
 

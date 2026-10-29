@@ -24,13 +24,13 @@ const useSavings = (
   { startDate, endDate }: DateRange = {},
 ) => {
   const { data: savings } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income, dbconf.taxes], {
+    splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income], {
       startDate,
       endDate,
     }),
   );
   const { data: income } = useQuery(
-    splitSumOptions(db, bookId, [dbconf.income, dbconf.taxes], { startDate, endDate }),
+    splitSumOptions(db, bookId, [dbconf.income], { startDate, endDate }),
   );
 
   const months = startDate && endDate ? endDate.diff(startDate, ["months"]).months : 1;

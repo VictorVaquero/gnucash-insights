@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -13,6 +14,8 @@ import { cn } from "@/lib/utils";
 interface ExpandableRegionContextType {
   expandedId: string | null;
   toggle: (id: string) => void;
+  /** Where the region currently is on screen. */
+  getRect: () => DOMRect | undefined;
 }
 
 // null outside a region: a ChartCard rendered elsewhere simply has no expand button.
@@ -37,11 +40,15 @@ export const ExpandableRegion = (props: { className?: string; children: ReactNod
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [expandedId]);
 
-  const value = useMemo(() => ({ expandedId, toggle }), [expandedId, toggle]);
+  const ref = useRef<HTMLDivElement>(null);
+  const getRect = useCallback(() => ref.current?.getBoundingClientRect(), []);
+  const value = useMemo(() => ({ expandedId, toggle, getRect }), [expandedId, toggle, getRect]);
 
   return (
     <ExpandableRegionContext value={value}>
-      <div className={cn("relative", props.className)}>{props.children}</div>
+      <div ref={ref} className={cn("relative", props.className)}>
+        {props.children}
+      </div>
     </ExpandableRegionContext>
   );
 };
