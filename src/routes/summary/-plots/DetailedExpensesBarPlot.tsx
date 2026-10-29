@@ -129,6 +129,7 @@ export const DetailedExpensesBarPlot = () => {
       bookId,
       accountIds: [dbconfig.expenses],
       periodicity: chartPeriodicity,
+      hideAccounts: [dbconfig.taxes, ...dbconfig.taxesAll],
       select: useCallback(
         (rawData: TransactData) => {
           if (rawData) {

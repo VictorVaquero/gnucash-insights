@@ -183,6 +183,11 @@ export const IncomeExpensesPlot = () => {
   const { dateRange, hideAccounts, chartPeriodicity: charMode } = useSummaryPageContext();
   const { deflate } = useDeflator();
   const dbconf = getConfig(user);
+  // Taxes are not part of what these bars compare, whatever the user toggles in the dropdown.
+  const hiddenAccounts = useMemo(
+    () => [...hideAccounts, dbconf.taxes, ...dbconf.taxesAll],
+    [hideAccounts, dbconf.taxes, dbconf.taxesAll],
+  );
 
   const { data: expenses } = useQuery(
     transactsSumOptions({
@@ -190,7 +195,7 @@ export const IncomeExpensesPlot = () => {
       bookId,
       accountIds: [dbconf.expenses],
       periodicity: charMode,
-      hideAccounts,
+      hideAccounts: hiddenAccounts,
     }),
   );
   const { data: income } = useQuery(
@@ -199,7 +204,7 @@ export const IncomeExpensesPlot = () => {
       bookId,
       accountIds: [dbconf.income],
       periodicity: charMode,
-      hideAccounts,
+      hideAccounts: hiddenAccounts,
     }),
   );
   const { data: net } = useQuery(
@@ -208,7 +213,7 @@ export const IncomeExpensesPlot = () => {
       bookId,
       accountIds: [dbconf.expenses, dbconf.income],
       periodicity: charMode,
-      hideAccounts,
+      hideAccounts: hiddenAccounts,
     }),
   );
 

@@ -27,6 +27,7 @@ const useSavings = (
     splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income], {
       startDate,
       endDate,
+      ignoreAccounts: [dbconf.taxes, ...dbconf.taxesAll],
     }),
   );
   const { data: income } = useQuery(

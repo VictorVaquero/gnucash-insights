@@ -141,16 +141,18 @@ interface SplitSumFilters {
   startDate?: DateTime;
   endDate?: DateTime;
   notes?: string;
+  /** Accounts left out of the sum even when they sit under one of the requested ones. */
+  ignoreAccounts?: string[];
 }
 
 const getSplitSumQuery = <TDB extends AnyDB>(
   db: TDB,
   bookId: string,
   accountNames: string[],
-  { startDate, endDate, notes }: SplitSumFilters = {},
+  { startDate, endDate, notes, ignoreAccounts }: SplitSumFilters = {},
 ) => {
   const ft = fullTransactionsQuery(db);
-  const accounts = getAccountsClosureQuery(db, accountNames);
+  const accounts = getAccountsClosureQuery(db, accountNames, ignoreAccounts);
   let filterQuery: SQL<unknown> | undefined = undefined;
   if (startDate) filterQuery = and(filterQuery, gte(timeTable.ymd, startDate));
   if (endDate) filterQuery = and(filterQuery, lt(timeTable.ymd, endDate));
@@ -174,10 +176,18 @@ export const splitSumOptions = <TDB extends AnyDB>(
   accountNames: string[],
   filters: SplitSumFilters = {},
 ) => {
-  const { startDate, endDate, notes } = filters;
+  const { startDate, endDate, notes, ignoreAccounts = [] } = filters;
   const enabled = !!db && !!bookId;
   return queryOptions({
-    queryKey: ["splitSum", bookId, ...accountNames, startDate?.toISO(), endDate?.toISO(), notes],
+    queryKey: [
+      "splitSum",
+      bookId,
+      ...accountNames,
+      startDate?.toISO(),
+      endDate?.toISO(),
+      notes,
+      [...ignoreAccounts].sort(),
+    ],
     queryFn: !enabled
       ? skipToken
       : async () => {

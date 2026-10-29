@@ -18,7 +18,7 @@ const useSum = (
   db: AnyDB | undefined,
   bookId: string | undefined,
   accountNames: string[],
-  filters?: { startDate?: DateTime; endDate?: DateTime },
+  filters?: { startDate?: DateTime; endDate?: DateTime; ignoreAccounts?: string[] },
 ) => useQuery(splitSumOptions(db, bookId, accountNames, filters)).data ?? 0;
 
 const DeltaChip = (props: { current: number; previous: number; positiveIsGood?: boolean }) => {
@@ -52,6 +52,7 @@ export const KpiBlock = (props: { className?: string }) => {
   const { locale } = useLocale();
   const { t } = useTranslation();
   const { deflate } = useDeflator();
+  const taxAccounts = [dbconf.taxes, ...dbconf.taxesAll];
   const prevMonth = latestMonth?.minus({ months: 1 });
   const latestDateKey = latestMonth?.toISODate() ?? "";
   const prevDateKey = prevMonth?.toISODate() ?? "";
@@ -65,10 +66,16 @@ export const KpiBlock = (props: { className?: string }) => {
   const upToLatest = { endDate: latestMonth };
 
   const earnings = -deflate(useSum(db, bookId, [dbconf.income], latestRange), latestDateKey);
-  const costs = deflate(useSum(db, bookId, [dbconf.expenses], latestRange), latestDateKey);
+  const costs = deflate(
+    useSum(db, bookId, [dbconf.expenses], { ...latestRange, ignoreAccounts: taxAccounts }),
+    latestDateKey,
+  );
   const netGain = earnings - costs;
   const prevEarnings = -deflate(useSum(db, bookId, [dbconf.income], prevRange), prevDateKey);
-  const prevCosts = deflate(useSum(db, bookId, [dbconf.expenses], prevRange), prevDateKey);
+  const prevCosts = deflate(
+    useSum(db, bookId, [dbconf.expenses], { ...prevRange, ignoreAccounts: taxAccounts }),
+    prevDateKey,
+  );
   const prevNetGain = prevEarnings - prevCosts;
 
   // `assets` is the parent of checking, savings and investments, so adding those on top of
@@ -83,6 +90,7 @@ export const KpiBlock = (props: { className?: string }) => {
     useSum(db, bookId, [dbconf.expenses], {
       startDate: latestMonth?.minus({ months: 3 }),
       endDate: latestMonth,
+      ignoreAccounts: taxAccounts,
     }),
     latestDateKey,
   );
