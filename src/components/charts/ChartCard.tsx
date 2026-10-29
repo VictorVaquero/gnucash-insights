@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useExpandableRegion } from "@/components/charts/ExpandableRegion";
@@ -25,25 +25,12 @@ const ExpandIcon = (props: { expanded: boolean }) => (
   </svg>
 );
 
-const SCREEN_MARGIN = 12;
-const DESKTOP_MIN_WIDTH = 768;
-
-// The region's on-screen rectangle clipped to the viewport, so an expanded chart is as large
-// as its region but never taller or wider than what can be seen. Narrow screens use a plain
-// full-screen overlay instead (no box).
-const visibleBox = (rect: DOMRect | undefined): CSSProperties | undefined => {
-  if (!rect || window.innerWidth < DESKTOP_MIN_WIDTH) return undefined;
-  const top = Math.max(rect.top, SCREEN_MARGIN);
-  const bottom = Math.min(rect.bottom, window.innerHeight - SCREEN_MARGIN);
-  const left = Math.max(rect.left, SCREEN_MARGIN);
-  const right = Math.min(rect.right, window.innerWidth - SCREEN_MARGIN);
-  return { top, left, width: Math.max(right - left, 0), height: Math.max(bottom - top, 0) };
-};
-
 export const ChartCard = (props: {
   title: string;
   hint?: string;
   className?: string;
+  /** Layout classes for this card's grid cell while expanded (spans, min heights, ...). */
+  expandedClassName?: string;
   children: ReactNode;
 }) => {
   const { t } = useTranslation();
@@ -51,32 +38,8 @@ export const ChartCard = (props: {
   const region = useExpandableRegion();
   const isExpanded = region?.expandedId === id;
 
-  // The expanded card leaves the layout (absolute), so the wrapper keeps the size it had,
-  // which stops the neighbouring cards from jumping while it is open.
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [heldHeight, setHeldHeight] = useState<number>();
-  const [box, setBox] = useState<CSSProperties>();
-  const getRect = region?.getRect;
-  const toggle = () => {
-    if (!region) return;
-    if (!isExpanded) {
-      setHeldHeight(wrapperRef.current?.offsetHeight);
-      setBox(visibleBox(getRect?.()));
-    }
-    region.toggle(id);
-  };
-
-  // Follow the region while the page scrolls or resizes under an expanded chart.
-  useEffect(() => {
-    if (!isExpanded || !getRect) return;
-    const update = () => setBox(visibleBox(getRect()));
-    window.addEventListener("scroll", update, true);
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update, true);
-      window.removeEventListener("resize", update);
-    };
-  }, [isExpanded, getRect]);
+  const toggle = () => region?.toggle(id);
+  const isHidden = !!region?.hideOthers && !!region.expandedId && !isExpanded;
 
   const label = isExpanded
     ? t("common.collapseChart", { title: props.title })
@@ -84,17 +47,14 @@ export const ChartCard = (props: {
 
   return (
     <div
-      ref={wrapperRef}
-      className={cn("md:h-full md:min-h-0 min-w-0", props.className)}
-      style={isExpanded ? { minHeight: heldHeight } : undefined}
+      className={cn(
+        "md:h-full md:min-h-0 min-w-0",
+        props.className,
+        isExpanded && props.expandedClassName,
+        isHidden && "hidden",
+      )}
     >
-      <Card
-        className={cn(
-          "flex flex-col h-full md:min-h-0 overflow-hidden bg-background",
-          isExpanded && "fixed inset-3 z-50 h-auto shadow-xl md:inset-auto",
-        )}
-        style={isExpanded ? box : undefined}
-      >
+      <Card className="flex flex-col h-full md:min-h-0 overflow-hidden">
         <CardHeader className={cn(props.hint && "items-baseline gap-3")}>
           <CardTitle>{props.title}</CardTitle>
           <div className="flex items-baseline gap-3">

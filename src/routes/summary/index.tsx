@@ -28,21 +28,28 @@ import { MonthDetailedExpensesPiePlot } from "./-plots/MonthDetailedExpensesPieP
 import { SummaryPageContextProvider } from "./-summaryPageContext";
 import { DetailedIncomeBarPlot } from "./-plots/DetailedIncomeBarPlot";
 
+const FULL_AREA = "sm:col-span-2 md:row-span-2 min-h-[28rem] md:min-h-0";
+const FULL_ROW = "md:col-span-2 min-h-[28rem]";
+
 const Summary = () => {
   const { t } = useTranslation();
   return (
     <SummaryPageContextProvider>
-      <div className="w-full md:h-full p-4 sm:p-10 pt-6 flex flex-col gap-y-6">
+      <div className="w-full md:min-h-full p-4 sm:p-10 pt-6 flex flex-col gap-y-6">
         <h1 className="text-xl font-semibold tracking-tight">{t("routes.summary.title")}</h1>
         <SettingsBlock />
-        <ExpandableRegion className="flex flex-col gap-y-6 md:flex-1 md:min-h-0">
+        <div className="flex flex-col gap-y-6 md:flex-1">
           <KpiBlock />
-          <div className="h-72 md:h-80 shrink-0">
+          {/* Expanded: twice as tall, the rows below move down. */}
+          <ExpandableRegion
+            className="h-72 md:h-80 shrink-0"
+            expandedClassName="h-[36rem] md:h-[40rem]"
+          >
             <ChartCard title={t("summary.charts.netWorthTrend")}>
               <NetWorthTrendPlot />
             </ChartCard>
-          </div>
-          <div className="flex flex-col md:flex-row gap-6 md:flex-1 md:min-h-0">
+          </ExpandableRegion>
+          <div className="flex flex-col md:flex-row gap-6 md:flex-1 md:min-h-[32rem]">
             <CollapsibleSection
               title={t("summary.sections.details")}
               className="md:w-72 md:shrink-0 md:self-start"
@@ -56,14 +63,21 @@ const Summary = () => {
                 <TopMovers />
               </div>
             </CollapsibleSection>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:grid-rows-2 md:flex-1 md:min-w-0 md:min-h-0">
-              <ChartCard title={t("summary.charts.assets")}>
+            {/* Expanded: one chart takes the full width and both rows, the other three step aside. */}
+            <ExpandableRegion
+              hideOthers
+              className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:grid-rows-2 md:flex-1 md:min-w-0 md:min-h-0"
+            >
+              <ChartCard title={t("summary.charts.assets")} expandedClassName={FULL_AREA}>
                 <AssetAccountsPlot />
               </ChartCard>
-              <ChartCard title={t("summary.charts.incomeVsExpenses")}>
+              <ChartCard title={t("summary.charts.incomeVsExpenses")} expandedClassName={FULL_AREA}>
                 <IncomeExpensesPlot />
               </ChartCard>
-              <ChartCard title={t("summary.charts.expensesByCategory")}>
+              <ChartCard
+                title={t("summary.charts.expensesByCategory")}
+                expandedClassName={FULL_AREA}
+              >
                 <div className="flex flex-col md:flex-row gap-4 md:h-full">
                   <div className="flex-1 min-w-0 h-64 md:h-full">
                     <DetailedExpensesBarPlot />
@@ -73,17 +87,18 @@ const Summary = () => {
                   </div>
                 </div>
               </ChartCard>
-              <ChartCard title={t("summary.charts.incomeByCategory")}>
+              <ChartCard title={t("summary.charts.incomeByCategory")} expandedClassName={FULL_AREA}>
                 <DetailedIncomeBarPlot />
               </ChartCard>
-            </div>
+            </ExpandableRegion>
           </div>
-        </ExpandableRegion>
+        </div>
+        {/* Expanded: full width and taller, the other card moves below it. */}
         <ExpandableRegion className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ChartCard title={t("summary.charts.budgetVsActual")}>
+          <ChartCard title={t("summary.charts.budgetVsActual")} expandedClassName={FULL_ROW}>
             <BudgetVsActual />
           </ChartCard>
-          <ChartCard title={t("summary.charts.recurringExpenses")}>
+          <ChartCard title={t("summary.charts.recurringExpenses")} expandedClassName={FULL_ROW}>
             <RecurringExpenses />
           </ChartCard>
         </ExpandableRegion>
