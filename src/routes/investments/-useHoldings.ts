@@ -27,13 +27,22 @@ export interface Lot {
 export interface Holding {
   accountId: string;
   name: string;
+  /** Broker / platform the holding lives in (Degiro, Ing, ...), if it sits under one. */
+  platform: string | null;
+  /** Readable name for lists and charts: "name · platform". */
+  label: string;
   ticker: string | null;
   commodityName: string | null;
   quantity: number;
   price: number | null;
   priceDate: string | null;
   marketValue: number;
+  /** Total bought. */
   costBasis: number;
+  /** Total cashed in from sales. */
+  proceeds: number;
+  /** Everything sold out: the gain is fully realised. */
+  isClosed: boolean;
   gain: number;
   gainPct: number | null;
   xirrNominal: number | null;
@@ -90,6 +99,7 @@ export const useHoldings = (): Portfolio => {
     const prices = pricesQuery.data ?? [];
 
     const holdings: Holding[] = holdingAccounts.map((account) => {
+      const platform = account.parentId === dbconf.investments ? null : account.platform;
       const holdingLots: Lot[] = lots
         .filter((l) => l.accountId === account.id)
         .map((l) => ({ date: l.date.toISODate() ?? "", quantity: l.quantity, value: l.value }));
@@ -107,7 +117,14 @@ export const useHoldings = (): Portfolio => {
       const price = latestPrice?.value ?? null;
       const marketValue = price != null ? quantity * price : 0;
 
-      const gain = marketValue - costBasis;
+      // Sales count as money back: a holding sold at a profit is a gain, not a total loss
+      // (its market value is 0 but the cash is in the proceeds).
+      const proceeds = holdingLots
+        .filter((l) => l.quantity < 0)
+        .reduce((sum, l) => sum - l.value, 0);
+      const isClosed = Math.abs(quantity) < 1e-6;
+
+      const gain = marketValue + proceeds - costBasis;
       const gainPct = costBasis > 0 ? (gain / costBasis) * 100 : null;
 
       // Buys are cash out (negative), sells are cash in (positive); the split's own
@@ -122,6 +139,8 @@ export const useHoldings = (): Portfolio => {
       return {
         accountId: account.id,
         name: account.name,
+        platform,
+        label: platform ? `${account.name} · ${platform}` : account.name,
         ticker: account.ticker,
         commodityName: account.commodityName,
         quantity,
@@ -129,6 +148,8 @@ export const useHoldings = (): Portfolio => {
         priceDate: latestPrice?.date ?? null,
         marketValue,
         costBasis,
+        proceeds,
+        isClosed,
         gain,
         gainPct,
         xirrNominal: xirr(cashflows),
@@ -140,7 +161,8 @@ export const useHoldings = (): Portfolio => {
 
     const totalMarketValue = holdings.reduce((sum, h) => sum + h.marketValue, 0);
     const totalCostBasis = holdings.reduce((sum, h) => sum + h.costBasis, 0);
-    const totalGain = totalMarketValue - totalCostBasis;
+    const totalProceeds = holdings.reduce((sum, h) => sum + h.proceeds, 0);
+    const totalGain = totalMarketValue + totalProceeds - totalCostBasis;
     const totalGainPct = totalCostBasis > 0 ? (totalGain / totalCostBasis) * 100 : null;
 
     const allCashflows: Cashflow[] = holdings.flatMap((h) =>
@@ -162,5 +184,5 @@ export const useHoldings = (): Portfolio => {
       xirrReal: xirr(allRealCashflows),
       isLoading,
     };
-  }, [holdingAccounts, lotsQuery.data, pricesQuery.data, deflate, isLoading]);
+  }, [holdingAccounts, lotsQuery.data, pricesQuery.data, deflate, isLoading, dbconf.investments]);
 };

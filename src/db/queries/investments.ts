@@ -1,5 +1,6 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { and, asc, eq, inArray, ne } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 
 import { AnyDB } from "../dbType";
 import {
@@ -27,10 +28,14 @@ const getHoldingAccountsQuery = <TDB extends AnyDB>({
   investmentsAccountId: string;
 }) => {
   const accountsFiltered = getAccountsClosureQuery(db, [investmentsAccountId]);
+  // The parent account is the platform (Degiro, Ing, ...) the holding lives in.
+  const parent = alias(accountsTable, "parent");
   return db
     .selectDistinct({
       id: accountsTable.id,
       name: accountsTable.name,
+      parentId: accountsTable.parent,
+      platform: parent.name,
       commodityId: commoditiesTable.id,
       ticker: commoditiesTable.code,
       commodityName: commoditiesTable.name,
@@ -38,6 +43,7 @@ const getHoldingAccountsQuery = <TDB extends AnyDB>({
     .from(accountsTable)
     .innerJoin(accountsFiltered, eq(accountsFiltered.id, accountsTable.id))
     .innerJoin(commoditiesTable, eq(commoditiesTable.id, accountsTable.commodity))
+    .leftJoin(parent, eq(parent.id, accountsTable.parent))
     .where(and(eq(accountsTable.bookId, bookId), ne(commoditiesTable.space, CURRENCY_SPACE)));
 };
 

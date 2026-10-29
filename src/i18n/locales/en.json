@@ -173,6 +173,21 @@
     "mobileYearWindow": "Showing the last {{count}} years. Rotate or use a wider screen to see the full history."
   },
   "travel": {
+    "explorer": {
+      "title": "Trips",
+      "summary": "{{count}} trips · {{total}}",
+      "empty": "No trips in this period.",
+      "trip": "Trip",
+      "start": "Start",
+      "end": "End",
+      "days": "Days",
+      "total": "Total",
+      "perDay": "Per day",
+      "transactions": "Transactions",
+      "transactionsHeading": "Transactions",
+      "byCategory": "Spending by category",
+      "sort": { "date": "Date", "total": "Total cost", "perDay": "Cost per day" }
+    },
     "sections": {
       "details": "Details"
     },
@@ -290,8 +305,11 @@
     },
     "chart": {
       "growth": "Growth comparison",
-      "growthHint": "Indexed to 100 at each holding's first price · click a series to isolate it",
-      "total": "Total"
+      "growthHint": "Return indexed to 100: each holding starts at 100 the day you buy it and ends when sold",
+      "total": "Total",
+      "value": "Value",
+      "invested": "Invested",
+      "mode": { "return": "Return", "value": "Value" }
     },
     "table": {
       "holding": "Holding",
@@ -300,6 +318,7 @@
       "value": "Value",
       "gain": "Gain",
       "annualized": "Annualized",
+      "closed": "Closed",
       "empty": "No investment holdings found."
     },
     "detail": {

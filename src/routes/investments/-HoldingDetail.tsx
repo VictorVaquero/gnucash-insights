@@ -33,7 +33,7 @@ export const HoldingDetail = () => {
             className="size-2.5 rounded-sm shrink-0"
             style={{ backgroundColor: getRandomColor(holding.accountId) }}
           />
-          {holding.ticker ? `${holding.ticker} — ${holding.name}` : holding.name}
+          {holding.label}
         </CardTitle>
         <button
           type="button"

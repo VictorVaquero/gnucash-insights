@@ -9,21 +9,23 @@ import {
   travelExpensesDetailedYearMonthOptions,
   travelExpensesYearMonthOptions,
   travelExpensesYearOptions,
+  tripSplitsOptions,
 } from "@/db/queries/travel";
 import { KpiBlock } from "./-components/KpiBlock";
 import { TravelExpensesDetailedPlot } from "./-components/TravelExpensesDetailedPlot";
 import { TravelExpensesMonthlyPlot } from "./-components/TravelExpensesMonthlyPlot";
 import { TravelExpensesPiePlot } from "./-components/TravelExpensesPiePlot ";
 import { TravelExpensesPlot } from "./-components/TravelExpensesPlot";
+import { TripExplorer } from "./-components/TripExplorer";
 
 const Expenses = () => {
   const { t } = useTranslation();
   return (
-    <div className="w-full md:h-full p-4 sm:p-10 pt-6 flex flex-col gap-y-6">
+    <div className="w-full p-4 sm:p-10 pt-6 flex flex-col gap-y-6">
       <h1 className="text-xl font-semibold tracking-tight text-foreground">
         {t("routes.travels.title")}
       </h1>
-      <div className="flex flex-col md:flex-row gap-6 md:flex-1 md:min-h-0">
+      <div className="flex flex-col md:flex-row gap-6 md:h-[640px] md:shrink-0">
         <CollapsibleSection
           title={t("travel.sections.details")}
           className="md:w-72 md:shrink-0 md:self-start"
@@ -45,6 +47,7 @@ const Expenses = () => {
           </ChartCard>
         </div>
       </div>
+      <TripExplorer />
     </div>
   );
 };
@@ -69,6 +72,7 @@ export const Route = createFileRoute("/travels/")({
       );
       queryClient.ensureQueryData(travelExpensesByAccountOptions({ db, user: auth.user, bookId }));
       queryClient.ensureQueryData(travelExpensesDetailedOptions({ db, user: auth.user, bookId }));
+      queryClient.ensureQueryData(tripSplitsOptions({ db, user: auth.user, bookId }));
     }
   },
 });

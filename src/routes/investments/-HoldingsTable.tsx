@@ -17,6 +17,7 @@ export const HoldingsTable = () => {
   const { locale } = useLocale();
   const { deflate, selectedHoldingId, selectHolding } = useInvestmentsPageContext();
   const { holdings, isLoading } = useHoldings();
+  const closedLabel = `(${t("investments.table.closed")})`;
 
   if (!isLoading && holdings.length === 0) {
     return <p className="text-sm text-muted-foreground py-4">{t("investments.table.empty")}</p>;
@@ -65,8 +66,11 @@ export const HoldingsTable = () => {
                       style={{ backgroundColor: getRandomColor(h.accountId) }}
                     />
                     <div className="flex flex-col min-w-0">
-                      <span className="font-medium">{h.ticker ?? h.name}</span>
-                      <span className="text-xs text-muted-foreground truncate">{h.name}</span>
+                      <span className="font-medium">{h.name}</span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {h.platform ?? ""}
+                        {h.isClosed ? ` ${closedLabel}` : ""}
+                      </span>
                     </div>
                   </div>
                 </td>

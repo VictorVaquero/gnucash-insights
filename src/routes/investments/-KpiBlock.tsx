@@ -62,7 +62,7 @@ export const KpiBlock = (props: { className?: string }) => {
           />
           <KpiCard
             name={t("investments.kpi.best")}
-            value={best ? `${best.ticker ?? best.name}` : "—"}
+            value={best ? `${best.label}` : "—"}
             color="text-green-600"
             delta={
               best ? <span className="text-xs">{pctLabel(best.gainPct, locale)}</span> : undefined
@@ -70,7 +70,7 @@ export const KpiBlock = (props: { className?: string }) => {
           />
           <KpiCard
             name={t("investments.kpi.worst")}
-            value={worst ? `${worst.ticker ?? worst.name}` : "—"}
+            value={worst ? `${worst.label}` : "—"}
             color="text-red-600"
             delta={
               worst ? <span className="text-xs">{pctLabel(worst.gainPct, locale)}</span> : undefined

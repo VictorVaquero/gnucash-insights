@@ -173,6 +173,21 @@
     "mobileYearWindow": "Mostrando los últimos {{count}} años. Gira la pantalla o usa una más ancha para ver el histórico completo."
   },
   "travel": {
+    "explorer": {
+      "title": "Viajes",
+      "summary": "{{count}} viajes · {{total}}",
+      "empty": "No hay viajes en este periodo.",
+      "trip": "Viaje",
+      "start": "Inicio",
+      "end": "Fin",
+      "days": "Días",
+      "total": "Total",
+      "perDay": "Por día",
+      "transactions": "Movimientos",
+      "transactionsHeading": "Movimientos",
+      "byCategory": "Gasto por categoría",
+      "sort": { "date": "Fecha", "total": "Coste total", "perDay": "Coste por día" }
+    },
     "sections": {
       "details": "Detalles"
     },
@@ -290,8 +305,11 @@
     },
     "chart": {
       "growth": "Comparativa de crecimiento",
-      "growthHint": "Indexado a 100 en el primer precio de cada activo · pulsa una serie para aislarla",
-      "total": "Total"
+      "growthHint": "Rendimiento en base 100: cada activo parte de 100 el día que lo compras y acaba al venderlo",
+      "total": "Total",
+      "value": "Valor",
+      "invested": "Aportado",
+      "mode": { "return": "Rendimiento", "value": "Valor" }
     },
     "table": {
       "holding": "Activo",
@@ -300,6 +318,7 @@
       "value": "Valor",
       "gain": "Ganancia",
       "annualized": "Anualizado",
+      "closed": "Cerrada",
       "empty": "No se han encontrado inversiones."
     },
     "detail": {

@@ -14,13 +14,14 @@ import type { TooltipContentProps } from "recharts";
 import { useTranslation } from "react-i18next";
 
 import { getRandomColor } from "@/common/getColors";
-import { formatNumber, useIsNarrowViewport } from "@/common/utils.ts";
+import { formatCurrency, formatNumber, useIsNarrowViewport } from "@/common/utils.ts";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { renderTouchDot } from "@/components/charts/TouchDot";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
+import { INVESTED_ID, TOTAL_ID, VALUE_ID, buildPortfolioSeries } from "../-portfolioSeries";
 import { useHoldings, type Holding } from "../-useHoldings";
 
 interface Series {
@@ -34,7 +35,6 @@ interface ChartRow {
   [holdingId: string]: string | number;
 }
 
-const TOTAL_ID = "__total";
 const marginDesktop = { top: 20, right: 20, bottom: 0, left: 44 };
 const marginMobile = { top: 10, right: 10, bottom: 0, left: 32 };
 const axisTickStyle = { fontSize: 10, fill: "currentColor" };
@@ -50,68 +50,45 @@ const entryColorStyle = (color: string) => {
 };
 
 const seriesColor = (s: Series): string =>
-  s.isTotal ? "var(--color-brand)" : getRandomColor(s.id);
+  s.id === INVESTED_ID
+    ? "var(--color-muted-foreground)"
+    : s.isTotal
+      ? "var(--color-brand)"
+      : getRandomColor(s.id);
 
-const buildIndexedRows = (
+type Mode = "return" | "value";
+
+const buildRows = (
   holdings: Holding[],
-  totalLabel: string,
+  mode: Mode,
+  labels: { total: string; value: string; invested: string },
 ): { rows: ChartRow[]; series: Series[] } => {
-  const holdingsWithPrices = holdings.filter(
-    (h) => h.priceHistory.length > 0 && h.priceHistory[0].value,
-  );
-  const series: Series[] = holdingsWithPrices.map((h) => ({
-    id: h.accountId,
-    label: h.ticker ?? h.name,
-  }));
+  const points = buildPortfolioSeries(holdings.map((h) => ({ id: h.accountId, ...h })));
+  const dateLabel = (date: string) => DateTime.fromISO(date).toFormat("MMM d, yyyy");
 
-  const byDate = new Map<string, ChartRow>();
-  for (const h of holdingsWithPrices) {
-    const base = h.priceHistory[0].value;
-    for (const p of h.priceHistory) {
-      const row =
-        byDate.get(p.date) ??
-        ({ date: p.date, dateLabel: DateTime.fromISO(p.date).toFormat("MMM d, yyyy") } as ChartRow);
-      row[h.accountId] = (p.value / base) * 100;
-      byDate.set(p.date, row);
-    }
+  if (mode === "value") {
+    return {
+      rows: points.map((p) => ({
+        date: p.date,
+        dateLabel: dateLabel(p.date),
+        [VALUE_ID]: p.value,
+        [INVESTED_ID]: p.invested,
+      })),
+      series: [
+        { id: VALUE_ID, label: labels.value, isTotal: true },
+        { id: INVESTED_ID, label: labels.invested },
+      ],
+    };
   }
 
-  const rows = Array.from(byDate.values()).sort(
-    (a, b) => DateTime.fromISO(a.date).toMillis() - DateTime.fromISO(b.date).toMillis(),
-  );
-
-  // Total line: a weighted blend of each holding's own price index (weighted by its current
-  // share of portfolio market value), so it stays on the same indexed-to-100 scale as the
-  // other series -- unlike a raw money-weighted total, it isn't skewed by *when* lots were
-  // purchased, only by price performance, which is what belongs on a growth comparison chart.
-  const totalMarketValue = holdingsWithPrices.reduce((sum, h) => sum + h.marketValue, 0);
-  if (rows.length > 0 && totalMarketValue > 0) {
-    const cursors = holdingsWithPrices.map((h) => ({
-      weight: h.marketValue / totalMarketValue,
-      base: h.priceHistory[0].value,
-      prices: h.priceHistory,
-      priceIdx: 0,
-      lastIndex: null as number | null,
-    }));
-
-    for (const row of rows) {
-      let weightedIndex = 0;
-      let weightSeen = 0;
-      for (const c of cursors) {
-        while (c.priceIdx < c.prices.length && c.prices[c.priceIdx].date <= row.date) {
-          c.lastIndex = (c.prices[c.priceIdx].value / c.base) * 100;
-          c.priceIdx++;
-        }
-        if (c.lastIndex != null) {
-          weightedIndex += c.weight * c.lastIndex;
-          weightSeen += c.weight;
-        }
-      }
-      if (weightSeen > 0) row[TOTAL_ID] = weightedIndex / weightSeen;
-    }
-    series.push({ id: TOTAL_ID, label: totalLabel, isTotal: true });
-  }
-
+  const shown = holdings.filter((h) => points.some((p) => h.accountId in p.index));
+  const series: Series[] = shown.map((h) => ({ id: h.accountId, label: h.label }));
+  series.push({ id: TOTAL_ID, label: labels.total, isTotal: true });
+  const rows = points.map((p) => {
+    const row: ChartRow = { date: p.date, dateLabel: dateLabel(p.date), ...p.index };
+    if (p.totalIndex != null) row[TOTAL_ID] = p.totalIndex;
+    return row;
+  });
   return { rows, series };
 };
 
@@ -127,6 +104,13 @@ const IndexedTooltipContent = ({
       {payload.map((entry) => {
         const s = series.find((s) => s.id === entry.dataKey);
         const value = entry.value as number;
+        if (entry.dataKey === VALUE_ID || entry.dataKey === INVESTED_ID) {
+          return (
+            <span key={entry.dataKey} style={entryColorStyle(entry.color)}>
+              {s?.label}: {formatCurrency(value, locale, { compact: true })}
+            </span>
+          );
+        }
         const delta = value - 100;
         const deltaColor =
           delta > 0 ? "text-green-600" : delta < 0 ? "text-red-600" : "text-muted-foreground";
@@ -146,16 +130,48 @@ const IndexedTooltipContent = ({
   );
 };
 
+const ModeButton = ({
+  mode,
+  active,
+  onSelect,
+}: {
+  mode: Mode;
+  active: boolean;
+  onSelect: (mode: Mode) => void;
+}) => {
+  const { t } = useTranslation();
+  const handleClick = useCallback(() => onSelect(mode), [onSelect, mode]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-pressed={active}
+      className={cn(
+        "text-xs px-3 py-1 rounded-full border font-medium transition-colors",
+        active
+          ? "bg-brand/10 text-brand border-brand"
+          : "bg-background text-muted-foreground border-border hover:text-foreground",
+      )}
+    >
+      {t(`investments.chart.mode.${mode}`)}
+    </button>
+  );
+};
+
 export const HoldingsGrowthPlot = () => {
   const isNarrowViewport = useIsNarrowViewport();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
   const { t } = useTranslation();
   const { holdings, isLoading } = useHoldings();
 
+  const [mode, setMode] = useState<Mode>("return");
   const totalLabel = t("investments.chart.total");
+  const valueLabel = t("investments.chart.value");
+  const investedLabel = t("investments.chart.invested");
   const { rows: chartData, series } = useMemo(
-    () => buildIndexedRows(holdings, totalLabel),
-    [holdings, totalLabel],
+    () =>
+      buildRows(holdings, mode, { total: totalLabel, value: valueLabel, invested: investedLabel }),
+    [holdings, mode, totalLabel, valueLabel, investedLabel],
   );
 
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
@@ -178,6 +194,12 @@ export const HoldingsGrowthPlot = () => {
       </ChartTooltip>
     ),
     [visibleSeries],
+  );
+
+  const { locale } = useLocale();
+  const yTickFormatter = useCallback(
+    (v: number) => formatCurrency(v, locale, { compact: true }),
+    [locale],
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -204,7 +226,11 @@ export const HoldingsGrowthPlot = () => {
 
   return (
     <div className="flex flex-col w-full h-full gap-2">
-      <div className="flex flex-wrap gap-1.5 shrink-0">
+      <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+        {(["return", "value"] as const).map((m) => (
+          <ModeButton key={m} mode={m} active={mode === m} onSelect={setMode} />
+        ))}
+        <span className="w-px h-4 bg-border mx-1" />
         {series.map((s) => {
           const isHidden = hidden.has(s.id);
           const color = seriesColor(s);
@@ -253,6 +279,7 @@ export const HoldingsGrowthPlot = () => {
               tickLine={false}
               width={margin.left}
               domain={["auto", "auto"]}
+              tickFormatter={mode === "value" ? yTickFormatter : undefined}
             />
             <RechartsTooltip content={renderTooltipContent} />
             {visibleSeries.map((s) => (

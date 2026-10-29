@@ -406,3 +406,60 @@ export const uniqueTravelsOptions = <TDB extends AnyDB>({
     enabled: !!db && !!bookId,
   });
 };
+
+const getTripSplitsQuery = <TDB extends AnyDB>({
+  db,
+  user,
+  bookId,
+}: {
+  db: TDB;
+  user: string;
+  bookId: string;
+}) => {
+  const dbconf = getConfig(user);
+  const ft = fullTransactionsQuery(db);
+  const accountsFiltered = getAccountsClosureQuery(db, [dbconf.expenses]);
+
+  return db
+    .select({
+      trip: sql<string>`${ft.slNotes}`.as("trip"),
+      transactionId: ft.transactionId,
+      date: sql<string>`substr(${ft.datePosted}, 0, 11)`.as("date"),
+      description: ft.description,
+      accountId: ft.accountId,
+      accountName: subqueryColumnName<string>(accountsFiltered, accountsFiltered.name).as(
+        "account_name",
+      ),
+      value: sql<number>`${ft.value}`.as("value"),
+    })
+    .from(ft)
+    .innerJoin(accountsFiltered, eq(accountsFiltered.id, ft.accountId))
+    .where(
+      and(
+        eq(ft.bookId, bookId),
+        eq(sql<string>`substr(${ft.slNotes}, 0, ${dbconf.tripDesc.length + 1})`, dbconf.tripDesc),
+      ),
+    )
+    .orderBy(sql`date`);
+};
+export type TripSplit = Awaited<
+  ReturnType<ReturnType<typeof getTripSplitsQuery>["execute"]>
+>[number];
+
+/** Every expense split tagged as part of a trip, one row per split; trips are derived from it client-side. */
+export const tripSplitsOptions = <TDB extends AnyDB>({
+  db,
+  user,
+  bookId,
+}: {
+  db: TDB | undefined;
+  user: string | undefined;
+  bookId: string | undefined;
+}) => {
+  const enabled = !!db && !!bookId && !!user;
+  return queryOptions({
+    queryKey: ["tripSplits", user, bookId],
+    queryFn: !enabled ? skipToken : async () => getTripSplitsQuery({ db, user, bookId }).execute(),
+    enabled,
+  });
+};

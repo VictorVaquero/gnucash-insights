@@ -174,6 +174,8 @@ describe("db/queries/investments", () => {
         {
           id: VWCE_ACCOUNT_ID,
           name: "VWCE",
+          parentId: "acc-broker",
+          platform: "Broker",
           commodityId: VWCE_COMMODITY_ID,
           ticker: "VWCE",
           commodityName: "Vanguard FTSE All-World",
