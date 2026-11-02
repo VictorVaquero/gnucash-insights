@@ -65,13 +65,22 @@ export const KpiBlock = (props: { className?: string }) => {
   const prevRange = { startDate: prevMonth, endDate: latestMonth };
   const upToLatest = { endDate: latestMonth };
 
-  const earnings = -deflate(useSum(db, bookId, [dbconf.income], latestRange), latestDateKey);
+  // Income is booked gross with its taxes as an expense: earnings are what is left after tax,
+  // costs leave taxes out, and net (earnings - costs) is unchanged.
+  const earnings = -deflate(
+    useSum(db, bookId, [dbconf.income], latestRange) +
+      useSum(db, bookId, [dbconf.taxes], latestRange),
+    latestDateKey,
+  );
   const costs = deflate(
     useSum(db, bookId, [dbconf.expenses], { ...latestRange, ignoreAccounts: taxAccounts }),
     latestDateKey,
   );
   const netGain = earnings - costs;
-  const prevEarnings = -deflate(useSum(db, bookId, [dbconf.income], prevRange), prevDateKey);
+  const prevEarnings = -deflate(
+    useSum(db, bookId, [dbconf.income], prevRange) + useSum(db, bookId, [dbconf.taxes], prevRange),
+    prevDateKey,
+  );
   const prevCosts = deflate(
     useSum(db, bookId, [dbconf.expenses], { ...prevRange, ignoreAccounts: taxAccounts }),
     prevDateKey,

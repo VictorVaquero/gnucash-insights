@@ -8,14 +8,30 @@
     "analysis": "Análisis"
   },
   "routes": {
-    "home": { "title": "Inicio" },
-    "metadata": { "title": "Metadatos" },
-    "summary": { "title": "Resumen" },
-    "expenses": { "title": "Gastos" },
-    "travels": { "title": "Viajes" },
-    "analysis": { "title": "Análisis" },
-    "login": { "title": "Iniciar sesión" },
-    "investments": { "title": "Inversiones" }
+    "home": {
+      "title": "Inicio"
+    },
+    "metadata": {
+      "title": "Metadatos"
+    },
+    "summary": {
+      "title": "Resumen"
+    },
+    "expenses": {
+      "title": "Gastos"
+    },
+    "travels": {
+      "title": "Viajes"
+    },
+    "analysis": {
+      "title": "Análisis"
+    },
+    "login": {
+      "title": "Iniciar sesión"
+    },
+    "investments": {
+      "title": "Inversiones"
+    }
   },
   "common": {
     "collapseChart": "Reducir {{title}}",
@@ -81,7 +97,9 @@
       "expensesByCategory": "Gastos por categoría",
       "incomeByCategory": "Ingresos por categoría",
       "budgetVsActual": "Presupuesto vs Real",
-      "recurringExpenses": "Gastos recurrentes"
+      "recurringExpenses": "Gastos recurrentes",
+      "savingsRate": "Tasa de ahorro",
+      "forecast": "Previsión de patrimonio"
     },
     "sections": {
       "details": "Detalles",
@@ -124,7 +142,10 @@
     },
     "recurring": {
       "empty": "Aún no se han detectado cargos recurrentes.",
-      "monthsSeen": "{{seen}}/{{total}} meses"
+      "monthsSeen": "{{seen}}/{{total}} meses",
+      "total": "{{annual}} al año ({{monthly}}/mes) en cargos recurrentes.",
+      "perYear": "{{value}}/año",
+      "perMonth": "{{value}}/mes"
     },
     "savings": {
       "heading": "Tasa de ahorro",
@@ -164,13 +185,53 @@
       "vsLastYear": "vs año anterior",
       "topCategory": "Categoría principal",
       "topCategoryTooltip": "Categoría con más gasto este año",
-      "avgMonthly": "Media mensual"
+      "avgMonthly": "Media mensual",
+      "committed": "Comprometido",
+      "committedTooltip": "Parte del gasto de los últimos 12 meses que viene de cargos recurrentes (recibos, suscripciones)",
+      "vsLastYearTooltip": "Los mismos meses del año anterior frente a lo que va de este año"
     },
     "sections": {
       "thisYear": "Desglose {{year}}",
       "allYears": "Todos los años"
     },
-    "mobileYearWindow": "Mostrando los últimos {{count}} años. Gira la pantalla o usa una más ancha para ver el histórico completo."
+    "mobileYearWindow": "Mostrando los últimos {{count}} años. Gira la pantalla o usa una más ancha para ver el histórico completo.",
+    "unusual": {
+      "title": "Inusual este mes",
+      "vsNormal": "frente a un {{amount}} habitual"
+    },
+    "trends": {
+      "title": "Qué cuesta más",
+      "subtitle": "Últimos 12 meses frente a los 12 anteriores",
+      "bySpend": "Por gasto",
+      "byGrowth": "Mayor crecimiento",
+      "noGrowth": "Ninguna categoría está creciendo.",
+      "new": "Nueva",
+      "changeTooltip": "{{amount}} de diferencia frente a los 12 meses anteriores"
+    },
+    "fixedVariable": {
+      "title": "Gasto fijo y variable",
+      "fixed": "Fijo",
+      "variable": "Variable",
+      "summary": "El {{share}}% de tu gasto ya está comprometido ({{monthly}}/mes en cargos recurrentes). El resto es donde puedes recortar."
+    },
+    "heatmap": {
+      "title": "Mes por categoría",
+      "subtitle": "Últimos 12 meses. Más oscuro = más gasto en esa categoría; cada fila tiene su propia escala."
+    },
+    "payees": {
+      "title": "A dónde va",
+      "subtitle": "Últimos 12 meses, agrupado por descripción",
+      "times": "{{count}}×",
+      "avg": "{{amount}} de media"
+    },
+    "largest": {
+      "title": "Mayores compras"
+    },
+    "weekday": {
+      "title": "Gasto por día de la semana",
+      "subtitle": "Media gastada cada día, últimos 12 meses",
+      "average": "Media"
+    }
   },
   "travel": {
     "explorer": {
@@ -186,7 +247,11 @@
       "transactions": "Movimientos",
       "transactionsHeading": "Movimientos",
       "byCategory": "Gasto por categoría",
-      "sort": { "date": "Fecha", "total": "Coste total", "perDay": "Coste por día" }
+      "sort": {
+        "date": "Fecha",
+        "total": "Coste total",
+        "perDay": "Coste por día"
+      }
     },
     "sections": {
       "details": "Detalles"
@@ -309,7 +374,10 @@
       "total": "Total",
       "value": "Valor",
       "invested": "Aportado",
-      "mode": { "return": "Rendimiento", "value": "Valor" }
+      "mode": {
+        "return": "Rendimiento",
+        "value": "Valor"
+      }
     },
     "table": {
       "holding": "Activo",
@@ -330,6 +398,13 @@
       "nominal": "Anualizado",
       "real": "Anualizado (real)",
       "noHistory": "No hay historial de precios disponible."
+    },
+    "allocation": {
+      "title": "Distribución",
+      "empty": "No hay posiciones abiertas.",
+      "byHolding": "Por posición",
+      "byPlatform": "Por plataforma",
+      "concentrated": "El {{share}}% de tu cartera está en {{name}}. Una posición tan grande concentra el riesgo."
     }
   },
   "accountsDropdown": {
@@ -358,5 +433,28 @@
   "sidebar": {
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
+  },
+  "insights": {
+    "title": "Lo más destacado",
+    "anomaly": "{{name}} está inusualmente alto este mes: {{amount}} frente a unos {{baseline}} habituales.",
+    "savingsUp": "El último mes ahorraste el {{rate}}% de tus ingresos, {{diff}} puntos por encima de tu media de 12 meses ({{avg}}%).",
+    "savingsDown": "El último mes ahorraste el {{rate}}% de tus ingresos, {{diff}} puntos por debajo de tu media de 12 meses ({{avg}}%).",
+    "categoryUp": "{{name}} sube un {{pct}}% frente a los 12 meses anteriores (+{{amount}}).",
+    "categoryDown": "{{name}} baja un {{pct}}% frente a los 12 meses anteriores (−{{amount}}). Bien.",
+    "priceRise": "{{name}} se ha encarecido un {{pct}}%.",
+    "priceRiseMany": "{{name}} y {{count}} cargos recurrentes más se han encarecido (el primero: +{{pct}}%).",
+    "recurring": "{{count}} cargos recurrentes suman {{annual}} al año."
+  },
+  "savingsRate": {
+    "monthly": "Tasa de ahorro",
+    "average": "Media de 6 meses",
+    "empty": "Aún no hay datos suficientes."
+  },
+  "forecast": {
+    "actual": "Patrimonio neto",
+    "expected": "Proyección",
+    "range": "Rango probable",
+    "empty": "Aún no hay datos suficientes.",
+    "summary": "Con tu ritmo de ahorro reciente llegarías a unos {{value}} en 12 meses (probablemente entre {{low}} y {{high}}). No incluye el mercado."
   }
 }

@@ -183,7 +183,8 @@ export const IncomeExpensesPlot = () => {
   const { dateRange, hideAccounts, chartPeriodicity: charMode } = useSummaryPageContext();
   const { deflate } = useDeflator();
   const dbconf = getConfig(user);
-  // Taxes are not part of what these bars compare, whatever the user toggles in the dropdown.
+  // Income is booked gross and its taxes as an expense: the bars compare income after tax with
+  // spending without it, while net (gross income minus every expense) is the same either way.
   const hiddenAccounts = useMemo(
     () => [...hideAccounts, dbconf.taxes, ...dbconf.taxesAll],
     [hideAccounts, dbconf.taxes, dbconf.taxesAll],
@@ -204,7 +205,15 @@ export const IncomeExpensesPlot = () => {
       bookId,
       accountIds: [dbconf.income],
       periodicity: charMode,
-      hideAccounts: hiddenAccounts,
+      hideAccounts,
+    }),
+  );
+  const { data: taxes } = useQuery(
+    transactsSumOptions({
+      db,
+      bookId,
+      accountIds: [dbconf.taxes],
+      periodicity: charMode,
     }),
   );
   const { data: net } = useQuery(
@@ -213,12 +222,12 @@ export const IncomeExpensesPlot = () => {
       bookId,
       accountIds: [dbconf.expenses, dbconf.income],
       periodicity: charMode,
-      hideAccounts: hiddenAccounts,
+      hideAccounts,
     }),
   );
 
   const data = useMemo(() => {
-    if (net && income && expenses) {
+    if (net && income && expenses && taxes) {
       const registry = new Map<string, PlotData>();
 
       /**
@@ -239,6 +248,7 @@ export const IncomeExpensesPlot = () => {
       income.forEach(
         (d) => (getEntry(d.date, d.dateLabel).income = Math.abs(deflate(d.value, d.date))),
       );
+      taxes.forEach((d) => (getEntry(d.date, d.dateLabel).income -= deflate(d.value, d.date)));
       expenses.forEach(
         (d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(deflate(d.value, d.date))),
       );
@@ -253,7 +263,7 @@ export const IncomeExpensesPlot = () => {
           return timeA - timeB;
         });
     }
-  }, [net, income, expenses, dateRange, deflate]);
+  }, [net, income, expenses, taxes, dateRange, deflate]);
 
   if (!data || !dateRange)
     return (

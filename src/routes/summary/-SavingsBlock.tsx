@@ -27,12 +27,16 @@ const useSavings = (
     splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income], {
       startDate,
       endDate,
-      ignoreAccounts: [dbconf.taxes, ...dbconf.taxesAll],
     }),
   );
-  const { data: income } = useQuery(
+  const { data: grossIncome } = useQuery(
     splitSumOptions(db, bookId, [dbconf.income], { startDate, endDate }),
   );
+  const { data: taxes } = useQuery(
+    splitSumOptions(db, bookId, [dbconf.taxes], { startDate, endDate }),
+  );
+  // Income is booked gross (a credit, so negative) with its taxes as an expense.
+  const income = grossIncome == null ? undefined : -(grossIncome + (taxes ?? 0));
 
   const months = startDate && endDate ? endDate.diff(startDate, ["months"]).months : 1;
 
@@ -43,7 +47,7 @@ const useSavings = (
   return {
     value: formatCurrency(meanSavings, locale, { compact: true }),
     title: `${formatCurrency(-(savings ?? 0), locale, { compact: true })}/${formatCurrency(netIncome, locale, { compact: true })}\n${formatNumber(
-      ((savings ?? 0) / netIncome) * 100,
+      (-(savings ?? 0) / netIncome) * 100,
       locale,
       { digits: 0 },
     )}%`,

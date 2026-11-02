@@ -5,6 +5,7 @@ import { ChartCard } from "@/components/charts/ChartCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { holdingAccountsOptions } from "@/db/queries/investments";
 import { getConfig } from "@/db/utils";
+import { AllocationCard } from "./-AllocationCard";
 import { HoldingDetail } from "./-HoldingDetail";
 import { HoldingsTable } from "./-HoldingsTable";
 import { InflationToggle } from "./-InflationToggle";
@@ -33,6 +34,14 @@ const InvestmentsContent = () => {
           <HoldingsGrowthPlot />
         </ChartCard>
       </div>
+      <Card>
+        <CardContent className="pt-4">
+          <p className="mb-3 text-sm font-semibold tracking-tight">
+            {t("investments.allocation.title")}
+          </p>
+          <AllocationCard />
+        </CardContent>
+      </Card>
       <Card>
         <CardContent className="pt-4">
           <HoldingsTable />

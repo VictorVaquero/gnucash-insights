@@ -8,14 +8,30 @@
     "analysis": "Analysis"
   },
   "routes": {
-    "home": { "title": "Home" },
-    "metadata": { "title": "Metadata" },
-    "summary": { "title": "Summary" },
-    "expenses": { "title": "Expenses" },
-    "travels": { "title": "Travels" },
-    "analysis": { "title": "Analysis" },
-    "login": { "title": "Login" },
-    "investments": { "title": "Investments" }
+    "home": {
+      "title": "Home"
+    },
+    "metadata": {
+      "title": "Metadata"
+    },
+    "summary": {
+      "title": "Summary"
+    },
+    "expenses": {
+      "title": "Expenses"
+    },
+    "travels": {
+      "title": "Travels"
+    },
+    "analysis": {
+      "title": "Analysis"
+    },
+    "login": {
+      "title": "Login"
+    },
+    "investments": {
+      "title": "Investments"
+    }
   },
   "common": {
     "collapseChart": "Shrink {{title}}",
@@ -81,7 +97,9 @@
       "expensesByCategory": "Expenses by Category",
       "incomeByCategory": "Income by Category",
       "budgetVsActual": "Budget vs Actual",
-      "recurringExpenses": "Recurring Expenses"
+      "recurringExpenses": "Recurring Expenses",
+      "savingsRate": "Savings rate",
+      "forecast": "Net worth forecast"
     },
     "sections": {
       "details": "Details",
@@ -124,7 +142,10 @@
     },
     "recurring": {
       "empty": "No recurring charges detected yet.",
-      "monthsSeen": "{{seen}}/{{total}} mo"
+      "monthsSeen": "{{seen}}/{{total}} mo",
+      "total": "{{annual}} a year ({{monthly}}/month) in recurring charges.",
+      "perYear": "{{value}}/yr",
+      "perMonth": "{{value}}/mo"
     },
     "savings": {
       "heading": "Savings rate",
@@ -164,13 +185,53 @@
       "vsLastYear": "vs last year",
       "topCategory": "Top category",
       "topCategoryTooltip": "Highest-spending category this year",
-      "avgMonthly": "Avg. monthly"
+      "avgMonthly": "Avg. monthly",
+      "committed": "Committed",
+      "committedTooltip": "Share of your last 12 months of spending that comes from recurring charges (bills, subscriptions)",
+      "vsLastYearTooltip": "Same months of last year compared with this year so far"
     },
     "sections": {
       "thisYear": "{{year}} breakdown",
       "allYears": "All years"
     },
-    "mobileYearWindow": "Showing the last {{count}} years. Rotate or use a wider screen to see the full history."
+    "mobileYearWindow": "Showing the last {{count}} years. Rotate or use a wider screen to see the full history.",
+    "unusual": {
+      "title": "Unusual this month",
+      "vsNormal": "vs a normal {{amount}}"
+    },
+    "trends": {
+      "title": "What's costing more",
+      "subtitle": "Last 12 months vs the 12 before",
+      "bySpend": "By spend",
+      "byGrowth": "Fastest growing",
+      "noGrowth": "No category is growing.",
+      "new": "New",
+      "changeTooltip": "{{amount}} difference vs the previous 12 months"
+    },
+    "fixedVariable": {
+      "title": "Fixed vs variable spending",
+      "fixed": "Fixed",
+      "variable": "Variable",
+      "summary": "{{share}}% of your spending is already committed ({{monthly}}/month in recurring charges). The rest is where you can cut."
+    },
+    "heatmap": {
+      "title": "Month by category",
+      "subtitle": "Last 12 months. Darker = more for that category; each row is shaded on its own scale."
+    },
+    "payees": {
+      "title": "Where it goes",
+      "subtitle": "Last 12 months, grouped by description",
+      "times": "{{count}}×",
+      "avg": "{{amount}} avg"
+    },
+    "largest": {
+      "title": "Biggest purchases"
+    },
+    "weekday": {
+      "title": "Spending by weekday",
+      "subtitle": "Average spent on each day, last 12 months",
+      "average": "Average"
+    }
   },
   "travel": {
     "explorer": {
@@ -186,7 +247,11 @@
       "transactions": "Transactions",
       "transactionsHeading": "Transactions",
       "byCategory": "Spending by category",
-      "sort": { "date": "Date", "total": "Total cost", "perDay": "Cost per day" }
+      "sort": {
+        "date": "Date",
+        "total": "Total cost",
+        "perDay": "Cost per day"
+      }
     },
     "sections": {
       "details": "Details"
@@ -309,7 +374,10 @@
       "total": "Total",
       "value": "Value",
       "invested": "Invested",
-      "mode": { "return": "Return", "value": "Value" }
+      "mode": {
+        "return": "Return",
+        "value": "Value"
+      }
     },
     "table": {
       "holding": "Holding",
@@ -330,6 +398,13 @@
       "nominal": "Annualized",
       "real": "Annualized (real)",
       "noHistory": "No price history available."
+    },
+    "allocation": {
+      "title": "Allocation",
+      "empty": "No open holdings.",
+      "byHolding": "By holding",
+      "byPlatform": "By platform",
+      "concentrated": "{{share}}% of your portfolio is in {{name}}. A single position this large concentrates risk."
     }
   },
   "accountsDropdown": {
@@ -358,5 +433,28 @@
   "sidebar": {
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
+  },
+  "insights": {
+    "title": "What stands out",
+    "anomaly": "{{name}} is unusually high this month: {{amount}} vs about {{baseline}} normally.",
+    "savingsUp": "You saved {{rate}}% of your income last month, {{diff}} points above your 12-month average ({{avg}}%).",
+    "savingsDown": "You saved {{rate}}% of your income last month, {{diff}} points below your 12-month average ({{avg}}%).",
+    "categoryUp": "{{name}} is up {{pct}}% over the previous 12 months (+{{amount}}).",
+    "categoryDown": "{{name}} is down {{pct}}% over the previous 12 months (−{{amount}}). Nice.",
+    "priceRise": "{{name}} got {{pct}}% more expensive.",
+    "priceRiseMany": "{{name}} and {{count}} more recurring charges got more expensive (first: +{{pct}}%).",
+    "recurring": "{{count}} recurring charges add up to {{annual}} a year."
+  },
+  "savingsRate": {
+    "monthly": "Savings rate",
+    "average": "6-month average",
+    "empty": "Not enough data yet."
+  },
+  "forecast": {
+    "actual": "Net worth",
+    "expected": "Projection",
+    "range": "Likely range",
+    "empty": "Not enough data yet.",
+    "summary": "At your recent saving pace you would reach about {{value}} in 12 months (likely between {{low}} and {{high}}). Markets are not included."
   }
 }

@@ -15,6 +15,9 @@ import { ExpandableRegion } from "@/components/charts/ExpandableRegion";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { BalancesBlock } from "@/routes/summary/-BalancesBlock.tsx";
 import { BudgetVsActual } from "@/routes/summary/-BudgetVsActual.tsx";
+import { InsightsStrip } from "@/routes/summary/-InsightsStrip.tsx";
+import { ForecastPlot } from "@/routes/summary/-plots/ForecastPlot.tsx";
+import { SavingsRatePlot } from "@/routes/summary/-plots/SavingsRatePlot.tsx";
 import { KpiBlock } from "@/routes/summary/-KpiBlock.tsx";
 import { RecurringExpenses } from "@/routes/summary/-RecurringExpenses.tsx";
 import { SavingsBlock } from "@/routes/summary/-SavingsBlock.tsx";
@@ -40,6 +43,7 @@ const Summary = () => {
         <SettingsBlock />
         <div className="flex flex-col gap-y-6 md:flex-1">
           <KpiBlock />
+          <InsightsStrip />
           {/* Expanded: twice as tall, the rows below move down. */}
           <ExpandableRegion
             className="h-72 md:h-80 shrink-0"
@@ -93,6 +97,14 @@ const Summary = () => {
             </ExpandableRegion>
           </div>
         </div>
+        <ExpandableRegion className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ChartCard title={t("summary.charts.savingsRate")} expandedClassName={FULL_ROW}>
+            <SavingsRatePlot />
+          </ChartCard>
+          <ChartCard title={t("summary.charts.forecast")} expandedClassName={FULL_ROW}>
+            <ForecastPlot />
+          </ChartCard>
+        </ExpandableRegion>
         {/* Expanded: full width and taller, the other card moves below it. */}
         <ExpandableRegion className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ChartCard title={t("summary.charts.budgetVsActual")} expandedClassName={FULL_ROW}>

@@ -20,6 +20,14 @@ import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { CategoryHeatmap } from "./-components/CategoryHeatmap";
+import { CategoryTrends } from "./-components/CategoryTrends";
+import { FixedVariablePlot } from "./-components/FixedVariablePlot";
+import { LargestPurchases } from "./-components/LargestPurchases";
+import { TopPayees } from "./-components/TopPayees";
+import { UnusualSpending } from "./-components/UnusualSpending";
+import { WeekdayPlot } from "./-components/WeekdayPlot";
+import { useExpenseAnalytics, type ExpenseAnalytics } from "./-useExpenseAnalytics";
 
 // Types
 interface ExpenseData {
@@ -29,11 +37,6 @@ interface ExpenseData {
   total: number;
   [year: number]: number;
 }
-
-// The yearly query returns one dynamic column per year (e.g. "2024") alongside its typed
-// columns, so ExpensesYearlyRow has no index signature — this reads a year column safely.
-const yearValue = (row: ExpensesYearlyRow, year: number): number =>
-  Number((row as unknown as Record<string, number | undefined>)[year.toString()] ?? 0);
 
 // One tile per year: background intensity reflects that category's own spend range,
 // so a light-vs-dark row lets you spot a creeping category before reading the number.
@@ -81,32 +84,18 @@ const ExpenseRow = ({ item, yearRange }: { item: ExpenseData; yearRange: number[
   );
 };
 
-const ThisYearKpis = ({
-  total,
-  topCategory,
-  previousYearTotal,
-  currentYear,
-  monthsElapsed,
-}: {
-  total: ExpensesYearlyRow;
-  topCategory: ExpensesYearlyRow | undefined;
-  previousYearTotal: number | undefined;
-  currentYear: number;
-  monthsElapsed: number;
-}) => {
+const ThisYearKpis = ({ analytics }: { analytics: ExpenseAnalytics }) => {
   const { locale } = useLocale();
   const { t } = useTranslation();
 
-  const thisYearTotal = Math.abs(Number(total.last ?? 0));
-  const diff = previousYearTotal ? thisYearTotal - previousYearTotal : undefined;
-  const pct = diff != null && previousYearTotal ? (diff / previousYearTotal) * 100 : undefined;
-  const avgMonthly = monthsElapsed > 0 ? thisYearTotal / monthsElapsed : 0;
+  const { ytd, prevYtd, year, topCategoryYtd, monthsElapsed, fixedShare } = analytics;
+  const pct = prevYtd > 0 ? ((ytd - prevYtd) / prevYtd) * 100 : undefined;
 
   return (
-    <section className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
       <KpiCard
-        name={t("expenses.kpi.thisYear", { year: currentYear })}
-        value={formatCurrency(thisYearTotal, locale, { compact: true })}
+        name={t("expenses.kpi.thisYear", { year })}
+        value={formatCurrency(ytd, locale, { compact: true })}
         color="text-red-600"
       />
       <KpiCard
@@ -117,86 +106,25 @@ const ThisYearKpis = ({
             : "—"
         }
         color={pct == null ? undefined : pct > 0 ? "text-red-600" : "text-green-600"}
+        title={t("expenses.kpi.vsLastYearTooltip")}
       />
       <KpiCard
         name={t("expenses.kpi.topCategory")}
-        value={topCategory?.name ?? "—"}
+        value={topCategoryYtd?.name ?? "—"}
         title={t("expenses.kpi.topCategoryTooltip")}
       />
       <KpiCard
         name={t("expenses.kpi.avgMonthly")}
-        value={formatCurrency(avgMonthly, locale, { compact: true })}
+        value={formatCurrency(monthsElapsed > 0 ? ytd / monthsElapsed : 0, locale, {
+          compact: true,
+        })}
+      />
+      <KpiCard
+        name={t("expenses.kpi.committed")}
+        value={`${formatNumber(fixedShare * 100, locale, { digits: 0 })}%`}
+        title={t("expenses.kpi.committedTooltip")}
       />
     </section>
-  );
-};
-
-// Ranked, flat breakdown of this year's top-level categories — the "what's driving this
-// year" read that the year-by-year tree below doesn't answer at a glance.
-const ThisYearBreakdown = ({
-  categories,
-  currentYear,
-  previousYear,
-}: {
-  categories: ExpensesYearlyRow[];
-  currentYear: number;
-  previousYear: number | undefined;
-}) => {
-  const { locale } = useLocale();
-  const { t } = useTranslation();
-
-  const rows = useMemo(() => {
-    const withTotals = categories
-      .map((row) => ({
-        row,
-        value: Math.abs(yearValue(row, currentYear)),
-        previousValue: previousYear != null ? Math.abs(yearValue(row, previousYear)) : undefined,
-      }))
-      .filter(({ value }) => value > 0)
-      .sort((a, b) => b.value - a.value);
-    const max = withTotals[0]?.value ?? 0;
-    return withTotals.map(({ row, value, previousValue }) => ({
-      row,
-      value,
-      max,
-      pct: previousValue ? ((value - previousValue) / previousValue) * 100 : undefined,
-    }));
-  }, [categories, currentYear, previousYear]);
-
-  if (rows.length === 0) return null;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("expenses.sections.thisYear", { year: currentYear })}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-1">
-        {rows.map(({ row, value, max, pct }) => (
-          <div key={row.id} className="flex items-center gap-3 py-1.5">
-            <span className="flex-1 min-w-0 truncate text-sm font-medium">{row.name}</span>
-            <div className="hidden sm:block w-24 h-1.5 rounded-full bg-muted overflow-hidden shrink-0">
-              <div
-                className="h-full rounded-full bg-brand"
-                style={{ width: `${max > 0 ? (value / max) * 100 : 0}%` }}
-              />
-            </div>
-            <span className="w-16 sm:w-20 text-right text-sm font-semibold tabular-nums shrink-0">
-              {formatCurrency(value, locale, { digits: 0, compact: true })}
-            </span>
-            <span
-              className={cn(
-                "w-14 text-right text-xs font-semibold tabular-nums shrink-0",
-                pct == null ? "text-muted-foreground" : pct > 0 ? "text-red-600" : "text-green-600",
-              )}
-            >
-              {pct != null
-                ? `${pct > 0 ? "▲" : "▼"} ${formatNumber(Math.abs(pct), locale, { digits: 0 })}%`
-                : "—"}
-            </span>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 };
 
@@ -213,6 +141,7 @@ const Expenses = () => {
   const isNarrow = useIsNarrowViewport();
 
   const { data, isSuccess } = useQuery(yearlyExpensesOptions({ db, bookId }));
+  const { analytics } = useExpenseAnalytics();
   const dbConfig = getConfig(user);
 
   // 1. Calculate Year Range
@@ -226,33 +155,12 @@ const Expenses = () => {
     () => (isNarrow ? fullYearRange.slice(-MOBILE_YEAR_WINDOW) : fullYearRange),
     [fullYearRange, isNarrow],
   );
-  const currentYear = fullYearRange[fullYearRange.length - 1];
-  const previousYear = fullYearRange[fullYearRange.length - 2];
 
   // 2. Process Hierarchy
   const head = useMemo(
     () => data?.find((d: ExpensesYearlyRow) => d.id === dbConfig.expenses),
     [data, dbConfig.expenses],
   );
-  const topCategory = useMemo(() => {
-    if (!data || !currentYear) return undefined;
-    return data
-      .filter((d: ExpensesYearlyRow) => d.id !== head?.id)
-      .reduce<ExpensesYearlyRow | undefined>((best, row) => {
-        const value = Math.abs(yearValue(row, currentYear));
-        const bestValue = best ? Math.abs(yearValue(best, currentYear)) : -Infinity;
-        return value > bestValue ? row : best;
-      }, undefined);
-  }, [data, head?.id, currentYear]);
-  const previousYearTotal = useMemo(() => {
-    if (!head || !previousYear) return undefined;
-    return Math.abs(yearValue(head, previousYear));
-  }, [head, previousYear]);
-  const topLevelCategories = useMemo(
-    () => data?.filter((d: ExpensesYearlyRow) => d.parentId === head?.id) ?? [],
-    [data, head?.id],
-  );
-
   const hierarchyList = useMemo(() => {
     if (!isSuccess || !data || !from || numMonths == null) return undefined;
     const others = data.filter((d: ExpensesYearlyRow) => d.id !== head?.id);
@@ -284,22 +192,32 @@ const Expenses = () => {
         {t("routes.expenses.title")}
       </h1>
 
-      {currentYear != null && to != null && (
-        <ThisYearKpis
-          total={head}
-          topCategory={topCategory}
-          previousYearTotal={previousYearTotal}
-          currentYear={currentYear}
-          monthsElapsed={to.diff(to.startOf("year"), "months").months + 1}
-        />
-      )}
+      {analytics && <ThisYearKpis analytics={analytics} />}
 
-      {currentYear != null && (
-        <ThisYearBreakdown
-          categories={topLevelCategories}
-          currentYear={currentYear}
-          previousYear={previousYear}
-        />
+      {analytics && (
+        <>
+          <UnusualSpending anomalies={analytics.anomalies} />
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <CategoryTrends trends={analytics.trends} />
+            <FixedVariablePlot
+              data={analytics.fixedVariable}
+              fixedShare={analytics.fixedShare}
+              fixed12={analytics.fixed12}
+            />
+          </div>
+          <CategoryHeatmap
+            txs={analytics.recent}
+            months={analytics.months12}
+            trends={analytics.trends}
+          />
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+            <TopPayees payees={analytics.payees} />
+            <div className="flex flex-col gap-6">
+              <WeekdayPlot stats={analytics.weekdays} />
+              <LargestPurchases txs={analytics.largest} />
+            </div>
+          </div>
+        </>
       )}
 
       <Card>
