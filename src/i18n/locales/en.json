@@ -467,7 +467,10 @@
   "outliers": {
     "excluded": "Without {{names}}",
     "included": "Including everything",
-    "tooltip": "One-off purchases ({{names}}) distort averages and trends. Click to include or leave them out of every figure."
+    "tooltip": "One-off purchases ({{names}}) distort averages and trends. Click to include or leave them out of every figure.",
+    "none": "No outliers selected",
+    "configure": "Choose outlier accounts",
+    "help": "Accounts (and their sub-accounts) treated as one-off purchases. Tick the ones to leave out of the figures."
   },
   "quality": {
     "lastEntry": "Last transaction: {{date}} ({{days}} days ago).",

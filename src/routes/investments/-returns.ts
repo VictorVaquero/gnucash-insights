@@ -2,8 +2,8 @@ import type { Cashflow } from "@/common/finance";
 import { xirr } from "@/common/finance";
 import type { Lot, PricePoint } from "./-useHoldings";
 
-/** Below this, an annualised rate is extrapolating a few months and is shown as period return only. */
-export const MIN_ANNUALIZE_DAYS = 365;
+/** Below this, even an annualised rate is only a few days extrapolated, so it is left out. */
+export const MIN_ANNUALIZE_DAYS = 30;
 
 const CASH_NAME = /\b(cash|efectivo|liquidez|saldo|wallet|monedero)\b/i;
 
@@ -28,8 +28,8 @@ export const spanDays = (cashflows: Cashflow[]): number => {
 };
 
 /**
- * Annualised return, only when the holding lived long enough for it to mean something.
- * A closed position ends at its last sale -- no stale market value is added -- and open ones
+ * Return annualised over the period the holding was actually open (first purchase to last
+ * sale, or today if still held). A closed position ends at its last sale -- no stale market value is added -- and open ones
  * end today with their current value.
  */
 export const annualizedReturn = (cashflows: Cashflow[]): number | null =>

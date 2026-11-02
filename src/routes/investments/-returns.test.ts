@@ -11,13 +11,21 @@ describe("isCashLike", () => {
 });
 
 describe("annualizedReturn", () => {
-  it("skips holdings that lived under a year", () => {
+  it("annualises over the open period, not a full year", () => {
     const cf = [
       { date: "2024-01-01", amount: -100 },
-      { date: "2024-06-01", amount: 120 },
+      { date: "2024-07-01", amount: 110 },
     ];
-    expect(spanDays(cf)).toBe(152);
-    expect(annualizedReturn(cf)).toBeNull();
+    expect(spanDays(cf)).toBe(182);
+    expect(annualizedReturn(cf)).toBeCloseTo(Math.pow(1.1, 365 / 182) - 1, 2);
+  });
+  it("skips spans of a few days", () => {
+    expect(
+      annualizedReturn([
+        { date: "2024-01-01", amount: -100 },
+        { date: "2024-01-05", amount: 110 },
+      ]),
+    ).toBeNull();
   });
   it("annualises longer ones", () => {
     const r = annualizedReturn([

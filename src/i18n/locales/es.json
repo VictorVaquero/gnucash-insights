@@ -467,7 +467,10 @@
   "outliers": {
     "excluded": "Sin {{names}}",
     "included": "Con todo incluido",
-    "tooltip": "Compras puntuales ({{names}}) que distorsionan medias y tendencias. Pulsa para incluirlas o dejarlas fuera de todas las cifras."
+    "tooltip": "Compras puntuales ({{names}}) que distorsionan medias y tendencias. Pulsa para incluirlas o dejarlas fuera de todas las cifras.",
+    "none": "Sin outliers elegidos",
+    "configure": "Elegir cuentas outlier",
+    "help": "Cuentas (y sus subcuentas) tratadas como compras puntuales. Marca las que quieras dejar fuera de las cifras."
   },
   "quality": {
     "lastEntry": "Última transacción: {{date}} (hace {{days}} días).",

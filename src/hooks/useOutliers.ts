@@ -6,12 +6,13 @@ import { accountsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 
-/** One-off purchases (the van) that distort every average; left out unless asked for. */
-const OUTLIER_ACCOUNT_IDS = [
+/** Default pick: the van purchase. The user can change the list from the toggle's menu. */
+const DEFAULT_OUTLIERS = [
   "8435fd4bfa974eaf89d1e91576470074", // Furgo
 ];
 
 const STORAGE_KEY = "outliers-excluded";
+const SELECTION_KEY = "outliers-accounts";
 const listeners = new Set<() => void>();
 
 const read = (): boolean => {
@@ -22,7 +23,23 @@ const read = (): boolean => {
   }
 };
 
+const readSelection = (): string[] => {
+  try {
+    const raw = localStorage.getItem(SELECTION_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter((x): x is string => typeof x === "string");
+    }
+  } catch {
+    // fall through to the default
+  }
+  return DEFAULT_OUTLIERS;
+};
+
 let current = read();
+let selection = readSelection();
+
+const notify = () => listeners.forEach((l) => l());
 
 const setExcludeOutliers = (value: boolean) => {
   current = value;
@@ -31,8 +48,21 @@ const setExcludeOutliers = (value: boolean) => {
   } catch {
     // storage unavailable: the choice just lasts for this page view
   }
-  listeners.forEach((l) => l());
+  notify();
 };
+
+const setSelection = (ids: string[]) => {
+  selection = ids;
+  try {
+    localStorage.setItem(SELECTION_KEY, JSON.stringify(ids));
+  } catch {
+    // storage unavailable: the choice just lasts for this page view
+  }
+  notify();
+};
+
+const toggleOutlierAccount = (id: string) =>
+  setSelection(selection.includes(id) ? selection.filter((x) => x !== id) : [...selection, id]);
 
 const subscribe = (cb: () => void) => {
   listeners.add(cb);
@@ -64,6 +94,7 @@ export const withDescendants = (
  */
 export const useOutliers = () => {
   const exclude = useSyncExternalStore(subscribe, () => current);
+  const selected = useSyncExternalStore(subscribe, () => selection);
   const { user } = useAuth();
   const { db } = useDB();
   const { bookId } = useBook();
@@ -73,12 +104,12 @@ export const useOutliers = () => {
   );
 
   const all = useMemo(
-    () => (accounts ? withDescendants(OUTLIER_ACCOUNT_IDS, accounts) : OUTLIER_ACCOUNT_IDS),
-    [accounts],
+    () => (accounts ? withDescendants(selected, accounts) : selected),
+    [accounts, selected],
   );
   const names = useMemo(
-    () => (accounts ?? []).filter((a) => OUTLIER_ACCOUNT_IDS.includes(a.id)).map((a) => a.name),
-    [accounts],
+    () => (accounts ?? []).filter((a) => selected.includes(a.id)).map((a) => a.name),
+    [accounts, selected],
   );
   const accountIds = useMemo(() => (exclude ? all : []), [exclude, all]);
   return {
@@ -86,6 +117,9 @@ export const useOutliers = () => {
     setExclude: setExcludeOutliers,
     accountIds,
     names,
+    selected,
+    toggleAccount: toggleOutlierAccount,
+    accounts: accounts ?? [],
     hasOutliers: names.length > 0,
   };
 };
