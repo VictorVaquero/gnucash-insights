@@ -1,3 +1,4 @@
+import { InvestmentsPageContextProvider } from "@/routes/investments/-investmentsPageContext";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,7 +23,7 @@ import { useSummaryAnalytics } from "../-useSummaryAnalytics";
 const axisTick = { fontSize: 10, fill: "currentColor" };
 
 /** Net worth for the last two years, then a 12-month projection with an uncertainty band. */
-export const ForecastPlot = () => {
+const ForecastPlotInner = () => {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const { months, forecast } = useSummaryAnalytics();
@@ -128,3 +129,9 @@ export const ForecastPlot = () => {
     </div>
   );
 };
+
+export const ForecastPlot = () => (
+  <InvestmentsPageContextProvider>
+    <ForecastPlotInner />
+  </InvestmentsPageContextProvider>
+);

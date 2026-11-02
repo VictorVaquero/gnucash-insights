@@ -9,6 +9,7 @@ export const ROUTES = [
   "expenses",
   "travels",
   "investments",
+  "quality",
   "analysis?query=%7B%7D",
 ];
 

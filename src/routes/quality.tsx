@@ -1,3 +1,4 @@
+import { InvestmentsPageContextProvider } from "@/routes/investments/-investmentsPageContext";
 import {
   faCircleCheck,
   faCircleExclamation,
@@ -51,7 +52,7 @@ const IssueCard = ({ issue }: { issue: QualityIssue }) => {
   );
 };
 
-const Quality = () => {
+const QualityInner = () => {
   const { t } = useTranslation();
   const { db } = useDB();
   const { bookId } = useBook();
@@ -103,6 +104,12 @@ const Quality = () => {
     </div>
   );
 };
+
+export const Quality = () => (
+  <InvestmentsPageContextProvider>
+    <QualityInner />
+  </InvestmentsPageContextProvider>
+);
 
 export const Route = createFileRoute("/quality")({
   component: Quality,
