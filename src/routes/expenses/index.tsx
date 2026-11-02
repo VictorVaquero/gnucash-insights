@@ -11,7 +11,9 @@ import {
 } from "@/common/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/KpiCard";
-import { OutlierToggle } from "@/components/OutlierToggle";
+import { MultiSelectTree } from "@/components/features/AccountsDropdown";
+import { accountsOptions } from "@/db/queries/global";
+import { useTaxAccountIds } from "@/hooks/useTaxes";
 import { useOutliers } from "@/hooks/useOutliers";
 import { TreeList } from "@/components/TreeList";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -144,10 +146,11 @@ const Expenses = () => {
 
   const dbConfig = getConfig(user);
   const { accountIds: outlierIds } = useOutliers();
+  const taxIds = useTaxAccountIds();
   // Taxes are shown apart from spending; outliers only when the user left them out.
-  const ignoreAccounts = useMemo(
-    () => [dbConfig.taxes, ...dbConfig.taxesAll, ...outlierIds],
-    [dbConfig.taxes, dbConfig.taxesAll, outlierIds],
+  const ignoreAccounts = useMemo(() => [...taxIds, ...outlierIds], [taxIds, outlierIds]);
+  const { data: expenseAccounts } = useQuery(
+    accountsOptions({ db, bookId, accountIds: [dbConfig.expenses] }),
   );
   const { data, isSuccess } = useQuery(yearlyExpensesOptions({ db, bookId, ignoreAccounts }));
   const { analytics } = useExpenseAnalytics();
@@ -200,7 +203,7 @@ const Expenses = () => {
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {t("routes.expenses.title")}
         </h1>
-        <OutlierToggle />
+        <MultiSelectTree options={expenseAccounts ?? []} />
       </div>
 
       {analytics && <ThisYearKpis analytics={analytics} />}

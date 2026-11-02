@@ -10,6 +10,7 @@ import { splitSumOptions } from "@/db/queries/global";
 import { AnyDB } from "@/db/dbType";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useTaxAccountIds } from "@/hooks/useTaxes";
 import { useOutliers } from "@/hooks/useOutliers";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,7 @@ export const KpiBlock = (props: { className?: string }) => {
   const { t } = useTranslation();
   const { deflate } = useDeflator();
   const { accountIds: outlierIds } = useOutliers();
-  const taxAccounts = [dbconf.taxes, ...dbconf.taxesAll];
+  const taxAccounts = useTaxAccountIds();
   const costIgnore = [...taxAccounts, ...outlierIds];
   const prevMonth = latestMonth?.minus({ months: 1 });
   const latestDateKey = latestMonth?.toISODate() ?? "";

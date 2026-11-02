@@ -11,6 +11,7 @@ import { AccountsData, accountsOptions } from "@/db/queries/global";
 import { TransactData, transactByAccountOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useTaxByPeriod } from "@/hooks/useTaxes";
 import { useLocale } from "@/hooks/useLocale";
 import { useSummaryPageContext } from "../-summaryPageContext";
 import { useDeflator } from "../-useDeflator";
@@ -76,7 +77,8 @@ export const DetailedIncomeBarPlot = () => {
   const { bookId } = useBook();
   const { user } = useAuth();
   const dbconfig = getConfig(user);
-  const { dateRange, chartPeriodicity } = useSummaryPageContext();
+  const { dateRange, chartPeriodicity, hideAccounts } = useSummaryPageContext();
+  const { taxes } = useTaxByPeriod(chartPeriodicity, hideAccounts);
   const { deflate } = useDeflator();
   const { locale } = useLocale();
   const { t } = useTranslation();
@@ -90,10 +92,19 @@ export const DetailedIncomeBarPlot = () => {
       periodicity: chartPeriodicity,
       select: useCallback(
         (rawData: TransactData) => {
-          if (rawData) {
+          if (rawData && taxes) {
+            // Taxes (income tax, social security, ...) come off the main income source, the
+            // account that earned the most, so the base salary is shown after tax.
+            const totals = new Map<string, number>();
+            for (const d of rawData)
+              totals.set(d.accountId, (totals.get(d.accountId) ?? 0) - d.value);
+            const base = [...totals].sort((a, b) => b[1] - a[1])[0]?.[0];
             const { data, keys } = pivotData(
               rawData
-                .map((d) => ({ ...d, value: -deflate(d.value, d.date) }))
+                .map((d) => {
+                  const tax = d.accountId === base ? (taxes.get(d.date) ?? 0) : 0;
+                  return { ...d, value: -deflate(d.value, d.date) - deflate(tax, d.date) };
+                })
                 .filter((d) => d.date >= dateRange.from.toString())
                 .filter((d) => d.date <= dateRange.to.toString()),
             );
@@ -101,7 +112,7 @@ export const DetailedIncomeBarPlot = () => {
           }
           return { data: undefined, keys: undefined };
         },
-        [dateRange, deflate],
+        [dateRange, deflate, taxes],
       ),
     }),
   );

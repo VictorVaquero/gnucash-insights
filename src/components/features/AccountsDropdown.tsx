@@ -5,7 +5,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSummaryPageContext } from "@/routes/summary/-summaryPageContext";
+import { useOutliers } from "@/hooks/useOutliers";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -58,7 +58,7 @@ const TreeNode = ({ node, level, selected, onToggle }: TreeNodeProps) => {
 };
 
 export function MultiSelectTree({ options }: MultiSelectTreeProps) {
-  const { manualHideAccounts: selected, toggleHideAccount: onToggle } = useSummaryPageContext();
+  const { selected, toggleAccount: onToggle } = useOutliers();
   const [search, setSearch] = useState("");
   const { t } = useTranslation();
   const handleSearchChange = useCallback(

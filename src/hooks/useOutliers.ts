@@ -6,22 +6,13 @@ import { accountsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 
-/** Default pick: the van purchase. The user can change the list from the toggle's menu. */
+/** Default pick: the van purchase. The user changes the list from the "hide accounts" dropdown. */
 const DEFAULT_OUTLIERS = [
   "8435fd4bfa974eaf89d1e91576470074", // Furgo
 ];
 
-const STORAGE_KEY = "outliers-excluded";
 const SELECTION_KEY = "outliers-accounts";
 const listeners = new Set<() => void>();
-
-const read = (): boolean => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) !== "0";
-  } catch {
-    return true;
-  }
-};
 
 const readSelection = (): string[] => {
   try {
@@ -36,20 +27,9 @@ const readSelection = (): string[] => {
   return DEFAULT_OUTLIERS;
 };
 
-let current = read();
 let selection = readSelection();
 
 const notify = () => listeners.forEach((l) => l());
-
-const setExcludeOutliers = (value: boolean) => {
-  current = value;
-  try {
-    localStorage.setItem(STORAGE_KEY, value ? "1" : "0");
-  } catch {
-    // storage unavailable: the choice just lasts for this page view
-  }
-  notify();
-};
 
 const setSelection = (ids: string[]) => {
   selection = ids;
@@ -93,7 +73,6 @@ export const withDescendants = (
  * the list to ignore (empty when outliers are included) and `names` what is being left out.
  */
 export const useOutliers = () => {
-  const exclude = useSyncExternalStore(subscribe, () => current);
   const selected = useSyncExternalStore(subscribe, () => selection);
   const { user } = useAuth();
   const { db } = useDB();
@@ -111,11 +90,8 @@ export const useOutliers = () => {
     () => (accounts ?? []).filter((a) => selected.includes(a.id)).map((a) => a.name),
     [accounts, selected],
   );
-  const accountIds = useMemo(() => (exclude ? all : []), [exclude, all]);
   return {
-    exclude,
-    setExclude: setExcludeOutliers,
-    accountIds,
+    accountIds: all,
     names,
     selected,
     toggleAccount: toggleOutlierAccount,

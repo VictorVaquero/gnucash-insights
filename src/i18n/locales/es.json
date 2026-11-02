@@ -464,14 +464,6 @@
     "summary": "Con tu ritmo de ahorro reciente llegarías a unos {{value}} en 12 meses (probablemente entre {{low}} y {{high}}). Sumando la rentabilidad histórica de tu cartera serían unos {{market}}.",
     "withMarket": "Con rentabilidad del mercado"
   },
-  "outliers": {
-    "excluded": "Sin {{names}}",
-    "included": "Con todo incluido",
-    "tooltip": "Compras puntuales ({{names}}) que distorsionan medias y tendencias. Pulsa para incluirlas o dejarlas fuera de todas las cifras.",
-    "none": "Sin outliers elegidos",
-    "configure": "Elegir cuentas outlier",
-    "help": "Cuentas (y sus subcuentas) tratadas como compras puntuales. Marca las que quieras dejar fuera de las cifras."
-  },
   "quality": {
     "lastEntry": "Última transacción: {{date}} (hace {{days}} días).",
     "noData": "Sin transacciones.",

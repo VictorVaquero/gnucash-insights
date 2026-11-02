@@ -24,6 +24,7 @@ import { transactsSumOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { useTaxByPeriod } from "@/hooks/useTaxes";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
 import { useSummaryPageContext } from "../-summaryPageContext";
@@ -183,22 +184,10 @@ export const IncomeExpensesPlot = () => {
   const { dateRange, hideAccounts, chartPeriodicity: charMode } = useSummaryPageContext();
   const { deflate } = useDeflator();
   const dbconf = getConfig(user);
-  // Income is booked gross and its taxes as an expense: the bars compare income after tax with
-  // spending without it, while net (gross income minus every expense) is the same either way.
-  const hiddenAccounts = useMemo(
-    () => [...hideAccounts, dbconf.taxes, ...dbconf.taxesAll],
-    [hideAccounts, dbconf.taxes, dbconf.taxesAll],
-  );
-
-  const { data: expenses } = useQuery(
-    transactsSumOptions({
-      db,
-      bookId,
-      accountIds: [dbconf.expenses],
-      periodicity: charMode,
-      hideAccounts: hiddenAccounts,
-    }),
-  );
+  // Income is booked gross with its taxes as expenses. Tax is measured once (all expenses minus
+  // the same expenses without tax accounts) and used for every figure, so income after tax,
+  // spending without tax and the net always add up.
+  const { taxes, spending: expenses } = useTaxByPeriod(charMode, hideAccounts);
   const { data: income } = useQuery(
     transactsSumOptions({
       db,
@@ -208,32 +197,10 @@ export const IncomeExpensesPlot = () => {
       hideAccounts,
     }),
   );
-  const { data: taxes } = useQuery(
-    transactsSumOptions({
-      db,
-      bookId,
-      accountIds: [dbconf.taxes],
-      periodicity: charMode,
-    }),
-  );
-  const { data: net } = useQuery(
-    transactsSumOptions({
-      db,
-      bookId,
-      accountIds: [dbconf.expenses, dbconf.income],
-      periodicity: charMode,
-      hideAccounts,
-    }),
-  );
 
   const data = useMemo(() => {
-    if (net && income && expenses && taxes) {
+    if (income && expenses && taxes) {
       const registry = new Map<string, PlotData>();
-
-      /**
-       * Internal helper to ensure we always work with a
-       * fully initialized PlotData object.
-       */
       const getEntry = (date: string, dateLabel: string): PlotData => {
         let entry = registry.get(date);
         if (!entry) {
@@ -243,27 +210,19 @@ export const IncomeExpensesPlot = () => {
         return entry;
       };
 
-      // Populate the Map
-      net.forEach((d) => (getEntry(d.date, d.dateLabel).net = -deflate(d.value, d.date)));
-      income.forEach(
-        (d) => (getEntry(d.date, d.dateLabel).income = Math.abs(deflate(d.value, d.date))),
-      );
-      taxes.forEach((d) => (getEntry(d.date, d.dateLabel).income -= deflate(d.value, d.date)));
-      expenses.forEach(
-        (d) => (getEntry(d.date, d.dateLabel).expenses = Math.abs(deflate(d.value, d.date))),
-      );
+      income.forEach((d) => (getEntry(d.date, d.dateLabel).income = -deflate(d.value, d.date)));
+      expenses.forEach((d) => (getEntry(d.date, d.dateLabel).expenses = deflate(d.value, d.date)));
+      registry.forEach((entry, date) => {
+        entry.income -= deflate(taxes.get(date) ?? 0, date);
+        entry.net = entry.income - entry.expenses;
+      });
 
-      // Convert to array and sort by date chronologically
       return Array.from(registry.values())
         .filter((d) => d.date >= dateRange.from.toString())
         .filter((d) => d.date <= dateRange.to.toString())
-        .sort((a, b) => {
-          const timeA = new Date(a.date).getTime();
-          const timeB = new Date(b.date).getTime();
-          return timeA - timeB;
-        });
+        .sort((a, b) => a.date.localeCompare(b.date));
     }
-  }, [net, income, expenses, taxes, dateRange, deflate]);
+  }, [income, expenses, taxes, dateRange, deflate]);
 
   if (!data || !dateRange)
     return (

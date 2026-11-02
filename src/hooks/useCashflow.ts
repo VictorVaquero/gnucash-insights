@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions, fullTransactionsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useTaxAccountIds } from "@/hooks/useTaxes";
 import { useOutliers } from "@/hooks/useOutliers";
 
 /** Month-by-month earnings, spending, savings and net worth, consistent with the KPI cards. */
@@ -15,6 +16,7 @@ export const useCashflow = () => {
   const { bookId } = useBook();
   const dbconf = getConfig(user);
   const { accountIds: outlierIds } = useOutliers();
+  const allTaxIds = useTaxAccountIds();
 
   const txQuery = useQuery(fullTransactionsOptions(db, bookId));
   const taxQuery = useQuery(accountsOptions({ db, bookId, accountIds: [dbconf.taxes] }));
@@ -23,7 +25,7 @@ export const useCashflow = () => {
 
   const data = useMemo(() => {
     if (!txQuery.data || !taxQuery.data || !assetsQuery.data || !liabilityQuery.data) return [];
-    const taxIds = new Set([...taxQuery.data.map((a) => a.id), ...dbconf.taxesAll]);
+    const taxIds = new Set([...taxQuery.data.map((a) => a.id), ...allTaxIds]);
     const worthIds = new Set([
       ...assetsQuery.data.map((a) => a.id),
       ...liabilityQuery.data.map((a) => a.id),
@@ -43,14 +45,7 @@ export const useCashflow = () => {
       });
     }
     return buildCashflow(splits);
-  }, [
-    txQuery.data,
-    taxQuery.data,
-    assetsQuery.data,
-    liabilityQuery.data,
-    dbconf.taxesAll,
-    outlierIds,
-  ]);
+  }, [txQuery.data, taxQuery.data, assetsQuery.data, liabilityQuery.data, allTaxIds, outlierIds]);
 
   return { data, isLoading: txQuery.isLoading };
 };

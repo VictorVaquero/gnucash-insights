@@ -81,7 +81,10 @@ const buildRows = (
     };
   }
 
-  const shown = holdings.filter((h) => points.some((p) => h.accountId in p.index));
+  // A line stuck at 100 (cash, or something that never moved) says nothing, so it is left out.
+  const moved = (id: string) =>
+    points.some((p) => id in p.index && Math.abs(p.index[id] - 100) >= 0.05);
+  const shown = holdings.filter((h) => !h.isCash && moved(h.accountId));
   const series: Series[] = shown.map((h) => ({ id: h.accountId, label: h.label }));
   series.push({ id: TOTAL_ID, label: labels.total, isTotal: true });
   const rows = points.map((p) => {

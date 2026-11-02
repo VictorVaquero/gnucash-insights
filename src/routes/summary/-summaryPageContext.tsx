@@ -18,11 +18,8 @@ type AccountId = string;
 
 interface SummaryContextType {
   // Account you want to see
-  /** Accounts left out of every figure: the ones picked by hand plus the outliers, if excluded. */
+  /** Accounts (with their sub-accounts) the user chose to leave out of every figure. */
   hideAccounts: AccountId[];
-  /** Only the accounts the user ticked in the dropdown. */
-  manualHideAccounts: AccountId[];
-  toggleHideAccount: (accountId: AccountId) => void;
 
   // Dates you want to see
   dateRange: DateRange;
@@ -47,19 +44,9 @@ interface SummaryContextType {
 // --- Context ---
 const SummaryPageContext = createContext<SummaryContextType | null>(null);
 
-// --- Reducer ---
-function hideAccountsReducer(state: AccountId[], account: AccountId): AccountId[] {
-  return state.includes(account) ? state.filter((a) => a !== account) : [...state, account];
-}
-
 // --- Provider ---
 export function SummaryPageContextProvider({ children }: { children: ReactNode }) {
-  const [manualHideAccounts, toggleHideAccount] = useReducer(hideAccountsReducer, []);
-  const { accountIds: outlierIds } = useOutliers();
-  const hideAccounts = useMemo(
-    () => [...new Set([...manualHideAccounts, ...outlierIds])],
-    [manualHideAccounts, outlierIds],
-  );
+  const { accountIds: hideAccounts } = useOutliers();
   const [detailedDate, setDetailedDate] = useState(DateTime.fromISO("2024-01"));
   const [dateRange, setDateRange] = useState<DateRange>({
     from: DateTime.now().minus({ years: 1 }),
@@ -82,8 +69,6 @@ export function SummaryPageContextProvider({ children }: { children: ReactNode }
   const value = useMemo(
     () => ({
       hideAccounts,
-      manualHideAccounts,
-      toggleHideAccount,
       detailedDate,
       setDetailedDate,
       dateRange,
@@ -95,15 +80,7 @@ export function SummaryPageContextProvider({ children }: { children: ReactNode }
       deflate,
       toggleDeflate,
     }),
-    [
-      hideAccounts,
-      manualHideAccounts,
-      detailedDate,
-      dateRange,
-      isYearly,
-      chartPeriodicity,
-      deflate,
-    ],
+    [hideAccounts, detailedDate, dateRange, isYearly, chartPeriodicity, deflate],
   );
 
   return <SummaryPageContext value={value}>{children}</SummaryPageContext>;
