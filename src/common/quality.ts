@@ -9,6 +9,7 @@ export interface QualitySplit {
 }
 
 export interface QualityHolding {
+  accountId: string;
   name: string;
   quantity: number;
   isClosed: boolean;
@@ -16,27 +17,34 @@ export interface QualityHolding {
   priceDate: string | null;
 }
 
+/** Why one item was flagged: a translation key suffix plus the values to fill in. */
+export interface QualityReason {
+  key: string;
+  params: Record<string, string | number>;
+}
+
+export interface QualityItem {
+  /** Transaction id, or the holding's account id. */
+  id: string;
+  title: string;
+  date: string | null;
+  reason: QualityReason;
+  /** Every split of the transaction, so the whole entry can be inspected. */
+  splits: { splitId: string; accountId: string; accountName: string; value: number }[];
+}
+
 export interface QualityIssue {
-  /** Short, stable label of what is wrong. */
+  /** Stable id of the check. */
   id: string;
   severity: "error" | "warning" | "info";
   count: number;
-  /** A few concrete examples to go and fix. */
-  samples: string[];
+  items: QualityItem[];
 }
 
-const SAMPLE = 5;
 const IMBALANCE = /^(imbalance|orphan|desequilibrio|huérfan)/i;
 export const STALE_PRICE_DAYS = 45;
 
 const dayDiff = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
-
-const issue = (
-  id: string,
-  severity: QualityIssue["severity"],
-  items: string[],
-): QualityIssue | null =>
-  items.length ? { id, severity, count: items.length, samples: items.slice(0, SAMPLE) } : null;
 
 /** Data-quality checks over raw splits and holdings; only problems that exist are returned. */
 export const checkQuality = (
@@ -51,47 +59,92 @@ export const checkQuality = (
     else byTx.set(s.transactionId, [s]);
   }
 
-  const label = (s: QualitySplit) => `${s.date} · ${s.description || "∅"} · ${s.value.toFixed(2)}`;
+  const txItem = (group: QualitySplit[], reason: QualityReason): QualityItem => ({
+    id: group[0].transactionId,
+    title: group[0].description.trim() || "—",
+    date: group[0].date,
+    reason,
+    splits: group.map((s) => ({
+      splitId: s.splitId,
+      accountId: s.accountId,
+      accountName: s.accountName,
+      value: s.value,
+    })),
+  });
 
-  const noDescription: string[] = [];
-  const unbalanced: string[] = [];
-  const future: string[] = [];
-  const dupes: string[] = [];
-  const seen = new Set<string>();
+  const noDescription: QualityItem[] = [];
+  const unbalanced: QualityItem[] = [];
+  const future: QualityItem[] = [];
+  const dupes: QualityItem[] = [];
+  const imbalance: QualityItem[] = [];
+  const firstWithKey = new Map<string, string>();
   let lastDate: string | null = null;
 
   for (const group of byTx.values()) {
     const first = group[0];
-    if (!first.description.trim()) noDescription.push(label(first));
-    if (Math.abs(group.reduce((sum, s) => sum + s.value, 0)) > 0.005) unbalanced.push(label(first));
-    if (first.date > today) future.push(label(first));
+    if (!first.description.trim())
+      noDescription.push(txItem(group, { key: "noDescription", params: {} }));
+
+    const sum = group.reduce((acc, s) => acc + s.value, 0);
+    if (Math.abs(sum) > 0.005)
+      unbalanced.push(txItem(group, { key: "unbalanced", params: { sum: sum.toFixed(2) } }));
+
+    const bad = group.filter((s) => IMBALANCE.test(s.accountName));
+    if (bad.length)
+      imbalance.push(txItem(group, { key: "imbalance", params: { account: bad[0].accountName } }));
+
+    if (first.date > today)
+      future.push(txItem(group, { key: "future", params: { date: first.date, today } }));
     else if (lastDate == null || first.date > lastDate) lastDate = first.date;
+
     const key = `${first.date}|${first.description.trim().toLowerCase()}|${group
       .map((s) => `${s.accountId}:${s.value.toFixed(2)}`)
       .sort()
       .join(",")}`;
-    if (seen.has(key)) dupes.push(label(first));
-    else seen.add(key);
+    const original = firstWithKey.get(key);
+    if (original) dupes.push(txItem(group, { key: "duplicates", params: { original } }));
+    else firstWithKey.set(key, first.transactionId);
   }
 
-  const imbalance = splits.filter((s) => IMBALANCE.test(s.accountName)).map(label);
-
+  const holdingItem = (h: QualityHolding, reason: QualityReason): QualityItem => ({
+    id: h.accountId,
+    title: h.name,
+    date: h.priceDate,
+    reason,
+    splits: [],
+  });
   const live = holdings.filter((h) => !h.isClosed && !h.isCash);
-  const noPrice = live.filter((h) => h.priceDate == null).map((h) => h.name);
+  const noPrice = live
+    .filter((h) => h.priceDate == null)
+    .map((h) => holdingItem(h, { key: "noPrice", params: { quantity: h.quantity } }));
   const stale = live
     .filter((h) => h.priceDate != null && dayDiff(h.priceDate, today) > STALE_PRICE_DAYS)
-    .map((h) => `${h.name} (${h.priceDate})`);
-  const negative = holdings.filter((h) => h.quantity < -1e-6).map((h) => h.name);
+    .map((h) =>
+      holdingItem(h, {
+        key: "stalePrice",
+        params: {
+          date: h.priceDate ?? "",
+          days: dayDiff(h.priceDate ?? today, today),
+          limit: STALE_PRICE_DAYS,
+        },
+      }),
+    );
+  const negative = holdings
+    .filter((h) => h.quantity < -1e-6)
+    .map((h) => holdingItem(h, { key: "negativeHolding", params: { quantity: h.quantity } }));
+
+  const make = (id: string, severity: QualityIssue["severity"], items: QualityItem[]) =>
+    items.length ? { id, severity, count: items.length, items } : null;
 
   const issues = [
-    issue("unbalanced", "error", unbalanced),
-    issue("imbalance", "error", imbalance),
-    issue("negativeHolding", "error", negative),
-    issue("noPrice", "warning", noPrice),
-    issue("stalePrice", "warning", stale),
-    issue("future", "warning", future),
-    issue("duplicates", "warning", dupes),
-    issue("noDescription", "info", noDescription),
+    make("unbalanced", "error", unbalanced),
+    make("imbalance", "error", imbalance),
+    make("negativeHolding", "error", negative),
+    make("noPrice", "warning", noPrice),
+    make("stalePrice", "warning", stale),
+    make("future", "warning", future),
+    make("duplicates", "warning", dupes),
+    make("noDescription", "info", noDescription),
   ].filter((i): i is QualityIssue => i != null);
 
   return {

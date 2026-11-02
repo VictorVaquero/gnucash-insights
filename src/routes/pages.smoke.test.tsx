@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { setAccountConfig } from "@/db/utils";
 import { createAuthStub, renderWithRouter } from "@/test/routerHarness";
 
-import { Quality } from "./quality";
+import { QualitySection } from "@/components/features/QualitySection";
 import { InvestmentsPageContextProvider } from "./investments/-investmentsPageContext";
 import { useHoldings } from "./investments/-useHoldings";
 import { ForecastPlot } from "./summary/-plots/ForecastPlot";
@@ -59,8 +59,8 @@ describe("page smoke", () => {
     await expectNoCrash(container);
   });
 
-  it("renders the data quality page on its own", async () => {
-    const { container } = render(<Quality />);
+  it("renders the data quality section on its own", async () => {
+    const { container } = render(<QualitySection />);
     await expectNoCrash(container);
   });
 

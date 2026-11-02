@@ -5,8 +5,7 @@
     "expenses": "Gastos",
     "trips": "Viajes",
     "investments": "Inversiones",
-    "analysis": "Análisis",
-    "quality": "Calidad de datos"
+    "analysis": "Análisis"
   },
   "routes": {
     "home": {
@@ -32,9 +31,6 @@
     },
     "investments": {
       "title": "Inversiones"
-    },
-    "quality": {
-      "title": "Calidad de datos"
     }
   },
   "common": {
@@ -501,6 +497,22 @@
         "title": "Transacciones sin descripción",
         "help": "Dificultan agrupar comercios y detectar recurrentes."
       }
-    }
+    },
+    "title": "Calidad de datos",
+    "reasons": {
+      "unbalanced": "Los splits suman {{sum}} en vez de 0.",
+      "imbalance": "Tiene un split en “{{account}}”, una cuenta comodín.",
+      "negativeHolding": "Tiene {{quantity}} unidades: se ha vendido más de lo comprado.",
+      "noPrice": "Tiene {{quantity}} unidades sin cotización, por lo que vale 0.",
+      "stalePrice": "El último precio es del {{date}} (hace {{days}} días, límite {{limit}}).",
+      "future": "Fechada el {{date}}, posterior a hoy ({{today}}).",
+      "duplicates": "Misma fecha, descripción e importes que la transacción {{original}}.",
+      "noDescription": "La descripción está vacía."
+    },
+    "id": "ID",
+    "account": "Cuenta",
+    "value": "Importe",
+    "splitId": "ID del split",
+    "showMore": "Mostrar {{count}} más"
   }
 }

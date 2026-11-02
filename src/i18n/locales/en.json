@@ -5,8 +5,7 @@
     "expenses": "Expenses",
     "trips": "Trips",
     "investments": "Investments",
-    "analysis": "Analysis",
-    "quality": "Data quality"
+    "analysis": "Analysis"
   },
   "routes": {
     "home": {
@@ -32,9 +31,6 @@
     },
     "investments": {
       "title": "Investments"
-    },
-    "quality": {
-      "title": "Data quality"
     }
   },
   "common": {
@@ -501,6 +497,22 @@
         "title": "Transactions without description",
         "help": "Harder to group in payees and recurring detection."
       }
-    }
+    },
+    "title": "Data quality",
+    "reasons": {
+      "unbalanced": "Splits add up to {{sum}} instead of 0.",
+      "imbalance": "Has a split in “{{account}}”, a catch-all account.",
+      "negativeHolding": "Holds {{quantity}} units: more sold than bought.",
+      "noPrice": "Holding {{quantity}} units with no price quote, so it is valued at 0.",
+      "stalePrice": "Last price is from {{date}} ({{days}} days ago, limit {{limit}}).",
+      "future": "Dated {{date}}, after today ({{today}}).",
+      "duplicates": "Same date, description and amounts as transaction {{original}}.",
+      "noDescription": "The description is empty."
+    },
+    "id": "ID",
+    "account": "Account",
+    "value": "Amount",
+    "splitId": "Split ID",
+    "showMore": "Show {{count}} more"
   }
 }

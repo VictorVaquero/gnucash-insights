@@ -16,6 +16,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { QualitySection } from "@/components/features/QualitySection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { booksOptions, domainOptions } from "@/db/queries/global";
 import { Book } from "@/db/schema";
@@ -127,7 +128,7 @@ const Metadata = () => {
   const maxDate = domainDates?.max?.toISODate() ?? "—";
 
   return (
-    <div className="p-4 md:p-10 flex flex-col gap-y-6 max-w-3xl">
+    <div className="p-4 md:p-10 flex flex-col gap-y-6 max-w-5xl">
       <div>
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {t("routes.metadata.title")}
@@ -140,6 +141,8 @@ const Metadata = () => {
         <DateRangeCard minDate={minDate} maxDate={maxDate} />
         <SourceCard book={book} />
       </div>
+
+      <QualitySection />
     </div>
   );
 };
