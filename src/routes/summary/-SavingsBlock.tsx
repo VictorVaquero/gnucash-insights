@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/useAuthContext";
 import { splitSumOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useTaxAccountIds } from "@/hooks/useTaxes";
 import { useOutliers } from "@/hooks/useOutliers";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
@@ -24,12 +25,15 @@ const useSavings = (
   bookId: string | undefined,
   { startDate, endDate }: DateRange = {},
   ignoreAccounts: string[] = [],
+  taxIds: string[] = [],
 ) => {
-  const { data: savings } = useQuery(
+  // Spending and income without the tax accounts, then taxes added once from the tax accounts
+  // themselves: right whether taxes sit inside the expenses tree or in a root of their own.
+  const { data: base } = useQuery(
     splitSumOptions(db, bookId, [dbconf.expenses, dbconf.income], {
       startDate,
       endDate,
-      ignoreAccounts,
+      ignoreAccounts: [...ignoreAccounts, ...taxIds],
     }),
   );
   const { data: grossIncome } = useQuery(
@@ -38,6 +42,7 @@ const useSavings = (
   const { data: taxes } = useQuery(
     splitSumOptions(db, bookId, [dbconf.taxes], { startDate, endDate }),
   );
+  const savings = base == null || taxes == null ? undefined : base + taxes;
   // Income is booked gross (a credit, so negative) with its taxes as an expense.
   const income = grossIncome == null ? undefined : -(grossIncome + (taxes ?? 0));
 
@@ -64,8 +69,9 @@ export const SavingsBlock = (props: { className?: string }) => {
   const { user } = useAuth();
   const dbconf = getConfig(user);
   const { accountIds: outlierIds } = useOutliers();
+  const taxIds = useTaxAccountIds();
 
-  const lastMonth = useSavings(db, dbconf, bookId, { startDate: latestMonth }, outlierIds);
+  const lastMonth = useSavings(db, dbconf, bookId, { startDate: latestMonth }, outlierIds, taxIds);
   const lastThreeMonths = useSavings(
     db,
     dbconf,
@@ -75,6 +81,7 @@ export const SavingsBlock = (props: { className?: string }) => {
       endDate: latestMonth,
     },
     outlierIds,
+    taxIds,
   );
   const lastSixMonths = useSavings(
     db,
@@ -85,6 +92,7 @@ export const SavingsBlock = (props: { className?: string }) => {
       endDate: latestMonth,
     },
     outlierIds,
+    taxIds,
   );
   const lastYear = useSavings(
     db,
@@ -95,8 +103,9 @@ export const SavingsBlock = (props: { className?: string }) => {
       endDate: latestMonth,
     },
     outlierIds,
+    taxIds,
   );
-  const allTime = useSavings(db, dbconf, bookId, { startDate, endDate }, outlierIds);
+  const allTime = useSavings(db, dbconf, bookId, { startDate, endDate }, outlierIds, taxIds);
   const { t } = useTranslation();
 
   return (

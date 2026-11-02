@@ -1,5 +1,5 @@
 import { BarLoader } from "@/components/ui/BarLoader";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -24,6 +24,7 @@ import { transactsSumOptions } from "@/db/queries/summary";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { buildIncomeExpenses } from "@/common/incomeExpenses";
 import { useTaxByPeriod } from "@/hooks/useTaxes";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuery } from "@tanstack/react-query";
@@ -184,9 +185,7 @@ export const IncomeExpensesPlot = () => {
   const { dateRange, hideAccounts, chartPeriodicity: charMode } = useSummaryPageContext();
   const { deflate } = useDeflator();
   const dbconf = getConfig(user);
-  // Income is booked gross with its taxes as expenses. Tax is measured once (all expenses minus
-  // the same expenses without tax accounts) and used for every figure, so income after tax,
-  // spending without tax and the net always add up.
+  // Income is booked gross with its taxes as an expense (possibly in a root of their own).
   const { taxes, spending: expenses } = useTaxByPeriod(charMode, hideAccounts);
   const { data: income } = useQuery(
     transactsSumOptions({
@@ -198,31 +197,16 @@ export const IncomeExpensesPlot = () => {
     }),
   );
 
+  const [showTaxes, setShowTaxes] = useState(false);
+  const { t } = useTranslation();
+
   const data = useMemo(() => {
     if (income && expenses && taxes) {
-      const registry = new Map<string, PlotData>();
-      const getEntry = (date: string, dateLabel: string): PlotData => {
-        let entry = registry.get(date);
-        if (!entry) {
-          entry = { date, dateLabel, net: 0, income: 0, expenses: 0 };
-          registry.set(date, entry);
-        }
-        return entry;
-      };
-
-      income.forEach((d) => (getEntry(d.date, d.dateLabel).income = -deflate(d.value, d.date)));
-      expenses.forEach((d) => (getEntry(d.date, d.dateLabel).expenses = deflate(d.value, d.date)));
-      registry.forEach((entry, date) => {
-        entry.income -= deflate(taxes.get(date) ?? 0, date);
-        entry.net = entry.income - entry.expenses;
-      });
-
-      return Array.from(registry.values())
+      return buildIncomeExpenses(income, expenses, taxes, showTaxes, deflate)
         .filter((d) => d.date >= dateRange.from.toString())
-        .filter((d) => d.date <= dateRange.to.toString())
-        .sort((a, b) => a.date.localeCompare(b.date));
+        .filter((d) => d.date <= dateRange.to.toString());
     }
-  }, [income, expenses, taxes, dateRange, deflate]);
+  }, [income, expenses, taxes, showTaxes, dateRange, deflate]);
 
   if (!data || !dateRange)
     return (
@@ -231,5 +215,22 @@ export const IncomeExpensesPlot = () => {
       </div>
     );
 
-  return <DrawMonthlyIncomeExpensesPlot data={data} />;
+  return (
+    <div className="relative w-full h-64 md:h-full flex flex-col">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          aria-pressed={showTaxes}
+          onClick={() => setShowTaxes((v) => !v)}
+          title={t("summary.plots.taxesToggleHint")}
+          className="text-xs rounded border border-border px-2 py-0.5 text-muted-foreground hover:bg-accent"
+        >
+          {showTaxes ? t("summary.plots.withTaxes") : t("summary.plots.withoutTaxes")}
+        </button>
+      </div>
+      <div className="flex-1 min-h-0">
+        <DrawMonthlyIncomeExpensesPlot data={data} />
+      </div>
+    </div>
+  );
 };

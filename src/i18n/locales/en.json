@@ -169,7 +169,10 @@
       "others": "Others",
       "otherAccount": "Other",
       "noExpenses": "No expenses in this range.",
-      "ranking": "All categories"
+      "ranking": "All categories",
+      "withTaxes": "Taxes shown: gross income, taxes as expenses",
+      "withoutTaxes": "Taxes hidden: income after taxes, no tax expenses",
+      "taxesToggleHint": "Switch between gross income with taxes as expenses and income as if taxes did not exist (net is the same)"
     }
   },
   "expenses": {

@@ -169,7 +169,10 @@
       "others": "Otros",
       "otherAccount": "Otro",
       "noExpenses": "Sin gastos en este rango.",
-      "ranking": "Todas las categorías"
+      "ranking": "Todas las categorías",
+      "withTaxes": "Con impuestos: ingresos brutos, impuestos como gasto",
+      "withoutTaxes": "Sin impuestos: ingresos tras impuestos, sin gasto de impuestos",
+      "taxesToggleHint": "Alterna entre ingresos brutos con impuestos como gasto e ingresos como si no hubiera impuestos (el neto es el mismo)"
     }
   },
   "expenses": {
