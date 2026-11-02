@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { DateTime } from "luxon";
 import { useMemo } from "react";
 
-import { xirr, type Cashflow } from "@/common/finance";
+import { type Cashflow } from "@/common/finance";
 import { useAuth } from "@/contexts/useAuthContext";
 import {
   commodityPricesOptions,
@@ -12,6 +12,7 @@ import {
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
 import { useDeflator } from "./-useDeflator";
+import { annualizedReturn, heldDays, isCashLike } from "./-returns";
 
 export interface PricePoint {
   date: string;
@@ -43,6 +44,10 @@ export interface Holding {
   proceeds: number;
   /** Everything sold out: the gain is fully realised. */
   isClosed: boolean;
+  /** Cash parking spot between investments: no real return, left out of gain and XIRR. */
+  isCash: boolean;
+  /** Days from first purchase to the last sale (closed) or today (open). */
+  heldDays: number;
   gain: number;
   gainPct: number | null;
   xirrNominal: number | null;
@@ -124,8 +129,9 @@ export const useHoldings = (): Portfolio => {
         .reduce((sum, l) => sum - l.value, 0);
       const isClosed = Math.abs(quantity) < 1e-6;
 
-      const gain = marketValue + proceeds - costBasis;
-      const gainPct = costBasis > 0 ? (gain / costBasis) * 100 : null;
+      const isCash = isCashLike(account.name, priceHistory);
+      const gain = isCash ? 0 : marketValue + proceeds - costBasis;
+      const gainPct = !isCash && costBasis > 0 ? (gain / costBasis) * 100 : null;
 
       // Buys are cash out (negative), sells are cash in (positive); the split's own
       // sign already encodes this (positive value = money added to the holding).
@@ -150,25 +156,30 @@ export const useHoldings = (): Portfolio => {
         costBasis,
         proceeds,
         isClosed,
+        isCash,
+        heldDays: heldDays(holdingLots, isClosed, today),
         gain,
         gainPct,
-        xirrNominal: xirr(cashflows),
-        xirrReal: xirr(realCashflows),
+        xirrNominal: isCash ? null : annualizedReturn(cashflows),
+        xirrReal: isCash ? null : annualizedReturn(realCashflows),
         priceHistory,
         lots: holdingLots,
       };
     });
 
+    // Cash only shuttles money between investments: it counts toward value, never toward returns.
+    const real = holdings.filter((h) => !h.isCash);
     const totalMarketValue = holdings.reduce((sum, h) => sum + h.marketValue, 0);
-    const totalCostBasis = holdings.reduce((sum, h) => sum + h.costBasis, 0);
-    const totalProceeds = holdings.reduce((sum, h) => sum + h.proceeds, 0);
-    const totalGain = totalMarketValue + totalProceeds - totalCostBasis;
+    const realMarketValue = real.reduce((sum, h) => sum + h.marketValue, 0);
+    const totalCostBasis = real.reduce((sum, h) => sum + h.costBasis, 0);
+    const totalProceeds = real.reduce((sum, h) => sum + h.proceeds, 0);
+    const totalGain = realMarketValue + totalProceeds - totalCostBasis;
     const totalGainPct = totalCostBasis > 0 ? (totalGain / totalCostBasis) * 100 : null;
 
-    const allCashflows: Cashflow[] = holdings.flatMap((h) =>
+    const allCashflows: Cashflow[] = real.flatMap((h) =>
       h.lots.map((l) => ({ date: l.date, amount: -l.value })),
     );
-    if (totalMarketValue > 0) allCashflows.push({ date: today, amount: totalMarketValue });
+    if (realMarketValue > 0) allCashflows.push({ date: today, amount: realMarketValue });
     const allRealCashflows: Cashflow[] = allCashflows.map((cf) => ({
       date: cf.date,
       amount: deflate(cf.amount, cf.date),
@@ -180,8 +191,8 @@ export const useHoldings = (): Portfolio => {
       totalCostBasis,
       totalGain,
       totalGainPct,
-      xirrNominal: xirr(allCashflows),
-      xirrReal: xirr(allRealCashflows),
+      xirrNominal: annualizedReturn(allCashflows),
+      xirrReal: annualizedReturn(allRealCashflows),
       isLoading,
     };
   }, [holdingAccounts, lotsQuery.data, pricesQuery.data, deflate, isLoading, dbconf.investments]);

@@ -11,10 +11,12 @@ import {
   YAxis,
 } from "recharts";
 
+import { marketGrowth } from "@/common/analytics";
 import { formatCurrency } from "@/common/utils";
 import { SimpleTooltip } from "@/components/charts/SimpleTooltip";
 import { useLocale } from "@/hooks/useLocale";
 
+import { useHoldings } from "@/routes/investments/-useHoldings";
 import { useSummaryAnalytics } from "../-useSummaryAnalytics";
 
 const axisTick = { fontSize: 10, fill: "currentColor" };
@@ -24,6 +26,8 @@ export const ForecastPlot = () => {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const { months, forecast } = useSummaryAnalytics();
+  const { totalMarketValue, xirrNominal } = useHoldings();
+  const withMarketName = t("forecast.withMarket");
   const actualName = t("forecast.actual");
   const expectedName = t("forecast.expected");
   const bandName = t("forecast.range");
@@ -39,18 +43,23 @@ export const ForecastPlot = () => {
     history[history.length - 1] = {
       ...history[history.length - 1],
       [expectedName]: last.netWorth,
+      [withMarketName]: last.netWorth,
       band: [last.netWorth, last.netWorth],
     };
-    const future = forecast.map((f) => ({
+    const future = forecast.map((f, i) => ({
       label: f.month,
       [expectedName]: f.expected,
+      [withMarketName]: f.expected + marketGrowth(totalMarketValue, xirrNominal, i + 1),
       band: [f.low, f.high],
     }));
     return [...history, ...future];
-  }, [months, forecast, actualName, expectedName]);
+  }, [months, forecast, actualName, expectedName, withMarketName, totalMarketValue, xirrNominal]);
 
   const money = (v: number) => formatCurrency(v, locale, { digits: 0 });
   const last = forecast[forecast.length - 1];
+  const withMarket = last
+    ? last.expected + marketGrowth(totalMarketValue, xirrNominal, forecast.length)
+    : 0;
 
   if (months.length === 0)
     return <p className="text-sm text-muted-foreground">{t("forecast.empty")}</p>;
@@ -61,6 +70,7 @@ export const ForecastPlot = () => {
         <p className="text-xs text-muted-foreground">
           {t("forecast.summary", {
             value: formatCurrency(last.expected, locale, { digits: 0, compact: true }),
+            market: formatCurrency(withMarket, locale, { digits: 0, compact: true }),
             low: formatCurrency(last.low, locale, { digits: 0, compact: true }),
             high: formatCurrency(last.high, locale, { digits: 0, compact: true }),
           })}
@@ -101,6 +111,14 @@ export const ForecastPlot = () => {
               stroke="var(--color-sky-500)"
               strokeWidth={2}
               strokeDasharray="5 4"
+              dot={false}
+              isAnimationActive={false}
+            />
+            <Line
+              dataKey={withMarketName}
+              stroke="var(--color-emerald-500)"
+              strokeWidth={2}
+              strokeDasharray="2 4"
               dot={false}
               isAnimationActive={false}
             />

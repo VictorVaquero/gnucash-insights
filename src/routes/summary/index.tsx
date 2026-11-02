@@ -25,9 +25,8 @@ import { TopMovers } from "@/routes/summary/-TopMovers.tsx";
 import { AssetAccountsPlot } from "@/routes/summary/-plots/AssetAccountsPlot.tsx";
 import { IncomeExpensesPlot } from "@/routes/summary/-plots/IncomeExpensesPlot.tsx";
 import { NetWorthTrendPlot } from "@/routes/summary/-plots/NetWorthTrendPlot.tsx";
+import { CategorySpendPlot } from "./-plots/CategorySpendPlot";
 import { SettingsBlock } from "./-SettingsBlock";
-import { DetailedExpensesBarPlot } from "./-plots/DetailedExpensesBarPlot";
-import { MonthDetailedExpensesPiePlot } from "./-plots/MonthDetailedExpensesPiePlot ";
 import { SummaryPageContextProvider } from "./-summaryPageContext";
 import { DetailedIncomeBarPlot } from "./-plots/DetailedIncomeBarPlot";
 
@@ -82,14 +81,7 @@ const Summary = () => {
                 title={t("summary.charts.expensesByCategory")}
                 expandedClassName={FULL_AREA}
               >
-                <div className="flex flex-col md:flex-row gap-4 md:h-full">
-                  <div className="flex-1 min-w-0 h-64 md:h-full">
-                    <DetailedExpensesBarPlot />
-                  </div>
-                  <div className="w-full md:w-40 shrink-0 h-64 md:h-full">
-                    <MonthDetailedExpensesPiePlot />
-                  </div>
-                </div>
+                <CategorySpendPlot />
               </ChartCard>
               <ChartCard title={t("summary.charts.incomeByCategory")} expandedClassName={FULL_AREA}>
                 <DetailedIncomeBarPlot />

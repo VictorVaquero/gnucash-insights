@@ -1,4 +1,5 @@
 import { PeriodicityTabs } from "@/components/PeriodicityTabs";
+import { OutlierToggle } from "@/components/OutlierToggle";
 import { Card, CardContent } from "@/components/ui/card";
 import { MultiSelectTree } from "@/components/features/AccountsDropdown";
 import { useAuth } from "@/contexts/useAuthContext";
@@ -36,6 +37,7 @@ export const SettingsBlock = () => {
           <PeriodicityTabs activeMode={chartMode} onChange={setChartMode} />
           <MultiSelectTree options={options} />
           <DeflateToggle />
+          <OutlierToggle />
         </div>
         {from && to && (
           <DateRangePresets

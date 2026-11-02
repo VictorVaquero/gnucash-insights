@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions, fullTransactionsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useOutliers } from "@/hooks/useOutliers";
 
 const OTHER_ID = "__other";
 
@@ -19,6 +20,7 @@ export const useExpenseTx = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const dbconf = getConfig(user);
+  const { accountIds: outlierIds } = useOutliers();
 
   const accountsQuery = useQuery(accountsOptions({ db, bookId, accountIds: [dbconf.expenses] }));
   const txQuery = useQuery(fullTransactionsOptions(db, bookId));
@@ -27,6 +29,7 @@ export const useExpenseTx = () => {
     if (!accountsQuery.data || !txQuery.data) return [];
     const accounts = new Map(accountsQuery.data.map((a) => [a.id, a]));
     const taxIds = new Set([dbconf.taxes, ...dbconf.taxesAll]);
+    const outliers = new Set(outlierIds);
 
     // Walk up to the direct child of the expenses root.
     const categoryOf = new Map<string, { id: string; name: string }>();
@@ -55,6 +58,7 @@ export const useExpenseTx = () => {
     for (const row of txQuery.data) {
       if (row.accountType !== "EXPENSE" || !row.ymdPosted) continue;
       if (!accounts.has(row.accountId) || isTax(row.accountId)) continue;
+      if (outliers.has(row.accountId)) continue;
       const category = resolve(row.accountId);
       const date = String(row.ymdPosted).slice(0, 10);
       out.push({
@@ -69,7 +73,14 @@ export const useExpenseTx = () => {
       });
     }
     return out;
-  }, [accountsQuery.data, txQuery.data, dbconf.expenses, dbconf.taxes, dbconf.taxesAll]);
+  }, [
+    accountsQuery.data,
+    txQuery.data,
+    dbconf.expenses,
+    dbconf.taxes,
+    dbconf.taxesAll,
+    outlierIds,
+  ]);
 
   return { data, isLoading: accountsQuery.isLoading || txQuery.isLoading };
 };

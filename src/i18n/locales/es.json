@@ -5,7 +5,8 @@
     "expenses": "Gastos",
     "trips": "Viajes",
     "investments": "Inversiones",
-    "analysis": "Análisis"
+    "analysis": "Análisis",
+    "quality": "Calidad de datos"
   },
   "routes": {
     "home": {
@@ -31,6 +32,9 @@
     },
     "investments": {
       "title": "Inversiones"
+    },
+    "quality": {
+      "title": "Calidad de datos"
     }
   },
   "common": {
@@ -167,7 +171,9 @@
       "net": "Neto",
       "netWithDate": "Neto ({{date}})",
       "others": "Otros",
-      "otherAccount": "Otro"
+      "otherAccount": "Otro",
+      "noExpenses": "Sin gastos en este rango.",
+      "ranking": "Todas las categorías"
     }
   },
   "expenses": {
@@ -452,9 +458,54 @@
   },
   "forecast": {
     "actual": "Patrimonio neto",
-    "expected": "Proyección",
+    "expected": "Proyección (solo ahorro)",
     "range": "Rango probable",
     "empty": "Aún no hay datos suficientes.",
-    "summary": "Con tu ritmo de ahorro reciente llegarías a unos {{value}} en 12 meses (probablemente entre {{low}} y {{high}}). No incluye el mercado."
+    "summary": "Con tu ritmo de ahorro reciente llegarías a unos {{value}} en 12 meses (probablemente entre {{low}} y {{high}}). Sumando la rentabilidad histórica de tu cartera serían unos {{market}}.",
+    "withMarket": "Con rentabilidad del mercado"
+  },
+  "outliers": {
+    "excluded": "Sin {{names}}",
+    "included": "Con todo incluido",
+    "tooltip": "Compras puntuales ({{names}}) que distorsionan medias y tendencias. Pulsa para incluirlas o dejarlas fuera de todas las cifras."
+  },
+  "quality": {
+    "lastEntry": "Última transacción: {{date}} (hace {{days}} días).",
+    "noData": "Sin transacciones.",
+    "allGood": "No se han encontrado problemas.",
+    "checks": {
+      "unbalanced": {
+        "title": "Transacciones descuadradas",
+        "help": "Splits que no suman cero."
+      },
+      "imbalance": {
+        "title": "Cuentas Imbalance / huérfanas",
+        "help": "Dinero en una cuenta comodín en vez de una categoría real."
+      },
+      "negativeHolding": {
+        "title": "Posiciones negativas",
+        "help": "Se han vendido más unidades de las compradas: falta una compra."
+      },
+      "noPrice": {
+        "title": "Posiciones sin precio",
+        "help": "Posiciones abiertas sin cotización, valoradas a cero."
+      },
+      "stalePrice": {
+        "title": "Precios desactualizados",
+        "help": "Posiciones abiertas con la última cotización antigua: valor y rentabilidad desfasados."
+      },
+      "future": {
+        "title": "Transacciones con fecha futura",
+        "help": "Posteriores a hoy; pueden distorsionar las cifras recientes."
+      },
+      "duplicates": {
+        "title": "Posibles duplicados",
+        "help": "Misma fecha, descripción e importes más de una vez."
+      },
+      "noDescription": {
+        "title": "Transacciones sin descripción",
+        "help": "Dificultan agrupar comercios y detectar recurrentes."
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useOutliers } from "@/hooks/useOutliers";
 import { useCallback, useMemo, useState, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -111,6 +112,8 @@ export const BudgetVsActual = (props: { className?: string }) => {
     });
   }, []);
 
+  const { accountIds: outlierIds } = useOutliers();
+  const outliers = useMemo(() => new Set(outlierIds), [outlierIds]);
   const { data: rawData } = useQuery(
     transactByAccountOptions({ db, bookId, accountIds: [dbconf.expenses], periodicity: "monthly" }),
   );
@@ -121,6 +124,7 @@ export const BudgetVsActual = (props: { className?: string }) => {
     const names = new Map<string, string>();
     const spentByAccount = new Map<string, number>();
     for (const row of rawData) {
+      if (outliers.has(row.accountId)) continue;
       names.set(row.accountId, row.accountName);
       if (row.date !== currentYmd) continue;
       spentByAccount.set(
@@ -149,7 +153,7 @@ export const BudgetVsActual = (props: { className?: string }) => {
       .sort((a, b) => b.spent - a.spent)
       .slice(0, MAX_UNBUDGETED_ROWS);
     return [...budgeted, ...unbudgeted];
-  }, [rawData, latestMonth, budgets]);
+  }, [rawData, latestMonth, budgets, outliers]);
 
   if (rows.length === 0) {
     return (

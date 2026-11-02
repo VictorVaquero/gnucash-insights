@@ -61,16 +61,6 @@ const median = (xs: number[]) => {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 };
 
-// ---------------------------------------------------------------------------------------
-// Monthly totals
-// ---------------------------------------------------------------------------------------
-
-export const monthlyTotals = (txs: ExpenseTx[]): Map<string, number> => {
-  const out = new Map<string, number>();
-  for (const tx of txs) out.set(tx.month, (out.get(tx.month) ?? 0) + tx.amount);
-  return out;
-};
-
 /** category id -> month -> amount. */
 export const categoryMonthly = (txs: ExpenseTx[]): Map<string, Map<string, number>> => {
   const out = new Map<string, Map<string, number>>();
@@ -82,7 +72,7 @@ export const categoryMonthly = (txs: ExpenseTx[]): Map<string, Map<string, numbe
   return out;
 };
 
-export const categoryNames = (txs: ExpenseTx[]): Map<string, string> => {
+const categoryNames = (txs: ExpenseTx[]): Map<string, string> => {
   const out = new Map<string, string>();
   for (const tx of txs) out.set(tx.categoryId, tx.categoryName);
   return out;
@@ -444,6 +434,16 @@ export const forecastNetWorth = (
   });
 };
 
+/**
+ * Extra net worth after `n` months from investments compounding at `annualRate` (capped to a
+ * sane band so one great or awful year does not run away), on top of the savings projection.
+ */
+export const marketGrowth = (invested: number, annualRate: number | null, n: number): number => {
+  if (invested <= 0 || annualRate == null) return 0;
+  const r = Math.max(-0.1, Math.min(0.12, annualRate));
+  return invested * (Math.pow(1 + r, n / 12) - 1);
+};
+
 /** Months until `target` is reached at `monthlyRate`, null when it never will. */
 export const monthsToTarget = (
   current: number,
@@ -457,3 +457,74 @@ export const monthsToTarget = (
 
 export const rollingAverage = (values: number[], window: number): number[] =>
   values.map((_, i) => mean(values.slice(Math.max(0, i - window + 1), i + 1)));
+
+// ---------------------------------------------------------------------------------------
+// Category stacks (few colours + "other") and ranking (all categories)
+// ---------------------------------------------------------------------------------------
+
+export type StackPeriodicity = "monthly" | "quarterly" | "yearly";
+
+const periodKey = (month: string, periodicity: StackPeriodicity): string => {
+  if (periodicity === "monthly") return month;
+  if (periodicity === "yearly") return month.slice(0, 4);
+  return `${month.slice(0, 4)}-Q${Math.floor((Number(month.slice(5, 7)) - 1) / 3) + 1}`;
+};
+
+export interface CategoryStack {
+  /** Largest first, at most `top` names; everything else is merged under `otherLabel`. */
+  keys: string[];
+  rows: Record<string, number | string>[];
+  /** Every category in the range, largest first, for a full ranking. */
+  ranking: { name: string; value: number; share: number }[];
+  total: number;
+}
+
+/**
+ * Stacks spending by period for the biggest `top` categories and folds the rest into one
+ * "other" series, so a stacked chart stays readable. The ranking keeps every category.
+ */
+export const categoryStack = (
+  txs: ExpenseTx[],
+  from: string,
+  to: string,
+  periodicity: StackPeriodicity,
+  top: number,
+  otherLabel: string,
+  scale: (value: number, month: string) => number = (v) => v,
+): CategoryStack => {
+  const inRange = txs.filter((t) => t.month >= from && t.month <= to);
+  const byCategory = new Map<string, number>();
+  for (const t of inRange)
+    byCategory.set(
+      t.categoryName,
+      (byCategory.get(t.categoryName) ?? 0) + scale(t.amount, t.month),
+    );
+  const ranked = [...byCategory.entries()].sort((a, b) => b[1] - a[1]);
+  const total = ranked.reduce((s, [, v]) => s + v, 0);
+  const keys = ranked.slice(0, top).map(([name]) => name);
+  const hasOther = ranked.length > top;
+  const keySet = new Set(keys);
+
+  const periods = [...new Set(monthRange(from, to).map((m) => periodKey(m, periodicity)))];
+  const rows = new Map<string, Record<string, number | string>>(
+    periods.map((p) => [
+      p,
+      {
+        label: p,
+        ...Object.fromEntries([...keys, ...(hasOther ? [otherLabel] : [])].map((k) => [k, 0])),
+      },
+    ]),
+  );
+  for (const t of inRange) {
+    const row = rows.get(periodKey(t.month, periodicity));
+    if (!row) continue;
+    const key = keySet.has(t.categoryName) ? t.categoryName : otherLabel;
+    row[key] = (row[key] as number) + scale(t.amount, t.month);
+  }
+  return {
+    keys: hasOther ? [...keys, otherLabel] : keys,
+    rows: [...rows.values()],
+    ranking: ranked.map(([name, value]) => ({ name, value, share: total > 0 ? value / total : 0 })),
+    total,
+  };
+};

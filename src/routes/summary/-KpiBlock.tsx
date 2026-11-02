@@ -10,6 +10,7 @@ import { splitSumOptions } from "@/db/queries/global";
 import { AnyDB } from "@/db/dbType";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
+import { useOutliers } from "@/hooks/useOutliers";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 import { useDeflator } from "./-useDeflator";
@@ -52,7 +53,9 @@ export const KpiBlock = (props: { className?: string }) => {
   const { locale } = useLocale();
   const { t } = useTranslation();
   const { deflate } = useDeflator();
+  const { accountIds: outlierIds } = useOutliers();
   const taxAccounts = [dbconf.taxes, ...dbconf.taxesAll];
+  const costIgnore = [...taxAccounts, ...outlierIds];
   const prevMonth = latestMonth?.minus({ months: 1 });
   const latestDateKey = latestMonth?.toISODate() ?? "";
   const prevDateKey = prevMonth?.toISODate() ?? "";
@@ -73,7 +76,7 @@ export const KpiBlock = (props: { className?: string }) => {
     latestDateKey,
   );
   const costs = deflate(
-    useSum(db, bookId, [dbconf.expenses], { ...latestRange, ignoreAccounts: taxAccounts }),
+    useSum(db, bookId, [dbconf.expenses], { ...latestRange, ignoreAccounts: costIgnore }),
     latestDateKey,
   );
   const netGain = earnings - costs;
@@ -82,7 +85,7 @@ export const KpiBlock = (props: { className?: string }) => {
     prevDateKey,
   );
   const prevCosts = deflate(
-    useSum(db, bookId, [dbconf.expenses], { ...prevRange, ignoreAccounts: taxAccounts }),
+    useSum(db, bookId, [dbconf.expenses], { ...prevRange, ignoreAccounts: costIgnore }),
     prevDateKey,
   );
   const prevNetGain = prevEarnings - prevCosts;
@@ -99,7 +102,7 @@ export const KpiBlock = (props: { className?: string }) => {
     useSum(db, bookId, [dbconf.expenses], {
       startDate: latestMonth?.minus({ months: 3 }),
       endDate: latestMonth,
-      ignoreAccounts: taxAccounts,
+      ignoreAccounts: costIgnore,
     }),
     latestDateKey,
   );

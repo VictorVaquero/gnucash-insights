@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useOutliers } from "@/hooks/useOutliers";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,6 +29,8 @@ export const TopMovers = (props: { className?: string }) => {
   const { locale } = useLocale();
   const { t } = useTranslation();
 
+  const { accountIds: outlierIds } = useOutliers();
+  const outliers = useMemo(() => new Set(outlierIds), [outlierIds]);
   const { data: rawData } = useQuery(
     transactByAccountOptions({
       db,
@@ -44,6 +47,7 @@ export const TopMovers = (props: { className?: string }) => {
 
     const byAccount = new Map<string, { accountName: string; current: number; previous: number }>();
     for (const row of rawData) {
+      if (outliers.has(row.accountId)) continue;
       if (row.date !== currentYmd && row.date !== previousYmd) continue;
       const entry = byAccount.get(row.accountId) ?? {
         accountName: row.accountName,
@@ -67,7 +71,7 @@ export const TopMovers = (props: { className?: string }) => {
       .filter((m) => m.current > 0 || m.previous > 0)
       .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
       .slice(0, 5);
-  }, [rawData, latestMonth]);
+  }, [rawData, latestMonth, outliers]);
 
   if (movers.length === 0) {
     return (

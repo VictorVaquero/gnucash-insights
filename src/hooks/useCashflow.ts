@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/useAuthContext";
 import { accountsOptions, fullTransactionsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB } from "@/hooks/useDB";
+import { useOutliers } from "@/hooks/useOutliers";
 
 /** Month-by-month earnings, spending, savings and net worth, consistent with the KPI cards. */
 export const useCashflow = () => {
@@ -13,6 +14,7 @@ export const useCashflow = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const dbconf = getConfig(user);
+  const { accountIds: outlierIds } = useOutliers();
 
   const txQuery = useQuery(fullTransactionsOptions(db, bookId));
   const taxQuery = useQuery(accountsOptions({ db, bookId, accountIds: [dbconf.taxes] }));
@@ -26,9 +28,12 @@ export const useCashflow = () => {
       ...assetsQuery.data.map((a) => a.id),
       ...liabilityQuery.data.map((a) => a.id),
     ]);
+    const outliers = new Set(outlierIds);
     const splits: CashSplit[] = [];
     for (const row of txQuery.data) {
       if (!row.ymdPosted) continue;
+      // Net worth keeps every euro; only the spending/saving side leaves outliers out.
+      if (outliers.has(row.accountId)) continue;
       splits.push({
         month: String(row.ymdPosted).slice(0, 7),
         value: row.value,
@@ -38,7 +43,14 @@ export const useCashflow = () => {
       });
     }
     return buildCashflow(splits);
-  }, [txQuery.data, taxQuery.data, assetsQuery.data, liabilityQuery.data, dbconf.taxesAll]);
+  }, [
+    txQuery.data,
+    taxQuery.data,
+    assetsQuery.data,
+    liabilityQuery.data,
+    dbconf.taxesAll,
+    outlierIds,
+  ]);
 
   return { data, isLoading: txQuery.isLoading };
 };

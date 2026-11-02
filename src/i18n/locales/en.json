@@ -5,7 +5,8 @@
     "expenses": "Expenses",
     "trips": "Trips",
     "investments": "Investments",
-    "analysis": "Analysis"
+    "analysis": "Analysis",
+    "quality": "Data quality"
   },
   "routes": {
     "home": {
@@ -31,6 +32,9 @@
     },
     "investments": {
       "title": "Investments"
+    },
+    "quality": {
+      "title": "Data quality"
     }
   },
   "common": {
@@ -167,7 +171,9 @@
       "net": "Net",
       "netWithDate": "Net ({{date}})",
       "others": "Others",
-      "otherAccount": "Other"
+      "otherAccount": "Other",
+      "noExpenses": "No expenses in this range.",
+      "ranking": "All categories"
     }
   },
   "expenses": {
@@ -452,9 +458,54 @@
   },
   "forecast": {
     "actual": "Net worth",
-    "expected": "Projection",
+    "expected": "Projection (savings only)",
     "range": "Likely range",
     "empty": "Not enough data yet.",
-    "summary": "At your recent saving pace you would reach about {{value}} in 12 months (likely between {{low}} and {{high}}). Markets are not included."
+    "summary": "At your recent saving pace you would reach about {{value}} in 12 months (likely between {{low}} and {{high}}). Adding your portfolio's historical return it would be about {{market}}.",
+    "withMarket": "With market growth"
+  },
+  "outliers": {
+    "excluded": "Without {{names}}",
+    "included": "Including everything",
+    "tooltip": "One-off purchases ({{names}}) distort averages and trends. Click to include or leave them out of every figure."
+  },
+  "quality": {
+    "lastEntry": "Last transaction: {{date}} ({{days}} days ago).",
+    "noData": "No transactions.",
+    "allGood": "No problems found.",
+    "checks": {
+      "unbalanced": {
+        "title": "Unbalanced transactions",
+        "help": "Splits that do not add up to zero."
+      },
+      "imbalance": {
+        "title": "Imbalance / orphan accounts",
+        "help": "Money parked in a catch-all account instead of a real category."
+      },
+      "negativeHolding": {
+        "title": "Negative holdings",
+        "help": "More units sold than bought: a missing purchase."
+      },
+      "noPrice": {
+        "title": "Holdings without a price",
+        "help": "Open positions with no quote, valued at zero."
+      },
+      "stalePrice": {
+        "title": "Stale prices",
+        "help": "Open positions whose latest quote is old, so their value and return are out of date."
+      },
+      "future": {
+        "title": "Future-dated transactions",
+        "help": "Dated after today; they may skew recent figures."
+      },
+      "duplicates": {
+        "title": "Possible duplicates",
+        "help": "Same date, description and amounts more than once."
+      },
+      "noDescription": {
+        "title": "Transactions without description",
+        "help": "Harder to group in payees and recurring detection."
+      }
+    }
   }
 }

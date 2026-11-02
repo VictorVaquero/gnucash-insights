@@ -9,12 +9,15 @@ import { fullTransactionsQuery, getAccountsClosureQuery, getDomain } from "./glo
 export const getExpensesYearlyQuery = async <TDB extends AnyDB>({
   db,
   bookId,
+  ignoreAccounts = [],
 }: {
   db: TDB;
   bookId: string;
+  /** Accounts (and, listed explicitly, their descendants) left out of every total. */
+  ignoreAccounts?: string[];
 }) => {
   const ft = fullTransactionsQuery(db);
-  const accounts = getAccountsClosureQuery(db);
+  const accounts = getAccountsClosureQuery(db, undefined, ignoreAccounts);
   const { min, max } = (await getDomain(db)) as {
     min: DateTime<boolean>;
     max: DateTime<boolean>;
@@ -61,14 +64,18 @@ export type ExpensesYearlyRow = Awaited<ReturnType<typeof getExpensesYearlyQuery
 export const yearlyExpensesOptions = <TDB extends AnyDB>({
   db,
   bookId,
+  ignoreAccounts = [],
 }: {
   db: TDB | undefined;
   bookId: string | undefined;
+  ignoreAccounts?: string[];
 }) => {
   const enabled = !!db && !!bookId;
   return queryOptions({
-    queryKey: ["expensesYearly", bookId],
-    queryFn: !enabled ? skipToken : async () => await getExpensesYearlyQuery({ db, bookId }),
+    queryKey: ["expensesYearly", bookId, [...ignoreAccounts].sort()],
+    queryFn: !enabled
+      ? skipToken
+      : async () => await getExpensesYearlyQuery({ db, bookId, ignoreAccounts }),
     enabled: enabled,
   });
 };

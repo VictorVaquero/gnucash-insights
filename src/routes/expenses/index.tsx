@@ -11,6 +11,8 @@ import {
 } from "@/common/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/KpiCard";
+import { OutlierToggle } from "@/components/OutlierToggle";
+import { useOutliers } from "@/hooks/useOutliers";
 import { TreeList } from "@/components/TreeList";
 import { useAuth } from "@/contexts/useAuthContext";
 import { ExpensesYearlyRow, yearlyExpensesOptions } from "@/db/queries/expenses";
@@ -140,9 +142,15 @@ const Expenses = () => {
   const { t } = useTranslation();
   const isNarrow = useIsNarrowViewport();
 
-  const { data, isSuccess } = useQuery(yearlyExpensesOptions({ db, bookId }));
-  const { analytics } = useExpenseAnalytics();
   const dbConfig = getConfig(user);
+  const { accountIds: outlierIds } = useOutliers();
+  // Taxes are shown apart from spending; outliers only when the user left them out.
+  const ignoreAccounts = useMemo(
+    () => [dbConfig.taxes, ...dbConfig.taxesAll, ...outlierIds],
+    [dbConfig.taxes, dbConfig.taxesAll, outlierIds],
+  );
+  const { data, isSuccess } = useQuery(yearlyExpensesOptions({ db, bookId, ignoreAccounts }));
+  const { analytics } = useExpenseAnalytics();
 
   // 1. Calculate Year Range
   // Calendar-year span (matches the query's own yearRange), not a fractional
@@ -188,9 +196,12 @@ const Expenses = () => {
 
   return (
     <div className="w-full p-4 pt-10 lg:p-10 flex flex-col gap-y-6">
-      <h1 className="text-xl font-semibold tracking-tight text-foreground">
-        {t("routes.expenses.title")}
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          {t("routes.expenses.title")}
+        </h1>
+        <OutlierToggle />
+      </div>
 
       {analytics && <ThisYearKpis analytics={analytics} />}
 

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   IconDefinition,
   faBook,
+  faClipboardCheck,
   faChartPie,
   faCoins,
   faMagnifyingGlass,
@@ -25,6 +26,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/metadata", icon: faBook, labelKey: "nav.metadata" },
+  { to: "/quality", icon: faClipboardCheck, labelKey: "nav.quality" },
   { to: "/summary", icon: faChartPie, labelKey: "nav.summary" },
   { to: "/expenses", icon: faCoins, labelKey: "nav.expenses" },
   { to: "/travels", icon: faPlane, labelKey: "nav.trips" },

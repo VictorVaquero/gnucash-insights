@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  categoryStack,
   categoryTrends,
   detectAnomalies,
   detectRecurring,
@@ -7,6 +8,7 @@ import {
   forecastNetWorth,
   largestTransactions,
   lastMonths,
+  marketGrowth,
   monthRange,
   monthsToTarget,
   normalizeDescription,
@@ -220,5 +222,43 @@ describe("forecast", () => {
 describe("rollingAverage", () => {
   it("averages over a trailing window", () => {
     expect(rollingAverage([2, 4, 6, 8], 2)).toEqual([2, 3, 5, 7]);
+  });
+});
+
+describe("categoryStack", () => {
+  const txs = [
+    tx({ month: "2024-01", amount: 100, categoryName: "Food" }),
+    tx({ month: "2024-02", amount: 50, categoryName: "Food" }),
+    tx({ month: "2024-01", amount: 30, categoryName: "Fun" }),
+    tx({ month: "2024-02", amount: 5, categoryName: "Gifts" }),
+    tx({ month: "2024-02", amount: 3, categoryName: "Pets" }),
+    tx({ month: "2023-12", amount: 999, categoryName: "Food" }),
+  ];
+  it("keeps the top categories, folds the rest and keeps a full ranking", () => {
+    const s = categoryStack(txs, "2024-01", "2024-02", "monthly", 2, "Other");
+    expect(s.keys).toEqual(["Food", "Fun", "Other"]);
+    expect(s.rows).toEqual([
+      { label: "2024-01", Food: 100, Fun: 30, Other: 0 },
+      { label: "2024-02", Food: 50, Fun: 0, Other: 8 },
+    ]);
+    expect(s.ranking.map((r) => r.name)).toEqual(["Food", "Fun", "Gifts", "Pets"]);
+    expect(s.total).toBe(188);
+    expect(s.ranking[0].share).toBeCloseTo(150 / 188);
+  });
+  it("groups by quarter and year and applies a scale", () => {
+    const q = categoryStack(txs, "2024-01", "2024-02", "quarterly", 5, "Other");
+    expect(q.rows).toEqual([{ label: "2024-Q1", Food: 150, Fun: 30, Gifts: 5, Pets: 3 }]);
+    const y = categoryStack(txs, "2023-12", "2024-02", "yearly", 1, "Other", (v) => v * 2);
+    expect(y.rows.map((r) => r.label)).toEqual(["2023", "2024"]);
+    expect(y.rows[0].Food).toBe(1998);
+  });
+});
+
+describe("marketGrowth", () => {
+  it("compounds and caps the rate", () => {
+    expect(marketGrowth(1000, 0.1, 12)).toBeCloseTo(100);
+    expect(marketGrowth(1000, 0.9, 12)).toBeCloseTo(120);
+    expect(marketGrowth(1000, null, 12)).toBe(0);
+    expect(marketGrowth(0, 0.1, 12)).toBe(0);
   });
 });

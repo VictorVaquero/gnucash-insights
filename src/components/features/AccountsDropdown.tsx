@@ -58,7 +58,7 @@ const TreeNode = ({ node, level, selected, onToggle }: TreeNodeProps) => {
 };
 
 export function MultiSelectTree({ options }: MultiSelectTreeProps) {
-  const { hideAccounts: selected, toggleHideAccount: onToggle } = useSummaryPageContext();
+  const { manualHideAccounts: selected, toggleHideAccount: onToggle } = useSummaryPageContext();
   const [search, setSearch] = useState("");
   const { t } = useTranslation();
   const handleSearchChange = useCallback(
