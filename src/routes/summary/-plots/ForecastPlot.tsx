@@ -22,7 +22,7 @@ import { useSummaryAnalytics } from "../-useSummaryAnalytics";
 
 const axisTick = { fontSize: 10, fill: "currentColor" };
 
-/** Net worth for the last two years, then a 12-month projection with an uncertainty band. */
+/** Net worth for the selected dates, then a 12-month projection with an uncertainty band. */
 const ForecastPlotInner = () => {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -35,7 +35,7 @@ const ForecastPlotInner = () => {
 
   const rows = useMemo(() => {
     const last = months[months.length - 1];
-    const history: Record<string, string | number | number[]>[] = months.slice(-24).map((m) => ({
+    const history: Record<string, string | number | number[]>[] = months.map((m) => ({
       label: m.month,
       [actualName]: m.netWorth,
     }));

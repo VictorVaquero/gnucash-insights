@@ -3,25 +3,32 @@ import { useMemo } from "react";
 import { buildInsights } from "@/common/insights";
 import { forecastNetWorth, rollingAverage } from "@/common/analytics";
 import { useCashflow } from "@/hooks/useCashflow";
-import { useDomain } from "@/hooks/useDB";
+import { useSummaryPageContext } from "./-summaryPageContext";
 import { useExpenseAnalytics } from "@/routes/expenses/-useExpenseAnalytics";
 
 /** Cashflow history, savings-rate trend, net-worth forecast and plain-language insights. */
 export const useSummaryAnalytics = () => {
   const { data: cashflow } = useCashflow();
   const { analytics } = useExpenseAnalytics();
-  const { to } = useDomain();
-  const end = to?.toFormat("yyyy-MM");
+  // The charts follow the date filter of the page.
+  const { dateRange } = useSummaryPageContext();
+  const end = dateRange.to.toFormat("yyyy-MM");
+  const start = dateRange.from.toFormat("yyyy-MM");
 
   return useMemo(() => {
-    const months = end ? cashflow.filter((m) => m.month <= end) : cashflow;
+    const upToEnd = cashflow.filter((m) => m.month <= end);
+    // The rolling average is computed on the full history so it is warmed up at the range start.
+    const smooth = rollingAverage(
+      upToEnd.map((m) => m.savingsRate ?? 0),
+      6,
+    );
+    const offset = upToEnd.findIndex((m) => m.month >= start);
+    const months = offset < 0 ? [] : upToEnd.slice(offset);
     const last = months[months.length - 1];
-    const rates = months.map((m) => m.savingsRate ?? 0);
-    const smooth = rollingAverage(rates, 6);
-    const savingsSeries = months.slice(-36).map((m, i, arr) => ({
+    const savingsSeries = months.map((m, i) => ({
       month: m.month,
       rate: m.savingsRate,
-      average: smooth[months.length - arr.length + i],
+      average: smooth[offset + i],
     }));
     const forecast = last
       ? forecastNetWorth(
@@ -37,9 +44,9 @@ export const useSummaryAnalytics = () => {
           anomalies: analytics.anomalies,
           trends: analytics.trends,
           recurring: analytics.recurring,
-          cashflow: months,
+          cashflow: upToEnd,
         })
       : [];
     return { months, savingsSeries, forecast, insights, recurring: analytics?.recurring ?? [] };
-  }, [cashflow, analytics, end]);
+  }, [cashflow, analytics, end, start]);
 };
