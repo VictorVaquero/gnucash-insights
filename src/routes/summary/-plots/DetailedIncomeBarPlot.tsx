@@ -139,7 +139,7 @@ export const DetailedIncomeBarPlot = () => {
   );
 
   const valueFormatter = useMemo(
-    () => (number: number) => formatCurrency(number, locale, { digits: 0, compact: true }),
+    () => (number: number) => formatCurrency(number, locale, { digits: 1, compact: true }),
     [locale],
   );
 
