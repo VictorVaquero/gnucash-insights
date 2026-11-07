@@ -87,6 +87,12 @@ export const Route = createFileRoute("/register/")({
   validateSearch: (search: Record<string, unknown>): RegisterSearch => ({
     account: typeof search.account === "string" ? search.account : undefined,
     tabs: typeof search.tabs === "string" ? search.tabs : undefined,
-    view: typeof search.view === "string" ? search.view : undefined,
+    // A hand-written JSON value is parsed into an object by the router; keep it as text.
+    view:
+      typeof search.view === "string"
+        ? search.view
+        : search.view && typeof search.view === "object"
+          ? JSON.stringify(search.view)
+          : undefined,
   }),
 });

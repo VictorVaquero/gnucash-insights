@@ -613,6 +613,7 @@
     "allAccounts": "Todas las cuentas",
     "newTab": "Nueva pestaña",
     "closeTab": "Cerrar pestaña {{name}}",
-    "shownOf": "{{shown}} de {{total}} mostradas · baja para ver más"
+    "shownOf": "{{shown}} de {{total}} mostradas · baja para ver más",
+    "opening": "Saldo inicial"
   }
 }

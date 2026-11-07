@@ -613,6 +613,7 @@
     "allAccounts": "All accounts",
     "newTab": "New tab",
     "closeTab": "Close tab {{name}}",
-    "shownOf": "{{shown}} of {{total}} shown · scroll for more"
+    "shownOf": "{{shown}} of {{total}} shown · scroll for more",
+    "opening": "Opening balance"
   }
 }

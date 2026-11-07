@@ -193,6 +193,8 @@ const presetRange = (id: "month" | "3m" | "year" | "1y"): { from: string; to: st
 const RegisterRowGroup = memo(function RegisterRowGroup(props: {
   r: RegisterRow;
   newMonth: boolean;
+  /** Totals of the month this row opens (only passed with `newMonth`). */
+  sub?: { debit: number; credit: number };
   odd: boolean;
   mode: ViewMode;
   open: boolean;
@@ -202,8 +204,19 @@ const RegisterRowGroup = memo(function RegisterRowGroup(props: {
   onToggle: (id: string) => void;
   onOpenAccount: (id: string, opts?: { newTab?: boolean }) => void;
 }) {
-  const { r, newMonth, odd, mode, open, accountType, accountMap, locale, onToggle, onOpenAccount } =
-    props;
+  const {
+    r,
+    newMonth,
+    sub,
+    odd,
+    mode,
+    open,
+    accountType,
+    accountMap,
+    locale,
+    onToggle,
+    onOpenAccount,
+  } = props;
   const { t } = useTranslation();
   const money = (v: number) => (v ? formatCurrency(v, locale) : "");
   const typeOf = (id: string | undefined) => accountMap.get(id ?? "")?.accountType;
@@ -213,11 +226,18 @@ const RegisterRowGroup = memo(function RegisterRowGroup(props: {
       {newMonth && (
         <tr className="bg-primary/10">
           <td
-            colSpan={8}
+            colSpan={5}
             className="border-t border-border px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
           >
             {monthLabel(r.date, locale)}
           </td>
+          <td className="border-t border-border px-3 py-1.5 text-right text-xs font-semibold tabular-nums text-foreground/70">
+            {sub ? money(sub.debit) : ""}
+          </td>
+          <td className="border-t border-border px-3 py-1.5 text-right text-xs font-semibold tabular-nums text-foreground/70">
+            {sub ? money(sub.credit) : ""}
+          </td>
+          <td className="border-t border-border" />
         </tr>
       )}
       <tr
@@ -362,6 +382,27 @@ export const RegisterView = ({
     return newestFirst ? [...filtered].reverse() : filtered;
   }, [register, query, from, to, newestFirst, recon, account]);
   const totals = useMemo(() => registerTotals(rows), [rows]);
+  const monthSubs = useMemo(() => {
+    const m = new Map<string, { debit: number; credit: number }>();
+    for (const r of rows) {
+      const k = r.date.slice(0, 7);
+      const cur = m.get(k) ?? { debit: 0, credit: 0 };
+      cur.debit += r.debit;
+      cur.credit += r.credit;
+      m.set(k, cur);
+    }
+    return m;
+  }, [rows]);
+  // Balance carried into the filtered range: the running balance just before its first day.
+  const opening = useMemo(() => {
+    if (!from) return null;
+    let bal = 0;
+    for (const r of register) {
+      if (r.date >= from) break;
+      bal = r.balance;
+    }
+    return bal;
+  }, [register, from]);
   const exportCsv = () => {
     const blob = new Blob([registerCsv([...rows].sort((a, b) => a.date.localeCompare(b.date)))], {
       type: "text/csv;charset=utf-8",
@@ -397,7 +438,9 @@ export const RegisterView = ({
   }, [hasMore, shown, rows]);
 
   const [leftKey, rightKey] = columnKeys(account?.accountType ?? "");
-  const endBalance = register[register.length - 1]?.balance ?? 0;
+  // Balance after the last filtered entry (not the whole book) so it matches the range shown.
+  const lastRow = newestFirst ? rows[0] : rows[rows.length - 1];
+  const endBalance = lastRow?.balance ?? 0;
   const setFilter = (patch: Partial<RegisterViewState>) => onState(patch);
   // Stable toggle so memoised row groups are not re-rendered when only another row changes.
   const latest = useRef(state);
@@ -523,6 +566,13 @@ export const RegisterView = ({
             })}{" "}
             · {t(`register.cols.${leftKey}`)}: {formatCurrency(totals.debit, locale)} ·{" "}
             {t(`register.cols.${rightKey}`)}: {formatCurrency(totals.credit, locale)} ·{" "}
+            {opening !== null && (
+              <>
+                {t("register.opening")}:{" "}
+                <span className="font-medium tabular-nums">{formatCurrency(opening, locale)}</span>
+                {" · "}
+              </>
+            )}
             {t("register.balance")}:{" "}
             <span className={cn("font-medium tabular-nums", endBalance < 0 && "text-red-600")}>
               {formatCurrency(endBalance, locale)}
@@ -536,7 +586,7 @@ export const RegisterView = ({
         className="max-h-[78vh] overflow-auto rounded-lg border border-border bg-card shadow-sm"
       >
         <table
-          className="w-full min-w-[74rem] table-fixed border-collapse text-[15px]"
+          className="w-full min-w-[68rem] table-fixed border-collapse text-[15px]"
           data-testid="register-table"
         >
           <colgroup>
@@ -575,6 +625,11 @@ export const RegisterView = ({
               key={r.splitId}
               r={r}
               newMonth={i === 0 || visible[i - 1].date.slice(0, 7) !== r.date.slice(0, 7)}
+              sub={
+                i === 0 || visible[i - 1].date.slice(0, 7) !== r.date.slice(0, 7)
+                  ? monthSubs.get(r.date.slice(0, 7))
+                  : undefined
+              }
               odd={i % 2 === 1}
               mode={mode}
               open={showSplits(r)}
