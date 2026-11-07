@@ -457,11 +457,9 @@ export const TransactTable = (props: {
   const allSelected = data.length > 0 && data.every((row) => rowSelection[row.splitId]);
   const someSelected = !allSelected && data.some((row) => rowSelection[row.splitId]);
   const handleToggleAll = useCallback(() => {
-    onRowSelectionChange(
-      allSelected
-        ? {}
-        : data.reduce<RowSelectionState>((acc, row) => ({ ...acc, [row.splitId]: true }), {}),
-    );
+    const all: RowSelectionState = {};
+    if (!allSelected) for (const row of data) all[row.splitId] = true;
+    onRowSelectionChange(all);
   }, [allSelected, data, onRowSelectionChange]);
   const handleToggleSelect = useCallback(
     (splitId: string) => onRowSelectionChange((prev) => ({ ...prev, [splitId]: !prev[splitId] })),

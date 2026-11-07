@@ -4,6 +4,7 @@ import {
   faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { DateTime } from "luxon";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,9 +27,6 @@ import { SegmentedControl } from "@/components/SegmentedControl";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
-
-/** Rows rendered per chunk; more are added as the list is scrolled. */
-const CHUNK = 80;
 
 const inputCls =
   "h-8 rounded border border-border bg-background px-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring";
@@ -190,8 +188,19 @@ const presetRange = (id: "month" | "3m" | "year" | "1y"): { from: string; to: st
   }
 };
 
+const Spacer = ({ height }: { height: number }) => (
+  <tbody aria-hidden>
+    <tr style={{ height }}>
+      <td colSpan={8} className="p-0" />
+    </tr>
+  </tbody>
+);
+
 const RegisterRowGroup = memo(function RegisterRowGroup(props: {
   r: RegisterRow;
+  /** Position in the list and the virtualiser's measuring ref. */
+  index: number;
+  measure: (el: HTMLElement | null) => void;
   newMonth: boolean;
   /** Totals of the month this row opens (only passed with `newMonth`). */
   sub?: { debit: number; credit: number };
@@ -208,6 +217,8 @@ const RegisterRowGroup = memo(function RegisterRowGroup(props: {
 }) {
   const {
     r,
+    index,
+    measure,
     newMonth,
     sub,
     cursor,
@@ -225,7 +236,7 @@ const RegisterRowGroup = memo(function RegisterRowGroup(props: {
   const typeOf = (id: string | undefined) => accountMap.get(id ?? "")?.accountType;
   const other = r.splits.find((x) => !x.isThis);
   return (
-    <tbody>
+    <tbody ref={measure} data-index={index}>
       {newMonth && (
         <tr className="bg-primary/10">
           <td
@@ -420,27 +431,20 @@ export const RegisterView = ({
     URL.revokeObjectURL(url);
   };
 
-  // Infinite scroll: render a chunk, add another when the sentinel nears the viewport. The
-  // count restarts whenever the row set changes (filters, account, sort).
-  const [grown, setGrown] = useState<{ rows: RegisterRow[]; n: number }>({ rows, n: CHUNK });
-  const shown = grown.rows === rows ? grown.n : CHUNK;
-  const visible = useMemo(() => rows.slice(0, shown), [rows, shown]);
-  const hasMore = shown < rows.length;
+  // Virtualised list: only the rows near the viewport exist in the DOM, however many there
+  // are. Each row group is measured (an opened transaction is taller), and two spacer
+  // bodies stand in for the rows above and below.
   const scroller = useRef<HTMLDivElement>(null);
-  const sentinel = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = sentinel.current;
-    if (!el || !hasMore) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting))
-          setGrown({ rows, n: Math.min(rows.length, shown + CHUNK) });
-      },
-      { root: scroller.current, rootMargin: "800px 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [hasMore, shown, rows]);
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scroller.current,
+    estimateSize: () => 48,
+    overscan: 12,
+    getItemKey: (i) => rows[i].splitId,
+  });
+  const items = virtualizer.getVirtualItems();
+  const padTop = items.length ? items[0].start : 0;
+  const padBottom = items.length ? virtualizer.getTotalSize() - items[items.length - 1].end : 0;
 
   const [leftKey, rightKey] = columnKeys(account?.accountType ?? "");
   // Balance after the last filtered entry (not the whole book) so it matches the range shown.
@@ -473,12 +477,13 @@ export const RegisterView = ({
         document.getElementById("register-search-value")?.focus();
       } else if (e.key === "j" || e.key === "k") {
         e.preventDefault();
-        const at = visible.findIndex((r) => r.splitId === cursorId);
-        const next = e.key === "j" ? Math.min(visible.length - 1, at + 1) : Math.max(0, at - 1);
-        const target = visible[next];
+        const at = rows.findIndex((r) => r.splitId === cursorId);
+        const next = e.key === "j" ? Math.min(rows.length - 1, at + 1) : Math.max(0, at - 1);
+        const target = rows[next];
         if (!target) return;
         setCursorId(target.splitId);
-        // Wait for the highlight to render, then keep the row in view under the sticky header.
+        // The row may be outside the rendered window: scroll it in, then trim to the edge.
+        virtualizer.scrollToIndex(next, { align: "auto" });
         requestAnimationFrame(() =>
           rootRef.current
             ?.querySelector(`[data-split="${CSS.escape(target.splitId)}"]`)
@@ -491,7 +496,7 @@ export const RegisterView = ({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visible, cursorId, onToggle]);
+  }, [rows, cursorId, onToggle, virtualizer]);
 
   const filtersActive = Boolean(query || from || to || recon !== "all");
 
@@ -650,7 +655,7 @@ export const RegisterView = ({
               <th className="px-3 py-2.5 text-right">{t("register.balance")}</th>
             </tr>
           </thead>
-          {visible.length === 0 && (
+          {rows.length === 0 && (
             <tbody>
               <tr>
                 <td colSpan={8} className="px-2 py-8 text-center text-muted-foreground">
@@ -659,36 +664,34 @@ export const RegisterView = ({
               </tr>
             </tbody>
           )}
-          {visible.map((r, i) => (
-            <RegisterRowGroup
-              key={r.splitId}
-              r={r}
-              newMonth={i === 0 || visible[i - 1].date.slice(0, 7) !== r.date.slice(0, 7)}
-              sub={
-                i === 0 || visible[i - 1].date.slice(0, 7) !== r.date.slice(0, 7)
-                  ? monthSubs.get(r.date.slice(0, 7))
-                  : undefined
-              }
-              cursor={cursorId === r.splitId}
-              odd={i % 2 === 1}
-              mode={mode}
-              open={showSplits(r)}
-              accountType={account?.accountType ?? ""}
-              accountMap={accountMap}
-              locale={locale}
-              onToggle={onToggle}
-              onOpenAccount={onOpenAccount}
-            />
-          ))}
+          {padTop > 0 && <Spacer height={padTop} />}
+          {items.map((item) => {
+            const i = item.index;
+            const r = rows[i];
+            const month = r.date.slice(0, 7);
+            const newMonth = i === 0 || rows[i - 1].date.slice(0, 7) !== month;
+            return (
+              <RegisterRowGroup
+                key={r.splitId}
+                index={i}
+                measure={virtualizer.measureElement}
+                r={r}
+                newMonth={newMonth}
+                sub={newMonth ? monthSubs.get(month) : undefined}
+                cursor={cursorId === r.splitId}
+                odd={i % 2 === 1}
+                mode={mode}
+                open={showSplits(r)}
+                accountType={account?.accountType ?? ""}
+                accountMap={accountMap}
+                locale={locale}
+                onToggle={onToggle}
+                onOpenAccount={onOpenAccount}
+              />
+            );
+          })}
+          {padBottom > 0 && <Spacer height={padBottom} />}
         </table>
-        {rows.length > 0 && (
-          <div
-            ref={sentinel}
-            className="py-2 text-center text-xs text-muted-foreground tabular-nums"
-          >
-            {t("register.shownOf", { shown: visible.length, total: rows.length })}
-          </div>
-        )}
       </div>
     </div>
   );

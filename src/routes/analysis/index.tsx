@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import type { OnChangeFn, RowSelectionState } from "@tanstack/react-table";
 import { DateTime } from "luxon";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { netTransactionValue } from "@/common/aggregate";
@@ -11,6 +11,7 @@ import { useIsNarrowViewport } from "@/common/utils.ts";
 import { ChartCard } from "@/components/charts/ChartCard";
 import { PeriodicityTabs } from "@/components/PeriodicityTabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/useAuthContext";
 import { fullTransactionsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
@@ -84,16 +85,23 @@ const Analysis = () => {
   const [compare, setCompare] = useState(false);
 
   const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
-  const transactions = useMemo(() => data, [data]);
+  const transactions = data;
+  // The filter inputs stay instant; the heavy derived data (filtering, chart, KPIs, table)
+  // follows at lower priority so typing never waits on it.
+  const appliedFilters = useDeferredValue(filters);
+  const stale = appliedFilters !== filters;
 
   const filteredByFilters = useMemo(() => {
-    const matches = compileSearch(filters.search, filters.field);
+    const matches = compileSearch(appliedFilters.search, appliedFilters.field);
+    const from = appliedFilters.range
+      ? appliedFilters.range.from.startOf("day").toMillis()
+      : -Infinity;
+    const to = appliedFilters.range ? appliedFilters.range.to.endOf("day").toMillis() : Infinity;
     return (transactions ?? []).filter((row) => {
-      if (filters.type !== "all" && row.accountType !== filters.type) return false;
-      if (filters.range) {
-        const from = filters.range.from.startOf("day");
-        const to = filters.range.to.endOf("day");
-        if (row.datePosted < from || row.datePosted > to) return false;
+      if (appliedFilters.type !== "all" && row.accountType !== appliedFilters.type) return false;
+      if (appliedFilters.range) {
+        const at = row.datePosted.toMillis();
+        if (at < from || at > to) return false;
       }
       if (
         !matches({
@@ -111,26 +119,26 @@ const Analysis = () => {
         return false;
       return true;
     });
-  }, [transactions, filters]);
+  }, [transactions, appliedFilters]);
 
   // Reset the checkbox selection back to "everything" whenever the filters actually change --
   // otherwise a selection made under a previous filter set would keep silently narrowing the
   // chart/KPIs after the visible table has moved on to a different filtered set. Adjusted
   // during render (rather than in an effect) per React's guidance on resetting state when a
   // prop changes.
-  const [prevFilters, setPrevFilters] = useState(filters);
-  if (filters !== prevFilters) {
-    setPrevFilters(filters);
+  const [prevFilters, setPrevFilters] = useState(appliedFilters);
+  if (appliedFilters !== prevFilters) {
+    setPrevFilters(appliedFilters);
     setRowSelection(null);
   }
 
   // Defaults to "all filtered rows selected" until the user makes an explicit selection.
-  const effectiveRowSelection = useMemo(
-    () =>
-      rowSelection ??
-      filteredByFilters.reduce<RowSelectionState>((d, row) => ({ ...d, [row.splitId]: true }), {}),
-    [filteredByFilters, rowSelection],
-  );
+  const effectiveRowSelection = useMemo(() => {
+    if (rowSelection) return rowSelection;
+    const all: RowSelectionState = {};
+    for (const row of filteredByFilters) all[row.splitId] = true;
+    return all;
+  }, [filteredByFilters, rowSelection]);
   const filteredTransactions = useMemo(
     () => filteredByFilters.filter((row) => effectiveRowSelection[row.splitId]),
     [filteredByFilters, effectiveRowSelection],
@@ -157,7 +165,13 @@ const Analysis = () => {
     );
 
   return (
-    <div className="w-full p-4 md:pr-10 flex flex-col gap-y-6">
+    <div
+      className={cn(
+        "w-full p-4 md:pr-10 flex flex-col gap-y-6",
+        stale && "[&>*:not(:first-child):not(:nth-child(2))]:opacity-70 transition-opacity",
+      )}
+      aria-busy={stale}
+    >
       <h1 className="sr-only">{t("routes.analysis.title")}</h1>
       <FilterBar
         filters={filters}

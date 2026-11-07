@@ -20,14 +20,27 @@ test.describe("account register", () => {
     await expect(page.getByTestId("register-table").getByText("City Bus")).toHaveCount(0);
   });
 
-  test("detailed view shows splits and infinite scroll loads more rows", async ({ page }) => {
-    const rows = page.getByTestId("register-table").locator("tbody");
-    const before = await rows.count();
-    await page.getByTestId("register-table").evaluate((el) => {
+  test("virtualised list: a few rows in the DOM, any row reachable by scrolling", async ({
+    page,
+  }) => {
+    const table = page.getByTestId("register-table");
+    const rows = table.locator("tbody");
+    await expect(rows.nth(1)).toBeVisible();
+    const total = await page.evaluate(() => {
+      const t = document.querySelector("[data-testid=register-table]");
+      return Number(t?.parentElement?.scrollHeight);
+    });
+    expect(total).toBeGreaterThan(5000); // hundreds of rows' worth of height...
+    expect(await rows.count()).toBeLessThan(80); // ...but only a window of them rendered
+    const first = await table.locator("tbody[data-index]").first().getAttribute("data-index");
+    await table.evaluate((el) => {
       const s = el.parentElement;
       if (s) s.scrollTop = s.scrollHeight;
     });
-    await expect.poll(async () => rows.count()).toBeGreaterThan(before);
+    await expect
+      .poll(async () => table.locator("tbody[data-index]").last().getAttribute("data-index"))
+      .not.toBe(first);
+    expect(await rows.count()).toBeLessThan(80);
     await page.getByRole("button", { name: "Detailed" }).click();
     await expect(page.getByRole("button", { name: "Detailed" })).toHaveAttribute(
       "aria-pressed",
