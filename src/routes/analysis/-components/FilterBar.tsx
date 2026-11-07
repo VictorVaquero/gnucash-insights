@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { DateRangePresets } from "@/routes/summary/-DateRangePresets";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { SavedViews } from "./SavedViews";
 import { SearchFilters } from "@/components/SearchFilters";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -138,6 +139,7 @@ export const FilterBar = (props: {
         onChange={(search) => onChange((prev) => ({ ...prev, search, field: "all" }))}
       />
       <p className="text-xs text-muted-foreground">{t("analysis.filters.searchHelp")}</p>
+      <SavedViews filters={filters} onApply={(f) => onChange(() => f)} />
       <div className="flex flex-wrap items-center gap-1.5">
         {quickChips.map((chip) => (
           <QuickChipButton

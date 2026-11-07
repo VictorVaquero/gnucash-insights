@@ -374,6 +374,11 @@
       "showing": "Showing",
       "rows": "Rows",
       "empty": "No transactions match your filters"
+    },
+    "views": {
+      "placeholder": "Name this view…",
+      "save": "Save view",
+      "delete": "Delete view {{name}}"
     }
   },
   "metadata": {

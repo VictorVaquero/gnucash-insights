@@ -374,6 +374,11 @@
       "showing": "Mostrando",
       "rows": "Filas",
       "empty": "Ninguna transacción coincide con tus filtros"
+    },
+    "views": {
+      "placeholder": "Nombre de la vista…",
+      "save": "Guardar vista",
+      "delete": "Borrar vista {{name}}"
     }
   },
   "metadata": {
