@@ -1,4 +1,4 @@
-import { faDownload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DateTime } from "luxon";
 import { useCallback } from "react";
@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { DateRangePresets } from "@/routes/summary/-DateRangePresets";
 import { SegmentedControl } from "@/components/SegmentedControl";
-import { SEARCH_FIELDS, type SearchField } from "@/common/search";
+import { SearchFilters } from "@/components/SearchFilters";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "@/types/domain";
@@ -93,22 +93,6 @@ export const FilterBar = (props: {
   const { t } = useTranslation();
   const quickChips = buildQuickChips(tripDesc);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      onChange((prev) => ({ ...prev, search: value }));
-    },
-    [onChange],
-  );
-
-  const handleFieldChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const field = e.target.value as SearchField;
-      onChange((prev) => ({ ...prev, field }));
-    },
-    [onChange],
-  );
-
   const handleTypeChange = useCallback(
     (type: TransactionTypeFilter) => onChange((prev) => ({ ...prev, type })),
     [onChange],
@@ -136,35 +120,6 @@ export const FilterBar = (props: {
   return (
     <div className="rounded-lg border border-border p-3 flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-48">
-          <FontAwesomeIcon
-            icon={faMagnifyingGlass}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-3.5"
-          />
-          <label htmlFor="analysis-search" className="sr-only">
-            {t("analysis.filters.searchLabel")}
-          </label>
-          <input
-            id="analysis-search"
-            type="search"
-            value={filters.search}
-            onChange={handleSearchChange}
-            placeholder={t("analysis.filters.searchPlaceholder")}
-            className="w-full pl-9 pr-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus-visible:outline focus-visible:outline-ring focus-visible:outline-1"
-          />
-        </div>
-        <select
-          aria-label={t("analysis.filters.searchScope")}
-          value={filters.field}
-          onChange={handleFieldChange}
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-        >
-          {SEARCH_FIELDS.map((f) => (
-            <option key={f} value={f}>
-              {t(`analysis.filters.fields.${f}`)}
-            </option>
-          ))}
-        </select>
         <TypeToggle type={filters.type} onChange={handleTypeChange} />
         <DateRangePresets
           domainFrom={domainFrom}
@@ -177,6 +132,11 @@ export const FilterBar = (props: {
           {t("analysis.filters.export")}
         </Button>
       </div>
+      <SearchFilters
+        idPrefix="analysis-search"
+        value={filters.search}
+        onChange={(search) => onChange((prev) => ({ ...prev, search, field: "all" }))}
+      />
       <p className="text-xs text-muted-foreground">{t("analysis.filters.searchHelp")}</p>
       <div className="flex flex-wrap items-center gap-1.5">
         {quickChips.map((chip) => (

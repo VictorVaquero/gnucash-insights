@@ -107,34 +107,36 @@ const parseNumber = (s: string): number | null => {
  * column); `field:value` targets one column, `-word` / `-field:value` excludes, `"a b"` keeps a
  * phrase, and `amount:>100`, `amount:<=50`, `amount:10..20` compare amounts (absolute value).
  */
+const parseToken = (raw: string, scope: SearchField): Term[] => {
+  let tok = raw;
+  let negate = false;
+  if (tok.startsWith("-") && tok.length > 1) {
+    negate = true;
+    tok = tok.slice(1);
+  }
+  let field = scope;
+  const colon = tok.indexOf(":");
+  if (colon > 0) {
+    const alias = ALIASES[tok.slice(0, colon).toLowerCase()];
+    if (alias) {
+      field = alias;
+      tok = tok.slice(colon + 1);
+    }
+  }
+  if (!tok) return [];
+  let op: Term["op"] = "~";
+  if (field === "amount") {
+    const m = /^(>=|<=|>|<|=)/.exec(tok);
+    if (m) {
+      op = m[1] as Term["op"];
+      tok = tok.slice(m[1].length);
+    }
+  }
+  return [{ field, negate, op, text: tok.toLowerCase() }];
+};
+
 export const parseSearch = (query: string, scope: SearchField = "all"): Term[] =>
-  tokenize(query).flatMap((raw): Term[] => {
-    let tok = raw;
-    let negate = false;
-    if (tok.startsWith("-") && tok.length > 1) {
-      negate = true;
-      tok = tok.slice(1);
-    }
-    let field = scope;
-    const colon = tok.indexOf(":");
-    if (colon > 0) {
-      const alias = ALIASES[tok.slice(0, colon).toLowerCase()];
-      if (alias) {
-        field = alias;
-        tok = tok.slice(colon + 1);
-      }
-    }
-    if (!tok) return [];
-    let op: Term["op"] = "~";
-    if (field === "amount") {
-      const m = /^(>=|<=|>|<|=)/.exec(tok);
-      if (m) {
-        op = m[1] as Term["op"];
-        tok = tok.slice(m[1].length);
-      }
-    }
-    return [{ field, negate, op, text: tok.toLowerCase() }];
-  });
+  tokenize(query).flatMap((raw) => parseToken(raw, scope));
 
 const textOf = (rec: SearchRecord, field: Exclude<SearchField, "all" | "amount">) =>
   (rec[field] ?? "").toLowerCase();
@@ -193,3 +195,59 @@ export const compileSearch = (query: string, scope: SearchField = "all") => {
   return (rec: SearchRecord): boolean =>
     terms.every((term) => matchTerm(rec, term) !== term.negate);
 };
+
+export interface FilterChip {
+  /** The raw token as it sits in the query string. */
+  raw: string;
+  field: SearchField;
+  negate: boolean;
+  op: Term["op"];
+  text: string;
+}
+
+/** The query as a list of filters (one per token), for showing them as removable chips. */
+export const queryChips = (query: string): FilterChip[] =>
+  tokenize(query).flatMap((raw) => {
+    const [term] = parseToken(raw, "all");
+    return term ? [{ raw, ...term }] : [];
+  });
+
+/** Builds one token (`-field:value`) in the syntax `parseSearch` reads. */
+export const buildToken = (
+  field: SearchField,
+  value: string,
+  opts: { negate?: boolean; op?: Term["op"] } = {},
+): string => {
+  const v = value.trim();
+  if (!v) return "";
+  const op = field === "amount" && opts.op && opts.op !== "~" && opts.op !== "=" ? opts.op : "";
+  const body = /\s/.test(v) ? `"${v.replace(/"/g, "")}"` : v;
+  const prefix = field === "all" ? "" : `${field}:`;
+  return `${opts.negate ? "-" : ""}${prefix}${op}${body}`;
+};
+
+const join = (tokens: string[]) => tokens.join(" ");
+
+export const addToken = (query: string, token: string): string =>
+  token ? join([...tokenize(query).map(requote), token]) : query;
+
+/** `tokenize` drops quotes; put them back around tokens that hold spaces. */
+const requote = (tok: string): string => {
+  if (!/\s/.test(tok)) return tok;
+  const colon = tok.indexOf(":");
+  return colon > 0 ? `${tok.slice(0, colon + 1)}"${tok.slice(colon + 1)}"` : `"${tok}"`;
+};
+
+export const removeToken = (query: string, index: number): string =>
+  join(
+    tokenize(query)
+      .map(requote)
+      .filter((_, i) => i !== index),
+  );
+
+export const toggleNegate = (query: string, index: number): string =>
+  join(
+    tokenize(query)
+      .map(requote)
+      .map((t, i) => (i !== index ? t : t.startsWith("-") ? t.slice(1) : `-${t}`)),
+  );

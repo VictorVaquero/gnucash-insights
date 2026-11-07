@@ -49,6 +49,18 @@
       "daily": "Daily",
       "weekly": "Weekly",
       "label": "Period"
+    },
+    "filters": {
+      "add": "Add filter",
+      "value": "Filter value",
+      "placeholder": "Type a value and press Enter…",
+      "field": "Column",
+      "operator": "Comparison",
+      "active": "Active filters",
+      "toggleExclude": "Click to include/exclude",
+      "not": "NOT",
+      "remove": "Remove filter {{filter}}",
+      "clear": "Clear all"
     }
   },
   "login": {
@@ -579,6 +591,26 @@
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
     "exportCsv": "Export CSV",
-    "unbalanced": "Unbalanced"
+    "unbalanced": "Unbalanced",
+    "reconFilter": "Reconciled",
+    "recon": {
+      "all": "All",
+      "unreconciled": "Unreconciled",
+      "reconciled": "Reconciled"
+    },
+    "preset": {
+      "month": "This month",
+      "3m": "3M",
+      "year": "This year",
+      "1y": "1Y"
+    },
+    "resetFilters": "Reset filters",
+    "openAccountHint": "Open this account (Ctrl/Shift-click or middle-click: new tab)",
+    "searchAccount": "Search accounts…",
+    "noAccounts": "No matching accounts",
+    "recent": "Recent",
+    "allAccounts": "All accounts",
+    "newTab": "New tab",
+    "closeTab": "Close tab {{name}}"
   }
 }

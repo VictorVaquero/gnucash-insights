@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { setAccountConfig } from "@/db/utils";
 import { createAuthStub, renderWithRouter } from "@/test/routerHarness";
 
-import { RegisterView } from "./register/-RegisterView";
+import { RegisterTabs } from "./register/-RegisterTabs";
 import { QualitySection } from "@/components/features/QualitySection";
 import { InvestmentsPageContextProvider } from "./investments/-investmentsPageContext";
 import { useHoldings } from "./investments/-useHoldings";
@@ -95,7 +95,7 @@ describe("page smoke", () => {
       { ...base, splitId: "s2", accountId: "b", value: -50, quantity: -50 },
     ];
     const { container, getByText, getByRole } = render(
-      <RegisterView splits={splits} accounts={accounts} accountId="b" onAccountChange={vi.fn()} />,
+      <RegisterTabs splits={splits} accounts={accounts} tabs={["b"]} active="b" onTabs={vi.fn()} />,
     );
     await expectNoCrash(container);
     expect(getByText("Market")).toBeTruthy();

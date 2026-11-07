@@ -1,18 +1,16 @@
 import {
   faArrowDownWideShort,
   faArrowUpWideShort,
-  faChevronLeft,
-  faChevronRight,
   faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Fragment, useMemo, useState } from "react";
+import { DateTime } from "luxon";
+import { Fragment, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
   buildRegister,
   columnKeys,
-  accountPath,
   registerCsv,
   registerMatcher,
   registerTotals,
@@ -20,16 +18,14 @@ import {
   type RegisterRow,
   type RegisterSplit,
 } from "@/common/register";
-import { SEARCH_FIELDS, type SearchField } from "@/common/search";
 import { formatCurrency } from "@/common/utils";
+import { SearchFilters } from "@/components/SearchFilters";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 100;
-
-type ViewMode = "simple" | "detailed";
 
 const inputCls =
   "h-8 rounded border border-border bg-background px-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring";
@@ -39,15 +35,24 @@ const btnCls =
 const TransferLink = (props: {
   id: string | undefined;
   label: string | undefined;
-  onGo: (id: string) => void;
-}) =>
-  props.id ? (
+  onGo: (id: string, opts?: { newTab?: boolean }) => void;
+}) => {
+  const { t } = useTranslation();
+  return props.id ? (
     <button
       type="button"
       className="text-left hover:underline"
+      title={t("register.openAccountHint")}
       onClick={(e) => {
         e.stopPropagation();
-        props.onGo(props.id as string);
+        props.onGo(props.id as string, { newTab: e.ctrlKey || e.metaKey || e.shiftKey });
+      }}
+      onAuxClick={(e) => {
+        if (e.button === 1) {
+          e.preventDefault();
+          e.stopPropagation();
+          props.onGo(props.id as string, { newTab: true });
+        }
       }}
     >
       {props.label}
@@ -55,6 +60,7 @@ const TransferLink = (props: {
   ) : (
     <>{props.label}</>
   );
+};
 
 const Reconciled = ({ flag }: { flag: string }) => (
   <span
@@ -64,62 +70,92 @@ const Reconciled = ({ flag }: { flag: string }) => (
   </span>
 );
 
+export type ViewMode = "simple" | "detailed";
+
+/** Everything the user can tweak on one register tab. */
+export interface RegisterViewState {
+  mode: ViewMode;
+  newestFirst: boolean;
+  query: string;
+  from: string;
+  to: string;
+  page: number;
+  expanded: string[];
+  /** "all" | "unreconciled" | "reconciled" */
+  recon: ReconFilter;
+}
+
+export type ReconFilter = "all" | "unreconciled" | "reconciled";
+
+export const initialRegisterState: RegisterViewState = {
+  mode: "simple",
+  newestFirst: true,
+  query: "",
+  from: "",
+  to: "",
+  page: 0,
+  expanded: [],
+  recon: "all",
+};
+
 interface RegisterViewProps {
   splits: RegisterSplit[];
   accounts: RegisterAccount[];
   accountId: string;
-  onAccountChange: (id: string) => void;
+  state: RegisterViewState;
+  onState: (patch: Partial<RegisterViewState>) => void;
+  /** Open another account (normally in this tab; `newTab` keeps this one open). */
+  onOpenAccount: (id: string, opts?: { newTab?: boolean }) => void;
 }
 
-/** A GnuCash-style account register: basic ledger or transaction journal, one account at a time. */
+const presetRange = (id: "month" | "3m" | "year" | "1y"): { from: string; to: string } => {
+  const now = DateTime.now();
+  const iso = (d: DateTime) => d.toISODate() ?? "";
+  switch (id) {
+    case "month":
+      return { from: iso(now.startOf("month")), to: iso(now.endOf("month")) };
+    case "3m":
+      return { from: iso(now.minus({ months: 3 })), to: iso(now) };
+    case "year":
+      return { from: iso(now.startOf("year")), to: iso(now.endOf("year")) };
+    default:
+      return { from: iso(now.minus({ years: 1 })), to: iso(now) };
+  }
+};
+
+/** A GnuCash-style account register: basic ledger or transaction journal, one account. */
 export const RegisterView = ({
   splits,
   accounts,
   accountId,
-  onAccountChange,
+  state,
+  onState,
+  onOpenAccount,
 }: RegisterViewProps) => {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const [mode, setMode] = useState<ViewMode>("simple");
-  const [newestFirst, setNewestFirst] = useState(true);
-  const [query, setQuery] = useState("");
-  const [scope, setScope] = useState<SearchField>("all");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [page, setPage] = useState(0);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const { mode, newestFirst, query, from, to, page, recon } = state;
+  const expanded = useMemo(() => new Set(state.expanded), [state.expanded]);
 
   const accountMap = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
   const account = accountMap.get(accountId);
-
-  // Accounts with at least one split, in tree order (sorted by full path).
-  const options = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const s of splits) counts.set(s.accountId, (counts.get(s.accountId) ?? 0) + 1);
-    return accounts
-      .filter((a) => a.accountType !== "ROOT" && (counts.get(a.id) ?? 0) > 0)
-      .map((a) => ({
-        id: a.id,
-        type: a.accountType,
-        path: accountPath(a.id, accountMap),
-        count: counts.get(a.id) ?? 0,
-      }))
-      .sort((a, b) => a.path.localeCompare(b.path));
-  }, [accounts, splits, accountMap]);
-  const index = options.findIndex((o) => o.id === accountId);
 
   const register = useMemo(
     () => buildRegister(splits, accountId, accountMap),
     [splits, accountId, accountMap],
   );
   const rows = useMemo(() => {
-    const matches = registerMatcher(query, scope);
+    const matches = registerMatcher(query);
     const type = account?.accountType ?? "";
     const filtered = register.filter(
-      (r) => (!from || r.date >= from) && (!to || r.date <= to) && matches(r, type),
+      (r) =>
+        (!from || r.date >= from) &&
+        (!to || r.date <= to) &&
+        (recon === "all" || (recon === "reconciled") === (r.reconciled === "y")) &&
+        matches(r, type),
     );
     return newestFirst ? [...filtered].reverse() : filtered;
-  }, [register, query, scope, from, to, newestFirst, account]);
+  }, [register, query, from, to, newestFirst, recon, account]);
   const totals = useMemo(() => registerTotals(rows), [rows]);
   const exportCsv = () => {
     const blob = new Blob([registerCsv([...rows].sort((a, b) => a.date.localeCompare(b.date)))], {
@@ -140,20 +176,13 @@ export const RegisterView = ({
   const [leftKey, rightKey] = columnKeys(account?.accountType ?? "");
   const money = (v: number) => (v ? formatCurrency(v, locale) : "");
   const endBalance = register[register.length - 1]?.balance ?? 0;
-  const reset = () => setPage(0);
-  const goTo = (i: number) => {
-    const o = options[i];
-    if (o) {
-      onAccountChange(o.id);
-      reset();
-    }
-  };
+  // Any change to a filter sends the table back to its first page.
+  const setFilter = (patch: Partial<RegisterViewState>) => onState({ ...patch, page: 0 });
   const toggle = (id: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(id)) next.add(id);
-      return next;
+    onState({
+      expanded: expanded.has(id) ? state.expanded.filter((x) => x !== id) : [...state.expanded, id],
     });
+  const filtersActive = Boolean(query || from || to || recon !== "all");
 
   const showSplits = (r: RegisterRow) => mode === "detailed" || expanded.has(r.splitId);
 
@@ -162,90 +191,57 @@ export const RegisterView = ({
       <Card>
         <CardContent className="flex flex-col gap-3 pt-4">
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className={btnCls}
-              disabled={index <= 0}
-              onClick={() => goTo(index - 1)}
-              aria-label={t("register.previous")}
-            >
-              <FontAwesomeIcon icon={faChevronLeft} />
-            </button>
-            <select
-              aria-label={t("register.account")}
-              className={cn(inputCls, "min-w-0 flex-1 md:max-w-xl")}
-              value={accountId}
-              onChange={(e) => {
-                onAccountChange(e.target.value);
-                reset();
-              }}
-            >
-              {options.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.path} ({o.count})
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className={btnCls}
-              disabled={index < 0 || index >= options.length - 1}
-              onClick={() => goTo(index + 1)}
-              aria-label={t("register.next")}
-            >
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
             <SegmentedControl
               label={t("register.view")}
               value={mode}
-              onChange={setMode}
+              onChange={(m) => onState({ mode: m })}
               options={[
                 { value: "simple", label: t("register.simple") },
                 { value: "detailed", label: t("register.detailed") },
               ]}
             />
-            <button type="button" className={btnCls} onClick={() => setNewestFirst((v) => !v)}>
+            <button
+              type="button"
+              className={btnCls}
+              onClick={() => onState({ newestFirst: !newestFirst })}
+            >
               <FontAwesomeIcon icon={newestFirst ? faArrowDownWideShort : faArrowUpWideShort} />
               {newestFirst ? t("register.newestFirst") : t("register.oldestFirst")}
             </button>
-            <input
-              type="search"
-              aria-label={t("register.search")}
-              placeholder={t("register.search")}
-              className={cn(inputCls, "min-w-40 flex-1 md:max-w-xs")}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                reset();
-              }}
+            <SegmentedControl
+              label={t("register.reconFilter")}
+              value={recon}
+              onChange={(v) => setFilter({ recon: v })}
+              options={[
+                { value: "all", label: t("register.recon.all") },
+                { value: "unreconciled", label: t("register.recon.unreconciled") },
+                { value: "reconciled", label: t("register.recon.reconciled") },
+              ]}
             />
-            <select
-              aria-label={t("analysis.filters.searchScope")}
-              className={inputCls}
-              value={scope}
-              onChange={(e) => {
-                setScope(e.target.value as SearchField);
-                reset();
-              }}
-            >
-              {SEARCH_FIELDS.map((f) => (
-                <option key={f} value={f}>
-                  {t(`analysis.filters.fields.${f}`)}
-                </option>
-              ))}
-            </select>
+          </div>
+          <SearchFilters
+            idPrefix="register-search"
+            value={query}
+            onChange={(q) => setFilter({ query: q })}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            {(["month", "3m", "year", "1y"] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={btnCls}
+                onClick={() => setFilter(presetRange(id))}
+              >
+                {t(`register.preset.${id}`)}
+              </button>
+            ))}
             <label className="flex items-center gap-1 text-xs text-muted-foreground">
               {t("register.from")}
               <input
                 type="date"
                 className={inputCls}
                 value={from}
-                onChange={(e) => {
-                  setFrom(e.target.value);
-                  reset();
-                }}
+                onChange={(e) => setFilter({ from: e.target.value })}
               />
             </label>
             <label className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -254,25 +250,31 @@ export const RegisterView = ({
                 type="date"
                 className={inputCls}
                 value={to}
-                onChange={(e) => {
-                  setTo(e.target.value);
-                  reset();
-                }}
+                onChange={(e) => setFilter({ to: e.target.value })}
               />
             </label>
+            {filtersActive && (
+              <button
+                type="button"
+                className="text-xs underline text-muted-foreground"
+                onClick={() => setFilter({ query: "", from: "", to: "", recon: "all" })}
+              >
+                {t("register.resetFilters")}
+              </button>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
-            <span className="mr-2 inline-flex gap-1">
+            <span className="mr-2 inline-flex gap-2">
               {mode === "simple" && (
                 <button
                   type="button"
                   className="underline"
                   onClick={() =>
-                    setExpanded(
-                      expanded.size
-                        ? new Set()
-                        : new Set(rows.filter((r) => r.isSplit).map((r) => r.splitId)),
-                    )
+                    onState({
+                      expanded: expanded.size
+                        ? []
+                        : rows.filter((r) => r.isSplit).map((r) => r.splitId),
+                    })
                   }
                 >
                   {expanded.size ? t("register.collapseAll") : t("register.expandAll")}
@@ -369,7 +371,7 @@ export const RegisterView = ({
                       <TransferLink
                         id={r.splits.find((x) => !x.isThis)?.accountId}
                         label={r.transfers[0]}
-                        onGo={onAccountChange}
+                        onGo={onOpenAccount}
                       />
                     )}
                   </td>
@@ -408,7 +410,7 @@ export const RegisterView = ({
                           <TransferLink
                             id={s.accountId}
                             label={s.accountPath}
-                            onGo={onAccountChange}
+                            onGo={onOpenAccount}
                           />
                         )}
                       </td>
@@ -432,7 +434,7 @@ export const RegisterView = ({
             type="button"
             className={btnCls}
             disabled={current === 0}
-            onClick={() => setPage(current - 1)}
+            onClick={() => onState({ page: current - 1 })}
           >
             {t("register.prevPage")}
           </button>
@@ -443,7 +445,7 @@ export const RegisterView = ({
             type="button"
             className={btnCls}
             disabled={current >= pages - 1}
-            onClick={() => setPage(current + 1)}
+            onClick={() => onState({ page: current + 1 })}
           >
             {t("register.nextPage")}
           </button>

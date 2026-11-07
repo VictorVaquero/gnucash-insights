@@ -65,3 +65,25 @@ describe("search", () => {
     ]);
   });
 });
+
+describe("filter chips", () => {
+  it("builds, lists, toggles and removes filters", async () => {
+    const m = await import("./search");
+    let q = "";
+    q = m.addToken(q, m.buildToken("description", "coffee shop"));
+    q = m.addToken(q, m.buildToken("amount", "100", { op: ">" }));
+    q = m.addToken(q, m.buildToken("account", "food", { negate: true }));
+    expect(q).toBe('description:"coffee shop" amount:>100 -account:food');
+    const chips = m.queryChips(q);
+    expect(chips.map((c) => [c.field, c.negate, c.text])).toEqual([
+      ["description", false, "coffee shop"],
+      ["amount", false, "100"],
+      ["account", true, "food"],
+    ]);
+    expect(m.toggleNegate(q, 0).startsWith('-description:"coffee shop"')).toBe(true);
+    expect(m.removeToken(q, 1)).toBe('description:"coffee shop" -account:food');
+    expect(m.buildToken("all", "  ")).toBe("");
+    const rec = { description: "Coffee Shop", account: "Drinks", amount: 150 };
+    expect(m.compileSearch(q)(rec)).toBe(true);
+  });
+});
