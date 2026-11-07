@@ -26,21 +26,47 @@ const columnHelper = createColumnHelper<Data>();
 // the React Compiler can't see -- it would cache TableRow's JSX against the (unrelated) row
 // object identity, so a selection change would silently fail to re-render. Passing `selected`
 // straight down as a prop keeps this compiler-safe, mirroring TransactsCardList.
+const TYPE_CHIP: Record<string, string> = {
+  INCOME: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300",
+  EXPENSE: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
+  BANK: "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300",
+  CASH: "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300",
+  ASSET: "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300",
+  STOCK: "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300",
+  MUTUAL: "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300",
+  LIABILITY: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
+  CREDIT: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
+};
+
+const DateCell = ({ date }: { date: Data["datePosted"] }) => {
+  const { locale } = useLocale();
+  return (
+    <span className="whitespace-nowrap font-medium tabular-nums">
+      {date.setLocale(locale).toFormat("dd LLL yyyy")}
+    </span>
+  );
+};
+
 const buildColumns = (t: (key: string, opts?: Record<string, unknown>) => string) => [
   columnHelper.accessor("datePosted", {
     header: t("analysis.table.headers.date"),
-    cell: (info) => info.getValue().toISODate(),
+    cell: (info) => <DateCell date={info.getValue()} />,
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("description", {
     header: t("analysis.table.headers.description"),
-    cell: (info) => info.getValue(),
+    cell: (info) => <span className="font-semibold text-foreground">{info.getValue()}</span>,
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("accountType", {
     header: t("analysis.table.headers.accountType"),
     cell: (info) => (
-      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground whitespace-nowrap">
+      <span
+        className={cn(
+          "inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap",
+          TYPE_CHIP[info.getValue()] ?? "bg-muted text-foreground/80",
+        )}
+      >
         {info.getValue()}
       </span>
     ),
@@ -48,7 +74,7 @@ const buildColumns = (t: (key: string, opts?: Record<string, unknown>) => string
   }),
   columnHelper.accessor("accountName", {
     header: t("analysis.table.headers.accountName"),
-    cell: (info) => info.getValue(),
+    cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     footer: (info) => info.column.id,
   }),
   columnHelper.accessor("value", {
@@ -68,7 +94,12 @@ const ValueCell = ({ value, accountType }: { value: number; accountType: string 
   const isExpenseColor = accountType === "EXPENSE" || (accountType !== "INCOME" && value < 0);
   return (
     <span
-      className={cn("font-medium tabular-nums", isExpenseColor ? "text-red-600" : "text-green-600")}
+      className={cn(
+        "whitespace-nowrap text-base font-semibold tabular-nums",
+        isExpenseColor
+          ? "text-red-700 dark:text-red-400"
+          : "text-emerald-700 dark:text-emerald-400",
+      )}
     >
       {formatCurrency(value, locale)}
     </span>
@@ -123,9 +154,9 @@ const ExpanderButton = ({
 const DetailRow = ({ row, colSpan }: { row: Data; colSpan: number }) => {
   const { t } = useTranslation();
   return (
-    <tr className="bg-accent/30">
-      <td colSpan={colSpan} className="p-3">
-        <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-xs">
+    <tr className="bg-accent/40">
+      <td colSpan={colSpan} className="border-l-4 border-primary/50 p-3">
+        <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-sm">
           <div>
             <dt className="text-muted-foreground">{t("analysis.table.headers.notes")}</dt>
             <dd className="text-foreground">{row.slNotes ?? "—"}</dd>
@@ -174,8 +205,8 @@ const TableRow = ({
   );
   return (
     <Fragment>
-      <tr className="border-b border-border hover:bg-accent/40">
-        <td className="p-2">
+      <tr className="border-b border-border/70 odd:bg-muted/40 hover:bg-accent/60">
+        <td className="p-3">
           <Checkbox
             aria-label={t("analysis.table.selectRow", { description: row.original.description })}
             checked={selected}
@@ -194,7 +225,7 @@ const TableRow = ({
           />
         </td>
         {row.getVisibleCells().map((cell) => (
-          <td key={cell.id} className="p-2">
+          <td key={cell.id} className="px-3 py-3">
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </td>
         ))}
@@ -239,10 +270,13 @@ const TableBody = ({
   const { t } = useTranslation();
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-foreground text-sm">
+      <table className="w-full border-collapse text-[15px] text-foreground">
         <thead>
           {headerGroups.map((hg) => (
-            <tr key={hg.id} className="border-b border-border">
+            <tr
+              key={hg.id}
+              className="border-b-2 border-border bg-muted text-xs uppercase tracking-wide"
+            >
               <th className="w-8">
                 <Checkbox
                   aria-label={t("analysis.table.selectAllRows")}
@@ -262,12 +296,12 @@ const TableBody = ({
                     : "asc"
                   : false;
                 return (
-                  <th key={h.id} className="text-left font-medium text-muted-foreground p-2">
+                  <th key={h.id} className="p-3 text-left font-semibold text-foreground/70">
                     {h.isPlaceholder ? null : h.column.getCanSort() ? (
                       <button
                         type="button"
                         onClick={h.column.getToggleSortingHandler()}
-                        className="inline-flex items-center hover:text-foreground"
+                        className="inline-flex items-center uppercase hover:text-foreground"
                       >
                         {flexRender(h.column.columnDef.header, h.getContext())}
                         <SortIcon direction={direction} />
@@ -340,28 +374,28 @@ const TablePagination = ({
     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-foreground">
       <span className="flex items-center gap-1">
         <button
-          className="rounded p-1 bg-muted disabled:opacity-40"
+          className="rounded px-2 py-1 bg-muted font-medium hover:bg-accent disabled:opacity-40"
           onClick={onFirstPage}
           disabled={!canPreviousPage}
         >
           {"<<"}
         </button>
         <button
-          className="rounded p-1 bg-muted disabled:opacity-40"
+          className="rounded px-2 py-1 bg-muted font-medium hover:bg-accent disabled:opacity-40"
           onClick={onPreviousPage}
           disabled={!canPreviousPage}
         >
           {"<"}
         </button>
         <button
-          className="rounded p-1 bg-muted disabled:opacity-40"
+          className="rounded px-2 py-1 bg-muted font-medium hover:bg-accent disabled:opacity-40"
           onClick={onNextPage}
           disabled={!canNextPage}
         >
           {">"}
         </button>
         <button
-          className="rounded p-1 bg-muted disabled:opacity-40"
+          className="rounded px-2 py-1 bg-muted font-medium hover:bg-accent disabled:opacity-40"
           onClick={onLastPage}
           disabled={!canNextPage}
         >
