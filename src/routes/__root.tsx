@@ -10,6 +10,7 @@ import { DateTime } from "luxon";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { CommandPalette } from "@/components/CommandPalette";
 import { AccountMenu } from "@/components/AccountMenu.tsx";
 import { Footer } from "@/components/Footer.tsx";
 import { SideBar } from "@/components/SideBar.tsx";
@@ -98,6 +99,7 @@ const RootComponent = () => {
     <>
       {isAuthenticated && <SideBar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />}
       {isAuthenticated && <AccountMenu />}
+      {isAuthenticated && isAppDataReady && <CommandPalette />}
       <main
         ref={mainRef}
         tabIndex={-1}

@@ -620,5 +620,11 @@
     "closeTab": "Cerrar pestaña {{name}}",
     "shownOf": "{{shown}} de {{total}} mostradas · baja para ver más",
     "opening": "Saldo inicial"
+  },
+  "palette": {
+    "title": "Paleta de comandos",
+    "placeholder": "Ir a una página o cuenta (Ctrl+K)…",
+    "page": "Página",
+    "none": "Sin resultados"
   }
 }

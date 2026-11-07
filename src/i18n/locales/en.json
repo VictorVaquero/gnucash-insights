@@ -620,5 +620,11 @@
     "closeTab": "Close tab {{name}}",
     "shownOf": "{{shown}} of {{total}} shown · scroll for more",
     "opening": "Opening balance"
+  },
+  "palette": {
+    "title": "Command palette",
+    "placeholder": "Go to a page or account (Ctrl+K)…",
+    "page": "Page",
+    "none": "Nothing found"
   }
 }
