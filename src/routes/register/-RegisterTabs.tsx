@@ -101,6 +101,21 @@ export const RegisterTabs = ({ splits, accounts, tabs, active, onTabs, view, onV
     if (encoded !== view) onView?.(encoded);
   }, [encoded, view, onView]);
 
+  // "[" / "]" step through the open tabs (ignored while typing in a field).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || (e.key !== "[" && e.key !== "]")) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) || el.isContentEditable)) return;
+      if (tabs.length < 2) return;
+      const at = tabs.indexOf(active);
+      const next = tabs[(at + (e.key === "]" ? 1 : tabs.length - 1)) % tabs.length];
+      onTabs(tabs, next);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tabs, active, onTabs]);
+
   const closePicker = useCallback(() => setPicker(null), []);
 
   return (

@@ -195,6 +195,8 @@ const RegisterRowGroup = memo(function RegisterRowGroup(props: {
   newMonth: boolean;
   /** Totals of the month this row opens (only passed with `newMonth`). */
   sub?: { debit: number; credit: number };
+  /** Keyboard cursor (j/k) is on this row. */
+  cursor: boolean;
   odd: boolean;
   mode: ViewMode;
   open: boolean;
@@ -208,6 +210,7 @@ const RegisterRowGroup = memo(function RegisterRowGroup(props: {
     r,
     newMonth,
     sub,
+    cursor,
     odd,
     mode,
     open,
@@ -241,11 +244,13 @@ const RegisterRowGroup = memo(function RegisterRowGroup(props: {
         </tr>
       )}
       <tr
+        data-split={r.splitId}
         className={cn(
           "border-t border-border/70 align-top hover:bg-accent/60",
           odd && "bg-muted/40",
           mode === "simple" && "cursor-pointer",
           open && "border-b-0",
+          cursor && "outline outline-2 -outline-offset-2 outline-primary",
           r.unbalanced && "bg-red-50 dark:bg-red-950/30",
         )}
         onClick={mode === "simple" ? () => onToggle(r.splitId) : undefined}
@@ -454,12 +459,46 @@ export const RegisterView = ({
     },
     [onState],
   );
+  // Keyboard: j/k move a row cursor, Enter opens/closes it, "/" jumps to the search box.
+  // "[" and "]" (switching tabs) are handled one level up, where the tabs live.
+  const [cursorId, setCursorId] = useState<string | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) || el.isContentEditable)) return;
+      if (e.key === "/") {
+        e.preventDefault();
+        document.getElementById("register-search-value")?.focus();
+      } else if (e.key === "j" || e.key === "k") {
+        e.preventDefault();
+        const at = visible.findIndex((r) => r.splitId === cursorId);
+        const next = e.key === "j" ? Math.min(visible.length - 1, at + 1) : Math.max(0, at - 1);
+        const target = visible[next];
+        if (!target) return;
+        setCursorId(target.splitId);
+        // Wait for the highlight to render, then keep the row in view under the sticky header.
+        requestAnimationFrame(() =>
+          rootRef.current
+            ?.querySelector(`[data-split="${CSS.escape(target.splitId)}"]`)
+            ?.scrollIntoView({ block: "nearest" }),
+        );
+      } else if (e.key === "Enter" && cursorId) {
+        e.preventDefault();
+        onToggle(cursorId);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [visible, cursorId, onToggle]);
+
   const filtersActive = Boolean(query || from || to || recon !== "all");
 
   const showSplits = (r: RegisterRow) => mode === "detailed" || expanded.has(r.splitId);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={rootRef} className="flex flex-col gap-3">
       <Card>
         <CardContent className="flex flex-col gap-3 pt-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -630,6 +669,7 @@ export const RegisterView = ({
                   ? monthSubs.get(r.date.slice(0, 7))
                   : undefined
               }
+              cursor={cursorId === r.splitId}
               odd={i % 2 === 1}
               mode={mode}
               open={showSplits(r)}

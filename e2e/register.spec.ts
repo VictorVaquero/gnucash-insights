@@ -55,4 +55,21 @@ test.describe("account register", () => {
     );
     await expect(page.getByTestId("register-table").getByText("City Bus")).toHaveCount(0);
   });
+
+  test("keyboard: j/k move the cursor, Enter opens the row, / focuses the search", async ({
+    page,
+  }) => {
+    const table = page.getByTestId("register-table");
+    await expect(table.locator("tbody").nth(1)).toBeVisible();
+    await page.keyboard.press("j");
+    await page.keyboard.press("j");
+    await page.keyboard.press("k");
+    await expect(table.locator("tr[class*=outline-primary]")).toHaveCount(1);
+    await page.keyboard.press("Enter");
+    const group = table.locator("tbody:has(tr[class*=outline-primary])");
+    // month heading + the row + its open split detail
+    await expect.poll(async () => group.locator("tr").count()).toBeGreaterThanOrEqual(3);
+    await page.keyboard.press("/");
+    await expect(page.locator("#register-search-value")).toBeFocused();
+  });
 });
