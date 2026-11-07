@@ -18,7 +18,7 @@ import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
 import { useLocale } from "@/hooks/useLocale";
-import { Periodicity } from "@/types/domain";
+import { FinePeriodicity } from "@/types/domain";
 import { FullTransaction } from "..";
 
 interface ChartRow {
@@ -32,6 +32,14 @@ interface ChartRow {
 
 const green = twStyles.getPropertyValue("--color-green-500");
 const red = twStyles.getPropertyValue("--color-red-500");
+
+const PERIOD_FORMATS: Record<FinePeriodicity, string> = {
+  daily: "yyyy-LL-dd",
+  weekly: "kkkk-'W'WW",
+  monthly: "yyyy-LL",
+  quarterly: "yyyy-qq",
+  yearly: "yyyy",
+};
 
 const marginDesktop = { top: 28, right: 20, bottom: 0, left: 50 };
 const marginMobile = { top: 24, right: 10, bottom: 0, left: 36 };
@@ -95,13 +103,12 @@ export const TransactsPlot = ({
   periodicity,
 }: {
   data: FullTransaction[];
-  periodicity: Periodicity;
+  periodicity: FinePeriodicity;
 }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const { locale } = useLocale();
   const margin = isNarrowViewport ? marginMobile : marginDesktop;
-  const format =
-    periodicity == "yearly" ? "yyyy" : periodicity == "monthly" ? "yyyy-LL" : "yyyy-qq";
+  const format = PERIOD_FORMATS[periodicity];
 
   const chartData: ChartRow[] = useMemo(() => {
     const grouped = groupBy(data, (d) => d.datePosted.toFormat(format));
@@ -151,6 +158,7 @@ export const TransactsPlot = ({
           {scrubbedPoint && (
             <ReferenceLine
               x={scrubbedPoint.dateLabel}
+              position="middle"
               stroke="var(--color-border)"
               strokeDasharray="3 3"
               ifOverflow="extendDomain"

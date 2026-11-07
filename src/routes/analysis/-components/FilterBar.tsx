@@ -5,6 +5,8 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DateRangePresets } from "@/routes/summary/-DateRangePresets";
+import { SegmentedControl } from "@/components/SegmentedControl";
+import { SEARCH_FIELDS, type SearchField } from "@/common/search";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "@/types/domain";
@@ -52,42 +54,15 @@ const TypeToggle = (props: {
   type: TransactionTypeFilter;
   onChange: (v: TransactionTypeFilter) => void;
 }) => {
-  const { type, onChange } = props;
-  return (
-    <div className="flex bg-muted p-1 rounded-lg w-fit shrink-0">
-      {TYPE_OPTIONS.map((option) => (
-        <TypeToggleButton
-          key={option.value}
-          option={option}
-          active={type === option.value}
-          onChange={onChange}
-        />
-      ))}
-    </div>
-  );
-};
-
-const TypeToggleButton = (props: {
-  option: { value: TransactionTypeFilter; labelKey: string };
-  active: boolean;
-  onChange: (v: TransactionTypeFilter) => void;
-}) => {
-  const { option, active, onChange } = props;
   const { t } = useTranslation();
-  const handleClick = useCallback(() => onChange(option.value), [onChange, option.value]);
+  const options = TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "px-3 py-1.5 rounded text-sm font-light transition-all duration-200",
-        active
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground hover:bg-accent",
-      )}
-    >
-      {t(option.labelKey)}
-    </button>
+    <SegmentedControl
+      label={t("analysis.filters.typeLabel")}
+      value={props.type}
+      options={options}
+      onChange={props.onChange}
+    />
   );
 };
 
@@ -126,6 +101,14 @@ export const FilterBar = (props: {
     [onChange],
   );
 
+  const handleFieldChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const field = e.target.value as SearchField;
+      onChange((prev) => ({ ...prev, field }));
+    },
+    [onChange],
+  );
+
   const handleTypeChange = useCallback(
     (type: TransactionTypeFilter) => onChange((prev) => ({ ...prev, type })),
     [onChange],
@@ -140,7 +123,9 @@ export const FilterBar = (props: {
     (chip: QuickChip) => {
       onChange((prev) => {
         const isActive = prev.type === chip.apply.type && prev.search === chip.apply.search;
-        return isActive ? { ...prev, type: "all", search: "" } : { ...prev, ...chip.apply };
+        return isActive
+          ? { ...prev, type: "all", search: "", field: "all" }
+          : { ...prev, ...chip.apply, field: "all" };
       });
     },
     [onChange],
@@ -168,6 +153,18 @@ export const FilterBar = (props: {
             className="w-full pl-9 pr-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus-visible:outline focus-visible:outline-ring focus-visible:outline-1"
           />
         </div>
+        <select
+          aria-label={t("analysis.filters.searchScope")}
+          value={filters.field}
+          onChange={handleFieldChange}
+          className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+        >
+          {SEARCH_FIELDS.map((f) => (
+            <option key={f} value={f}>
+              {t(`analysis.filters.fields.${f}`)}
+            </option>
+          ))}
+        </select>
         <TypeToggle type={filters.type} onChange={handleTypeChange} />
         <DateRangePresets
           domainFrom={domainFrom}
@@ -180,6 +177,7 @@ export const FilterBar = (props: {
           {t("analysis.filters.export")}
         </Button>
       </div>
+      <p className="text-xs text-muted-foreground">{t("analysis.filters.searchHelp")}</p>
       <div className="flex flex-wrap items-center gap-1.5">
         {quickChips.map((chip) => (
           <QuickChipButton

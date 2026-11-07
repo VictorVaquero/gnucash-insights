@@ -1016,6 +1016,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>((props, forward
           {scrubbedLabel != null && (
             <ReferenceLine
               x={scrubbedLabel}
+              position="middle"
               stroke="var(--color-border)"
               strokeDasharray="3 3"
               ifOverflow="extendDomain"

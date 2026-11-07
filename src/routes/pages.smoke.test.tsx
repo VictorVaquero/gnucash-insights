@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { setAccountConfig } from "@/db/utils";
 import { createAuthStub, renderWithRouter } from "@/test/routerHarness";
 
+import { RegisterView } from "./register/-RegisterView";
 import { QualitySection } from "@/components/features/QualitySection";
 import { InvestmentsPageContextProvider } from "./investments/-investmentsPageContext";
 import { useHoldings } from "./investments/-useHoldings";
@@ -71,6 +72,34 @@ describe("page smoke", () => {
         <CategorySpendPlot />
       </SummaryPageContextProvider>,
     );
+    await expectNoCrash(container);
+  });
+
+  it("renders an account register in simple and detailed view", async () => {
+    const accounts = [
+      { id: "r", name: "Root", parent: null, accountType: "ROOT" },
+      { id: "b", name: "Bank", parent: "r", accountType: "BANK" },
+      { id: "x", name: "Food", parent: "r", accountType: "EXPENSE" },
+    ];
+    const base = {
+      memo: null,
+      action: null,
+      reconciled: "n",
+      description: "Market",
+      notes: null,
+      date: "2024-01-10",
+      transactionId: "t",
+    };
+    const splits = [
+      { ...base, splitId: "s1", accountId: "x", value: 50, quantity: 50 },
+      { ...base, splitId: "s2", accountId: "b", value: -50, quantity: -50 },
+    ];
+    const { container, getByText, getByRole } = render(
+      <RegisterView splits={splits} accounts={accounts} accountId="b" onAccountChange={vi.fn()} />,
+    );
+    await expectNoCrash(container);
+    expect(getByText("Market")).toBeTruthy();
+    getByRole("button", { name: "Detailed" }).click();
     await expectNoCrash(container);
   });
 });

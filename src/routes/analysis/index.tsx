@@ -15,14 +15,19 @@ import { useAuth } from "@/contexts/useAuthContext";
 import { fullTransactionsOptions } from "@/db/queries/global";
 import { getConfig } from "@/db/utils";
 import { useBook, useDB, useDomain } from "@/hooks/useDB";
-import { Periodicity } from "@/types/domain";
+import { FinePeriodicity } from "@/types/domain";
+import { compileSearch } from "@/common/search";
 import { FilterBar } from "./-components/FilterBar";
 import { KpiBlock } from "./-components/KpiBlock";
 import { SelectionBar } from "./-components/SelectionBar";
 import { TransactsCardList } from "./-components/TransactsCardList";
 import { TransactsPlot } from "./-components/TransactsPlot";
 import { TransactTable } from "./-components/TransactsTable";
-import { AnalysisSearchParams, useAnalysisFilters } from "./-components/useAnalysisFilters";
+import {
+  AnalysisSearchParams,
+  parseSearchField,
+  useAnalysisFilters,
+} from "./-components/useAnalysisFilters";
 
 export interface FullTransaction {
   accountId: string;
@@ -62,6 +67,8 @@ const exportCsv = (rows: FullTransaction[]) => {
   URL.revokeObjectURL(url);
 };
 
+const FINE_PERIODS: FinePeriodicity[] = ["daily", "weekly", "monthly", "quarterly", "yearly"];
+
 const Analysis = () => {
   const { db } = useDB();
   const { bookId } = useBook();
@@ -73,13 +80,13 @@ const Analysis = () => {
   const isNarrowViewport = useIsNarrowViewport();
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState | null>(null);
-  const [chartPeriodicity, setChartPeriodicity] = useState<Periodicity>("monthly");
+  const [chartPeriodicity, setChartPeriodicity] = useState<FinePeriodicity>("monthly");
 
   const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
   const transactions = useMemo(() => data, [data]);
 
   const filteredByFilters = useMemo(() => {
-    const search = filters.search.trim().toLowerCase();
+    const matches = compileSearch(filters.search, filters.field);
     return (transactions ?? []).filter((row) => {
       if (filters.type !== "all" && row.accountType !== filters.type) return false;
       if (filters.range) {
@@ -87,11 +94,20 @@ const Analysis = () => {
         const to = filters.range.to.endOf("day");
         if (row.datePosted < from || row.datePosted > to) return false;
       }
-      if (search) {
-        const haystack =
-          `${row.description ?? ""} ${row.slNotes ?? ""} ${row.accountName}`.toLowerCase();
-        if (!haystack.includes(search)) return false;
-      }
+      if (
+        !matches({
+          description: row.description,
+          notes: row.slNotes,
+          account: row.accountName,
+          accountId: row.accountId,
+          transactionId: row.transactionId,
+          splitId: row.splitId,
+          type: row.accountType,
+          date: row.ymdPosted.slice(0, 10),
+          amount: row.value,
+        })
+      )
+        return false;
       return true;
     });
   }, [transactions, filters]);
@@ -166,7 +182,11 @@ const Analysis = () => {
           )}
         </ChartCard>
         <div className="flex flex-col gap-3">
-          <PeriodicityTabs activeMode={chartPeriodicity} onChange={setChartPeriodicity} />
+          <PeriodicityTabs
+            activeMode={chartPeriodicity}
+            onChange={setChartPeriodicity}
+            options={FINE_PERIODS}
+          />
           <KpiBlock data={filteredTransactions} />
         </div>
       </div>
@@ -207,6 +227,7 @@ export const Route = createFileRoute("/analysis/")({
   },
   validateSearch: (search: Record<string, unknown>): AnalysisSearchParams => ({
     q: typeof search.q === "string" ? search.q : undefined,
+    field: parseSearchField(search.field),
     type: search.type === "EXPENSE" || search.type === "INCOME" ? search.type : undefined,
     from: typeof search.from === "string" ? search.from : undefined,
     to: typeof search.to === "string" ? search.to : undefined,

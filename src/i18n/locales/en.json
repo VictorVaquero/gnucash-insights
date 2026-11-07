@@ -5,7 +5,8 @@
     "expenses": "Expenses",
     "trips": "Trips",
     "investments": "Investments",
-    "analysis": "Analysis"
+    "analysis": "Analysis",
+    "register": "Registers"
   },
   "routes": {
     "home": {
@@ -31,6 +32,9 @@
     },
     "investments": {
       "title": "Investments"
+    },
+    "register": {
+      "title": "Registers"
     }
   },
   "common": {
@@ -41,7 +45,10 @@
     "periodicity": {
       "monthly": "Monthly",
       "quarterly": "Quarterly",
-      "yearly": "Yearly"
+      "yearly": "Yearly",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "label": "Period"
     }
   },
   "login": {
@@ -292,7 +299,23 @@
       "tobacco": "Tobacco",
       "trips": "Trips",
       "sport": "Sport",
-      "export": "Export CSV"
+      "export": "Export CSV",
+      "fields": {
+        "all": "All columns",
+        "description": "Description",
+        "notes": "Notes",
+        "memo": "Memo",
+        "account": "Account",
+        "accountId": "Account ID",
+        "transactionId": "Transaction ID",
+        "splitId": "Split ID",
+        "type": "Type",
+        "date": "Date",
+        "amount": "Amount"
+      },
+      "searchHelp": "Tip: field:value (desc:rent, account:food, id:abc, amount:>100, amount:10..50), \"exact phrase\", -exclude.",
+      "searchScope": "Search in",
+      "typeLabel": "Type"
     },
     "kpi": {
       "mean": "Mean",
@@ -517,5 +540,45 @@
     "value": "Amount",
     "splitId": "Split ID",
     "showMore": "Show {{count}} more"
+  },
+  "register": {
+    "title": "Account registers",
+    "previous": "Previous account",
+    "next": "Next account",
+    "account": "Account",
+    "view": "View",
+    "simple": "Simple",
+    "detailed": "Detailed",
+    "newestFirst": "Newest first",
+    "oldestFirst": "Oldest first",
+    "search": "Search description, memo, account…",
+    "from": "From",
+    "to": "To",
+    "summary": "{{count}} of {{total}} transactions · {{type}}",
+    "balance": "Balance",
+    "date": "Date",
+    "num": "Num",
+    "description": "Description",
+    "transfer": "Transfer",
+    "splitTransaction": "-- Split transaction --",
+    "empty": "No transactions.",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "cols": {
+      "deposit": "Deposit",
+      "withdrawal": "Withdrawal",
+      "expense": "Expense",
+      "rebate": "Rebate",
+      "charge": "Charge",
+      "income": "Income",
+      "payment": "Payment",
+      "invoice": "Invoice",
+      "debit": "Debit",
+      "credit": "Credit"
+    },
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "exportCsv": "Export CSV",
+    "unbalanced": "Unbalanced"
   }
 }

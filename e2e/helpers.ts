@@ -10,6 +10,7 @@ export const ROUTES = [
   "travels",
   "investments",
   "analysis?query=%7B%7D",
+  "register",
 ];
 
 export const guestLogin = async (page: Page) => {

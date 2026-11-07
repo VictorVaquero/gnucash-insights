@@ -9,6 +9,7 @@ import {
   faMagnifyingGlass,
   faPiggyBank,
   faPlane,
+  faTableList,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { createLink, useRouterState } from "@tanstack/react-router";
@@ -35,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: "nav.analysis",
     search: { query: {} },
   },
+  { to: "/register", icon: faTableList, labelKey: "nav.register" },
 ];
 
 interface ItemLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {

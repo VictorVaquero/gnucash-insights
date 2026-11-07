@@ -130,6 +130,7 @@ const DrawMonthlyIncomeExpensesPlot = ({ data }: { data: PlotData[] }) => {
           {scrubbedPoint && (
             <ReferenceLine
               x={scrubbedPoint.dateLabel}
+              position="middle"
               stroke="var(--color-border)"
               strokeDasharray="3 3"
               ifOverflow="extendDomain"

@@ -5,7 +5,8 @@
     "expenses": "Gastos",
     "trips": "Viajes",
     "investments": "Inversiones",
-    "analysis": "Análisis"
+    "analysis": "Análisis",
+    "register": "Registros"
   },
   "routes": {
     "home": {
@@ -31,6 +32,9 @@
     },
     "investments": {
       "title": "Inversiones"
+    },
+    "register": {
+      "title": "Registros"
     }
   },
   "common": {
@@ -41,7 +45,10 @@
     "periodicity": {
       "monthly": "Mensual",
       "quarterly": "Trimestral",
-      "yearly": "Anual"
+      "yearly": "Anual",
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "label": "Periodo"
     }
   },
   "login": {
@@ -292,7 +299,23 @@
       "tobacco": "Tabaco",
       "trips": "Viajes",
       "sport": "Deporte",
-      "export": "Exportar CSV"
+      "export": "Exportar CSV",
+      "fields": {
+        "all": "Todas las columnas",
+        "description": "Descripción",
+        "notes": "Notas",
+        "memo": "Memo",
+        "account": "Cuenta",
+        "accountId": "ID de cuenta",
+        "transactionId": "ID de transacción",
+        "splitId": "ID de split",
+        "type": "Tipo",
+        "date": "Fecha",
+        "amount": "Importe"
+      },
+      "searchHelp": "Truco: campo:valor (desc:alquiler, cuenta:comida, id:abc, importe:>100, importe:10..50), \"frase exacta\", -excluir.",
+      "searchScope": "Buscar en",
+      "typeLabel": "Tipo"
     },
     "kpi": {
       "mean": "Media",
@@ -517,5 +540,45 @@
     "value": "Importe",
     "splitId": "ID del split",
     "showMore": "Mostrar {{count}} más"
+  },
+  "register": {
+    "title": "Registros de cuentas",
+    "previous": "Cuenta anterior",
+    "next": "Cuenta siguiente",
+    "account": "Cuenta",
+    "view": "Vista",
+    "simple": "Simple",
+    "detailed": "Detallada",
+    "newestFirst": "Más recientes primero",
+    "oldestFirst": "Más antiguas primero",
+    "search": "Buscar descripción, memo, cuenta…",
+    "from": "Desde",
+    "to": "Hasta",
+    "summary": "{{count}} de {{total}} transacciones · {{type}}",
+    "balance": "Saldo",
+    "date": "Fecha",
+    "num": "Núm",
+    "description": "Descripción",
+    "transfer": "Transferencia",
+    "splitTransaction": "-- Transacción dividida --",
+    "empty": "Sin transacciones.",
+    "prevPage": "Anterior",
+    "nextPage": "Siguiente",
+    "cols": {
+      "deposit": "Ingreso",
+      "withdrawal": "Retirada",
+      "expense": "Gasto",
+      "rebate": "Reembolso",
+      "charge": "Cargo",
+      "income": "Ingreso",
+      "payment": "Pago",
+      "invoice": "Factura",
+      "debit": "Debe",
+      "credit": "Haber"
+    },
+    "expandAll": "Expandir todo",
+    "collapseAll": "Contraer todo",
+    "exportCsv": "Exportar CSV",
+    "unbalanced": "Descuadrada"
   }
 }

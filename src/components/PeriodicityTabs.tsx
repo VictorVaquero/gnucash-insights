@@ -1,55 +1,27 @@
-import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils";
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { Periodicity } from "@/types/domain";
 
-const PERIODICITY_OPTIONS: Periodicity[] = ["monthly", "quarterly", "yearly"];
+const DEFAULT_OPTIONS: Periodicity[] = ["monthly", "quarterly", "yearly"];
 
-const PeriodicityTabButton = ({
-  option,
+/** Switch between aggregation periods. `options` lets a page offer finer ones (daily, weekly). */
+export const PeriodicityTabs = <T extends string = Periodicity>({
   activeMode,
   onChange,
+  options = DEFAULT_OPTIONS as unknown as T[],
 }: {
-  option: Periodicity;
-  activeMode: Periodicity;
-  onChange: (mode: Periodicity) => void;
+  activeMode: T;
+  onChange: (mode: T) => void;
+  options?: T[];
 }) => {
   const { t } = useTranslation();
-  const handleClick = useCallback(() => onChange(option), [onChange, option]);
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "px-4 py-2 rounded capitalize font-light transition-all duration-200",
-        activeMode === option
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground hover:bg-accent",
-      )}
-    >
-      {t(`common.periodicity.${option}`)}
-    </button>
-  );
-};
-
-export const PeriodicityTabs = ({
-  activeMode,
-  onChange,
-}: {
-  activeMode: Periodicity;
-  onChange: (mode: Periodicity) => void;
-}) => {
-  return (
-    <div className="flex bg-muted p-1 rounded-lg w-fit">
-      {PERIODICITY_OPTIONS.map((option) => (
-        <PeriodicityTabButton
-          key={option}
-          option={option}
-          activeMode={activeMode}
-          onChange={onChange}
-        />
-      ))}
-    </div>
+    <SegmentedControl
+      label={t("common.periodicity.label")}
+      value={activeMode}
+      onChange={onChange}
+      options={options.map((o) => ({ value: o, label: t(`common.periodicity.${o}`) }))}
+    />
   );
 };
