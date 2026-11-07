@@ -117,17 +117,37 @@ export const accountPath = (id: string, accounts: Map<string, RegisterAccount>):
  * The register of one account: its splits oldest first (ties keep a stable order) with the running
  * balance, the other accounts involved and, for the detailed view, every split of each transaction.
  */
-export const buildRegister = (
-  splits: RegisterSplit[],
-  accountId: string,
-  accounts: Map<string, RegisterAccount>,
-): RegisterRow[] => {
+// Grouping every split by transaction is the same for every account, so keep it per splits array
+// (switching tabs then only walks the chosen account's splits).
+const groupCache = new WeakMap<RegisterSplit[], Map<string, RegisterSplit[]>>();
+const groupByTransaction = (splits: RegisterSplit[]) => {
+  const cached = groupCache.get(splits);
+  if (cached) return cached;
   const byTx = new Map<string, RegisterSplit[]>();
   for (const s of splits) {
     const list = byTx.get(s.transactionId);
     if (list) list.push(s);
     else byTx.set(s.transactionId, [s]);
   }
+  groupCache.set(splits, byTx);
+  return byTx;
+};
+
+export const buildRegister = (
+  splits: RegisterSplit[],
+  accountId: string,
+  accounts: Map<string, RegisterAccount>,
+): RegisterRow[] => {
+  const byTx = groupByTransaction(splits);
+  const paths = new Map<string, string>();
+  const pathOf = (id: string) => {
+    let p = paths.get(id);
+    if (p === undefined) {
+      p = accountPath(id, accounts);
+      paths.set(id, p);
+    }
+    return p;
+  };
   const type = accounts.get(accountId)?.accountType ?? "";
   const sign = isCreditNormal(type) ? -1 : 1;
 
@@ -144,7 +164,7 @@ export const buildRegister = (
     const views: RegisterSplitView[] = all.map((o) => ({
       splitId: o.splitId,
       accountId: o.accountId,
-      accountPath: accountPath(o.accountId, accounts),
+      accountPath: pathOf(o.accountId),
       memo: o.memo,
       action: o.action,
       reconciled: o.reconciled,

@@ -611,6 +611,7 @@
     "recent": "Recientes",
     "allAccounts": "Todas las cuentas",
     "newTab": "Nueva pestaña",
-    "closeTab": "Cerrar pestaña {{name}}"
+    "closeTab": "Cerrar pestaña {{name}}",
+    "shownOf": "{{shown}} de {{total}} mostradas · baja para ver más"
   }
 }

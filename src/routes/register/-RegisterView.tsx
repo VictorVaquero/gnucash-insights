@@ -5,7 +5,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DateTime } from "luxon";
-import { Fragment, useMemo, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -27,7 +27,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 
-const PAGE_SIZE = 100;
+/** Rows rendered per chunk; more are added as the list is scrolled. */
+const CHUNK = 80;
 
 const inputCls =
   "h-8 rounded border border-border bg-background px-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring";
@@ -147,7 +148,6 @@ export interface RegisterViewState {
   query: string;
   from: string;
   to: string;
-  page: number;
   expanded: string[];
   /** "all" | "unreconciled" | "reconciled" */
   recon: ReconFilter;
@@ -161,7 +161,6 @@ export const initialRegisterState: RegisterViewState = {
   query: "",
   from: "",
   to: "",
-  page: 0,
   expanded: [],
   recon: "all",
 };
@@ -191,6 +190,144 @@ const presetRange = (id: "month" | "3m" | "year" | "1y"): { from: string; to: st
   }
 };
 
+const RegisterRowGroup = memo(function RegisterRowGroup(props: {
+  r: RegisterRow;
+  newMonth: boolean;
+  odd: boolean;
+  mode: ViewMode;
+  open: boolean;
+  accountType: string;
+  accountMap: Map<string, RegisterAccount>;
+  locale: string;
+  onToggle: (id: string) => void;
+  onOpenAccount: (id: string, opts?: { newTab?: boolean }) => void;
+}) {
+  const { r, newMonth, odd, mode, open, accountType, accountMap, locale, onToggle, onOpenAccount } =
+    props;
+  const { t } = useTranslation();
+  const money = (v: number) => (v ? formatCurrency(v, locale) : "");
+  const typeOf = (id: string | undefined) => accountMap.get(id ?? "")?.accountType;
+  const other = r.splits.find((x) => !x.isThis);
+  return (
+    <tbody>
+      {newMonth && (
+        <tr className="bg-primary/10">
+          <td
+            colSpan={8}
+            className="border-t border-border px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
+          >
+            {monthLabel(r.date, locale)}
+          </td>
+        </tr>
+      )}
+      <tr
+        className={cn(
+          "border-t border-border/70 align-top hover:bg-accent/60",
+          odd && "bg-muted/40",
+          mode === "simple" && "cursor-pointer",
+          open && "border-b-0",
+          r.unbalanced && "bg-red-50 dark:bg-red-950/30",
+        )}
+        onClick={mode === "simple" ? () => onToggle(r.splitId) : undefined}
+      >
+        <td className="whitespace-nowrap px-3 py-2.5 font-medium tabular-nums">
+          {dayLabel(r.date, locale)}
+        </td>
+        <td className="px-2 py-2.5 text-muted-foreground">{r.num}</td>
+        <td className="px-3 py-2.5">
+          <span className="font-semibold text-foreground">{r.description}</span>
+          {r.unbalanced && (
+            <span className="ml-2 rounded bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+              {t("register.unbalanced")}
+            </span>
+          )}
+        </td>
+        <td className="px-3 py-2.5">
+          {r.isSplit ? (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-sm italic text-foreground/80">
+              {t("register.splitTransaction")} · {r.splits.length}
+            </span>
+          ) : (
+            <AccountLabel
+              path={r.transfers[0]}
+              type={typeOf(other?.accountId)}
+              id={other?.accountId}
+              onGo={onOpenAccount}
+            />
+          )}
+        </td>
+        <td className="px-2 py-2.5 text-center">
+          <Reconciled flag={r.reconciled} />
+        </td>
+        <td
+          className={cn(
+            "whitespace-nowrap px-3 py-2.5 text-right text-base font-semibold tabular-nums",
+            TONE[sideTone(accountType, "left")],
+          )}
+        >
+          {money(r.debit)}
+        </td>
+        <td
+          className={cn(
+            "whitespace-nowrap px-3 py-2.5 text-right text-base font-semibold tabular-nums",
+            TONE[sideTone(accountType, "right")],
+          )}
+        >
+          {money(r.credit)}
+        </td>
+        <td
+          className={cn(
+            "whitespace-nowrap px-3 py-2.5 text-right font-medium tabular-nums",
+            r.balance < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
+          )}
+        >
+          {formatCurrency(r.balance, locale)}
+        </td>
+      </tr>
+      {open && (
+        <tr className="bg-muted/30 text-sm">
+          <td className="border-l-4 border-primary/50" />
+          <td />
+          <td colSpan={6} className="px-3 py-1.5 pl-6 text-muted-foreground">
+            {r.notes && <span className="italic">{r.notes}</span>}
+            <span className="ml-3 font-mono text-[11px]">{r.transactionId}</span>
+          </td>
+        </tr>
+      )}
+      {open &&
+        r.splits.map((s) => (
+          <tr key={s.splitId} className={cn("text-sm", s.isThis ? "bg-primary/10" : "bg-muted/30")}>
+            <td className="border-l-4 border-primary/50" />
+            <td className="px-2 py-1.5 text-muted-foreground">{s.action}</td>
+            <td className="px-3 py-1.5 pl-6 italic text-muted-foreground">{s.memo}</td>
+            <td className="px-3 py-1.5">
+              {s.isThis ? (
+                <span className="font-semibold text-foreground">{s.accountPath}</span>
+              ) : (
+                <AccountLabel
+                  path={s.accountPath}
+                  type={typeOf(s.accountId)}
+                  id={s.accountId}
+                  onGo={onOpenAccount}
+                />
+              )}
+            </td>
+            <td className="px-2 py-1.5 text-center">
+              <Reconciled flag={s.reconciled} />
+            </td>
+            <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-foreground/80">
+              {money(s.debit)}
+            </td>
+            <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-foreground/80">
+              {money(s.credit)}
+            </td>
+            <td />
+          </tr>
+        ))}
+    </tbody>
+  );
+});
+
 /** A GnuCash-style account register: basic ledger or transaction journal, one account. */
 export const RegisterView = ({
   splits,
@@ -202,7 +339,7 @@ export const RegisterView = ({
 }: RegisterViewProps) => {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const { mode, newestFirst, query, from, to, page, recon } = state;
+  const { mode, newestFirst, query, from, to, recon } = state;
   const expanded = useMemo(() => new Set(state.expanded), [state.expanded]);
 
   const accountMap = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
@@ -237,19 +374,43 @@ export const RegisterView = ({
     URL.revokeObjectURL(url);
   };
 
-  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const current = Math.min(page, pages - 1);
-  const visible = rows.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
+  // Infinite scroll: render a chunk, add another when the sentinel nears the viewport. The
+  // count restarts whenever the row set changes (filters, account, sort).
+  const [grown, setGrown] = useState<{ rows: RegisterRow[]; n: number }>({ rows, n: CHUNK });
+  const shown = grown.rows === rows ? grown.n : CHUNK;
+  const visible = useMemo(() => rows.slice(0, shown), [rows, shown]);
+  const hasMore = shown < rows.length;
+  const scroller = useRef<HTMLDivElement>(null);
+  const sentinel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !hasMore) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting))
+          setGrown({ rows, n: Math.min(rows.length, shown + CHUNK) });
+      },
+      { root: scroller.current, rootMargin: "800px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, shown, rows]);
 
   const [leftKey, rightKey] = columnKeys(account?.accountType ?? "");
-  const money = (v: number) => (v ? formatCurrency(v, locale) : "");
   const endBalance = register[register.length - 1]?.balance ?? 0;
-  // Any change to a filter sends the table back to its first page.
-  const setFilter = (patch: Partial<RegisterViewState>) => onState({ ...patch, page: 0 });
-  const toggle = (id: string) =>
-    onState({
-      expanded: expanded.has(id) ? state.expanded.filter((x) => x !== id) : [...state.expanded, id],
-    });
+  const setFilter = (patch: Partial<RegisterViewState>) => onState(patch);
+  // Stable toggle so memoised row groups are not re-rendered when only another row changes.
+  const latest = useRef(state);
+  useEffect(() => {
+    latest.current = state;
+  }, [state]);
+  const onToggle = useCallback(
+    (id: string) => {
+      const cur = latest.current.expanded;
+      onState({ expanded: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
+    },
+    [onState],
+  );
   const filtersActive = Boolean(query || from || to || recon !== "all");
 
   const showSplits = (r: RegisterRow) => mode === "detailed" || expanded.has(r.splitId);
@@ -339,9 +500,7 @@ export const RegisterView = ({
                   className="underline"
                   onClick={() =>
                     onState({
-                      expanded: expanded.size
-                        ? []
-                        : rows.filter((r) => r.isSplit).map((r) => r.splitId),
+                      expanded: expanded.size ? [] : rows.map((r) => r.splitId),
                     })
                   }
                 >
@@ -372,11 +531,24 @@ export const RegisterView = ({
         </CardContent>
       </Card>
 
-      <div className="max-h-[78vh] overflow-auto rounded-lg border border-border bg-card shadow-sm">
+      <div
+        ref={scroller}
+        className="max-h-[78vh] overflow-auto rounded-lg border border-border bg-card shadow-sm"
+      >
         <table
-          className="w-full min-w-[48rem] border-collapse text-[15px]"
+          className="w-full min-w-[56rem] table-fixed border-collapse text-[15px]"
           data-testid="register-table"
         >
+          <colgroup>
+            <col className="w-32" />
+            <col className="w-16" />
+            <col />
+            <col className="w-[22rem]" />
+            <col className="w-12" />
+            <col className="w-32" />
+            <col className="w-32" />
+            <col className="w-36" />
+          </colgroup>
           <thead className="sticky top-0 z-10 bg-muted text-xs font-semibold uppercase tracking-wide text-foreground/70 shadow-[0_1px_0_var(--color-border)]">
             <tr>
               <th className="px-3 py-2.5 text-left">{t("register.date")}</th>
@@ -389,168 +561,40 @@ export const RegisterView = ({
               <th className="px-3 py-2.5 text-right">{t("register.balance")}</th>
             </tr>
           </thead>
-          <tbody>
-            {visible.length === 0 && (
+          {visible.length === 0 && (
+            <tbody>
               <tr>
                 <td colSpan={8} className="px-2 py-8 text-center text-muted-foreground">
                   {t("register.empty")}
                 </td>
               </tr>
-            )}
-            {visible.map((r, i) => {
-              const newMonth = i === 0 || visible[i - 1].date.slice(0, 7) !== r.date.slice(0, 7);
-              const typeOf = (id: string | undefined) => accountMap.get(id ?? "")?.accountType;
-              const other = r.splits.find((x) => !x.isThis);
-              return (
-                <Fragment key={r.splitId}>
-                  {newMonth && (
-                    <tr className="bg-primary/10">
-                      <td
-                        colSpan={8}
-                        className="border-t border-border px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
-                      >
-                        {monthLabel(r.date, locale)}
-                      </td>
-                    </tr>
-                  )}
-                  <tr
-                    className={cn(
-                      "border-t border-border/70 align-top hover:bg-accent/60",
-                      i % 2 === 1 && "bg-muted/40",
-                      mode === "detailed" && "bg-muted/60",
-                      r.isSplit && mode === "simple" && "cursor-pointer",
-                      r.unbalanced && "bg-red-50 dark:bg-red-950/30",
-                    )}
-                    onClick={mode === "simple" && r.isSplit ? () => toggle(r.splitId) : undefined}
-                  >
-                    <td className="whitespace-nowrap px-3 py-2.5 font-medium tabular-nums">
-                      {dayLabel(r.date, locale)}
-                    </td>
-                    <td className="px-2 py-2.5 text-muted-foreground">{r.num}</td>
-                    <td className="px-3 py-2.5">
-                      <span className="font-semibold text-foreground">{r.description}</span>
-                      {mode === "detailed" && r.notes && (
-                        <span className="block text-sm italic text-muted-foreground">
-                          {r.notes}
-                        </span>
-                      )}
-                      {mode === "detailed" && (
-                        <span className="block font-mono text-[11px] text-muted-foreground">
-                          {r.transactionId}
-                          {r.unbalanced && (
-                            <span className="ml-2 rounded bg-red-600 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase text-white">
-                              {t("register.unbalanced")}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      {r.isSplit ? (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-sm italic text-foreground/80">
-                          {t("register.splitTransaction")} · {r.splits.length}
-                        </span>
-                      ) : (
-                        <AccountLabel
-                          path={r.transfers[0]}
-                          type={typeOf(other?.accountId)}
-                          id={other?.accountId}
-                          onGo={onOpenAccount}
-                        />
-                      )}
-                    </td>
-                    <td className="px-2 py-2.5 text-center">
-                      <Reconciled flag={r.reconciled} />
-                    </td>
-                    <td
-                      className={cn(
-                        "whitespace-nowrap px-3 py-2.5 text-right text-base font-semibold tabular-nums",
-                        TONE[sideTone(account?.accountType ?? "", "left")],
-                      )}
-                    >
-                      {money(r.debit)}
-                    </td>
-                    <td
-                      className={cn(
-                        "whitespace-nowrap px-3 py-2.5 text-right text-base font-semibold tabular-nums",
-                        TONE[sideTone(account?.accountType ?? "", "right")],
-                      )}
-                    >
-                      {money(r.credit)}
-                    </td>
-                    <td
-                      className={cn(
-                        "whitespace-nowrap px-3 py-2.5 text-right font-medium tabular-nums",
-                        r.balance < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
-                      )}
-                    >
-                      {formatCurrency(r.balance, locale)}
-                    </td>
-                  </tr>
-                  {showSplits(r) &&
-                    (r.isSplit || mode === "detailed") &&
-                    r.splits.map((s) => (
-                      <tr
-                        key={s.splitId}
-                        className={cn("text-sm", s.isThis ? "bg-primary/10" : "bg-muted/30")}
-                      >
-                        <td className="border-l-4 border-primary/50" />
-                        <td className="px-2 py-1.5 text-muted-foreground">{s.action}</td>
-                        <td className="px-3 py-1.5 pl-6 italic text-muted-foreground">{s.memo}</td>
-                        <td className="px-3 py-1.5">
-                          {s.isThis ? (
-                            <span className="font-semibold text-foreground">{s.accountPath}</span>
-                          ) : (
-                            <AccountLabel
-                              path={s.accountPath}
-                              type={typeOf(s.accountId)}
-                              id={s.accountId}
-                              onGo={onOpenAccount}
-                            />
-                          )}
-                        </td>
-                        <td className="px-2 py-1.5 text-center">
-                          <Reconciled flag={s.reconciled} />
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-foreground/80">
-                          {money(s.debit)}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-foreground/80">
-                          {money(s.credit)}
-                        </td>
-                        <td />
-                      </tr>
-                    ))}
-                </Fragment>
-              );
-            })}
-          </tbody>
+            </tbody>
+          )}
+          {visible.map((r, i) => (
+            <RegisterRowGroup
+              key={r.splitId}
+              r={r}
+              newMonth={i === 0 || visible[i - 1].date.slice(0, 7) !== r.date.slice(0, 7)}
+              odd={i % 2 === 1}
+              mode={mode}
+              open={showSplits(r)}
+              accountType={account?.accountType ?? ""}
+              accountMap={accountMap}
+              locale={locale}
+              onToggle={onToggle}
+              onOpenAccount={onOpenAccount}
+            />
+          ))}
         </table>
+        {rows.length > 0 && (
+          <div
+            ref={sentinel}
+            className="py-2 text-center text-xs text-muted-foreground tabular-nums"
+          >
+            {t("register.shownOf", { shown: visible.length, total: rows.length })}
+          </div>
+        )}
       </div>
-
-      {pages > 1 && (
-        <div className="flex items-center justify-center gap-3 text-sm">
-          <button
-            type="button"
-            className={btnCls}
-            disabled={current === 0}
-            onClick={() => onState({ page: current - 1 })}
-          >
-            {t("register.prevPage")}
-          </button>
-          <span className="text-muted-foreground tabular-nums">
-            {current + 1} / {pages}
-          </span>
-          <button
-            type="button"
-            className={btnCls}
-            disabled={current >= pages - 1}
-            onClick={() => onState({ page: current + 1 })}
-          >
-            {t("register.nextPage")}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
