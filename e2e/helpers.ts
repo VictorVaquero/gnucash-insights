@@ -15,6 +15,6 @@ export const ROUTES = [
 
 export const guestLogin = async (page: Page) => {
   await page.goto("login");
-  await page.getByRole("button", { name: "Guest" }).click();
+  await page.getByRole("button", { name: /Guest|Probar/ }).click();
   await page.waitForURL("**/summary");
 };
