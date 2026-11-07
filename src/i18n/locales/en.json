@@ -343,7 +343,9 @@
       "income": "Income",
       "expense": "Expenses",
       "analyzing": "Analyzing {{count}} of {{total}} transactions",
-      "resetSelection": "Reset to filtered"
+      "resetSelection": "Reset to filtered",
+      "compare": "Compare with previous year",
+      "prevYear": "Previous year"
     },
     "selection": {
       "sum": "Sum {{amount}}"

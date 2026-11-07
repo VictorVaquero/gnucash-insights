@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
+  Line,
   CartesianGrid,
   ComposedChart,
   ReferenceLine,
@@ -30,6 +31,9 @@ interface ChartRow {
   income: number;
   expense: number;
   net: number;
+  /** Same period one year earlier (only when comparing and that period has data). */
+  prevIncome?: number;
+  prevExpense?: number;
 }
 
 const green = twStyles.getPropertyValue("--color-green-500");
@@ -95,6 +99,16 @@ const ChartTooltipContent = ({ payload }: Pick<TooltipContentProps<number, strin
         {t("analysis.chart.expense")}:{" "}
         <span style={redStyle}>{formatCurrency(d.expense, locale, { compact: true })}</span>
       </div>
+      {d.prevIncome !== undefined && (
+        <div className="text-muted-foreground text-xs">
+          {t("analysis.chart.prevYear")}:{" "}
+          <span style={greenStyle}>{formatCurrency(d.prevIncome, locale, { compact: true })}</span>
+          {" / "}
+          <span style={redStyle}>
+            {formatCurrency(d.prevExpense ?? 0, locale, { compact: true })}
+          </span>
+        </div>
+      )}
       <div className="text-muted-foreground text-sm">
         {t("analysis.kpi.total")}:{" "}
         <span style={netStyle(d.net >= 0)}>{formatCurrency(d.net, locale, { compact: true })}</span>
@@ -131,11 +145,14 @@ export const TransactsPlot = ({
   data,
   periodicity,
   onPeriodSelect,
+  compare = false,
 }: {
   data: FullTransaction[];
   periodicity: FinePeriodicity;
   /** Called with the period's date range when a bar is clicked. */
   onPeriodSelect?: (range: { from: DateTime; to: DateTime }) => void;
+  /** Overlay the same period of the previous year as dashed lines. */
+  compare?: boolean;
 }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const { locale } = useLocale();
@@ -156,6 +173,15 @@ export const TransactsPlot = ({
       return { dateLabel: date, income, expense, net: income - expense };
     }).sort((a, b) => (a.dateLabel > b.dateLabel ? 1 : -1));
   }, [data, format]);
+  const rows: ChartRow[] = useMemo(() => {
+    if (!compare) return chartData;
+    const byLabel = new Map(chartData.map((r) => [r.dateLabel, r]));
+    return chartData.map((r) => {
+      const start = periodRange(r.dateLabel, periodicity)?.from;
+      const prev = start && byLabel.get(start.minus({ years: 1 }).toFormat(format));
+      return prev ? { ...r, prevIncome: prev.income, prevExpense: prev.expense } : r;
+    });
+  }, [chartData, compare, periodicity, format]);
 
   const latest = chartData[chartData.length - 1];
 
@@ -231,7 +257,7 @@ export const TransactsPlot = ({
         />
       )}
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={margin}>
+        <ComposedChart data={rows} margin={margin}>
           <CartesianGrid strokeOpacity={0.1} vertical={false} />
           {scrubbedPoint && (
             <ReferenceLine
@@ -271,6 +297,28 @@ export const TransactsPlot = ({
             maxBarSize={24}
             isAnimationActive={false}
           />
+          {compare && (
+            <Line
+              dataKey="prevIncome"
+              stroke={green}
+              strokeDasharray="4 3"
+              strokeWidth={1.5}
+              dot={false}
+              connectNulls
+              isAnimationActive={false}
+            />
+          )}
+          {compare && (
+            <Line
+              dataKey="prevExpense"
+              stroke={red}
+              strokeDasharray="4 3"
+              strokeWidth={1.5}
+              dot={false}
+              connectNulls
+              isAnimationActive={false}
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

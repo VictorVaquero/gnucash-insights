@@ -81,6 +81,7 @@ const Analysis = () => {
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState | null>(null);
   const [chartPeriodicity, setChartPeriodicity] = useState<FinePeriodicity>("monthly");
+  const [compare, setCompare] = useState(false);
 
   const { data, isSuccess } = useQuery(fullTransactionsOptions(db, bookId));
   const transactions = useMemo(() => data, [data]);
@@ -179,6 +180,7 @@ const Analysis = () => {
             <TransactsPlot
               data={filteredTransactions}
               periodicity={chartPeriodicity}
+              compare={compare}
               onPeriodSelect={(range) => setFilters((f) => ({ ...f, range }))}
             />
           ) : (
@@ -191,6 +193,14 @@ const Analysis = () => {
             onChange={setChartPeriodicity}
             options={FINE_PERIODS}
           />
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={compare}
+              onChange={(e) => setCompare(e.target.checked)}
+            />
+            {t("analysis.chart.compare")}
+          </label>
           <KpiBlock data={filteredTransactions} />
         </div>
       </div>

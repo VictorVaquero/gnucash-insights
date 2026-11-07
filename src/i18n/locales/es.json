@@ -343,7 +343,9 @@
       "income": "Ingresos",
       "expense": "Gastos",
       "analyzing": "Analizando {{count}} de {{total}} transacciones",
-      "resetSelection": "Restablecer a lo filtrado"
+      "resetSelection": "Restablecer a lo filtrado",
+      "compare": "Comparar con el año anterior",
+      "prevYear": "Año anterior"
     },
     "selection": {
       "sum": "Suma {{amount}}"
