@@ -1,6 +1,6 @@
 import { faChevronLeft, faChevronRight, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { accountPath, type RegisterAccount, type RegisterSplit } from "@/common/register";
@@ -18,12 +18,36 @@ interface Props {
   tabs: string[];
   active: string;
   onTabs: (tabs: string[], active: string) => void;
+  /** Serialised state of the active tab as found in the URL, and a way to write it back. */
+  view?: string;
+  onView?: (view: string | undefined) => void;
 }
+
+const URL_KEYS = ["mode", "newestFirst", "query", "from", "to", "recon"] as const;
+
+/** Only what differs from the defaults, so the URL stays short for an untouched tab. */
+export const encodeView = (s: RegisterViewState): string | undefined => {
+  const out: Record<string, unknown> = {};
+  for (const k of URL_KEYS) if (s[k] !== initialRegisterState[k]) out[k] = s[k];
+  return Object.keys(out).length ? JSON.stringify(out) : undefined;
+};
+
+export const decodeView = (view?: string): Partial<RegisterViewState> => {
+  if (!view) return {};
+  try {
+    const raw = JSON.parse(view) as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const k of URL_KEYS) if (typeof raw[k] === typeof initialRegisterState[k]) out[k] = raw[k];
+    return out as Partial<RegisterViewState>;
+  } catch {
+    return {};
+  }
+};
 
 const shortName = (path: string) => path.split(":").slice(-2).join(":");
 
 /** Several account registers side by side as tabs, with a searchable account picker. */
-export const RegisterTabs = ({ splits, accounts, tabs, active, onTabs }: Props) => {
+export const RegisterTabs = ({ splits, accounts, tabs, active, onTabs, view, onView }: Props) => {
   const { t } = useTranslation();
   const [states, setStates] = useState<Record<string, RegisterViewState>>({});
   const [picker, setPicker] = useState<null | "replace" | "new">(null);
@@ -67,12 +91,15 @@ export const RegisterTabs = ({ splits, accounts, tabs, active, onTabs }: Props) 
     onTabs(next, id === active ? (next[Math.max(0, at - 1)] ?? next[0]) : active);
   };
 
-  const state = states[active] ?? initialRegisterState;
+  const fromUrl = useMemo(() => ({ ...initialRegisterState, ...decodeView(view) }), [view]);
+  const state = states[active] ?? fromUrl;
   const patch = (p: Partial<RegisterViewState>) =>
-    setStates((prev) => ({
-      ...prev,
-      [active]: { ...(prev[active] ?? initialRegisterState), ...p },
-    }));
+    setStates((prev) => ({ ...prev, [active]: { ...(prev[active] ?? fromUrl), ...p } }));
+
+  const encoded = encodeView(state);
+  useEffect(() => {
+    if (encoded !== view) onView?.(encoded);
+  }, [encoded, view, onView]);
 
   const closePicker = useCallback(() => setPicker(null), []);
 

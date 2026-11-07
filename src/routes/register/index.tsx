@@ -14,6 +14,8 @@ interface RegisterSearch {
   account?: string;
   /** Comma-separated ids of the open tabs. */
   tabs?: string;
+  /** JSON of the active tab's non-default view state (mode, filters, dates, sort). */
+  view?: string;
 }
 
 const Register = () => {
@@ -22,7 +24,7 @@ const Register = () => {
   const { db } = useDB();
   const { bookId } = useBook();
   const dbconf = getConfig(user);
-  const { account, tabs: tabsParam } = Route.useSearch();
+  const { account, tabs: tabsParam, view } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const { data: splits } = useQuery(registerSplitsOptions(db, bookId));
   const { data: accounts } = useQuery(accountsOptions({ db, bookId }));
@@ -52,9 +54,20 @@ const Register = () => {
         accounts={accounts}
         tabs={tabs}
         active={active}
+        view={view}
+        onView={(next) =>
+          void navigate({
+            search: (prev) => ({ ...prev, view: next }),
+            replace: true,
+          })
+        }
         onTabs={(next, current) =>
           void navigate({
-            search: { account: current, tabs: next.length > 1 ? next.join(",") : undefined },
+            search: {
+              account: current,
+              tabs: next.length > 1 ? next.join(",") : undefined,
+              view: current === active ? view : undefined,
+            },
             replace: true,
           })
         }
@@ -74,5 +87,6 @@ export const Route = createFileRoute("/register/")({
   validateSearch: (search: Record<string, unknown>): RegisterSearch => ({
     account: typeof search.account === "string" ? search.account : undefined,
     tabs: typeof search.tabs === "string" ? search.tabs : undefined,
+    view: typeof search.view === "string" ? search.view : undefined,
   }),
 });

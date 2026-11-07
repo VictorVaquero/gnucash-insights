@@ -551,7 +551,8 @@
     "account": "Account",
     "value": "Amount",
     "splitId": "Split ID",
-    "showMore": "Show {{count}} more"
+    "showMore": "Show {{count}} more",
+    "openRegister": "Open in register"
   },
   "register": {
     "title": "Account registers",

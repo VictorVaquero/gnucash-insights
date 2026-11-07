@@ -551,7 +551,8 @@
     "account": "Cuenta",
     "value": "Importe",
     "splitId": "ID del split",
-    "showMore": "Mostrar {{count}} más"
+    "showMore": "Mostrar {{count}} más",
+    "openRegister": "Abrir en el registro"
   },
   "register": {
     "title": "Registros de cuentas",

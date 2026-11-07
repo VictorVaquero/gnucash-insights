@@ -5,6 +5,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { DateTime } from "luxon";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,6 +31,10 @@ const PAGE = 25;
 const ItemRow = ({ item }: { item: QualityItem }) => {
   const { t } = useTranslation();
   const { locale } = useLocale();
+  // A transaction opens in the register of its first account, narrowed to that entry;
+  // a holding (no splits) opens the account itself.
+  const account = item.splits[0]?.accountId ?? item.id;
+  const view = item.splits.length ? JSON.stringify({ query: `txid:${item.id}` }) : undefined;
   return (
     <details className="group rounded border border-border px-2 py-1.5 text-sm">
       <summary className="flex cursor-pointer flex-wrap items-baseline gap-x-3 gap-y-0.5">
@@ -43,6 +48,14 @@ const ItemRow = ({ item }: { item: QualityItem }) => {
         <p>
           <span className="text-muted-foreground">{t("quality.id")}: </span>
           <span className="break-all font-mono">{item.id}</span>
+          {" · "}
+          <Link
+            to="/register"
+            search={{ account, view }}
+            className="text-primary underline underline-offset-2"
+          >
+            {t("quality.openRegister")}
+          </Link>
         </p>
         {item.splits.length > 0 && (
           <table className="w-full">

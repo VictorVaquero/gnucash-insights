@@ -123,6 +123,8 @@ describe("columns and search", () => {
     expect(m("memo:irpf")).toBe(true);
     expect(m("irpf", "account")).toBe(false);
     expect(m("id:sal")).toBe(true);
+    expect(m(`txid:${pay.transactionId}`)).toBe(true);
+    expect(m("txid:other-transaction")).toBe(false);
     expect(m("amount:>2000")).toBe(true);
     expect(m("tx:pay")).toBe(true);
   });

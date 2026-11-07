@@ -42,4 +42,17 @@ test.describe("account register", () => {
     await expect(page.getByRole("tab")).toHaveCount(2);
     await expect(page).toHaveURL(/tabs=/);
   });
+
+  test("keeps view and filters in the URL across a reload", async ({ page }) => {
+    await page.getByRole("button", { name: "Detailed" }).click();
+    await page.getByPlaceholder(/Type a value/).fill("payroll");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/view=/);
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Detailed" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(page.getByTestId("register-table").getByText("City Bus")).toHaveCount(0);
+  });
 });
