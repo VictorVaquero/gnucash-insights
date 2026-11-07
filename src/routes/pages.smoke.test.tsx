@@ -13,6 +13,11 @@ import { ForecastPlot } from "./summary/-plots/ForecastPlot";
 import { CategorySpendPlot } from "./summary/-plots/CategorySpendPlot";
 import { SummaryPageContextProvider } from "./summary/-summaryPageContext";
 
+// jsdom has no layout, so the register's virtual list would see a 0px viewport and render no
+// rows; give every element a size.
+Object.defineProperty(HTMLElement.prototype, "clientHeight", { configurable: true, value: 800 });
+Object.defineProperty(HTMLElement.prototype, "clientWidth", { configurable: true, value: 1200 });
+
 // Smoke tests: mount page-level pieces with only the providers the real route gives them
 // (no database), so a missing context provider or a render-time crash fails here instead of
 // on the deployed page. Queries stay disabled, so these assert "renders", not data.
@@ -94,11 +99,11 @@ describe("page smoke", () => {
       { ...base, splitId: "s1", accountId: "x", value: 50, quantity: 50 },
       { ...base, splitId: "s2", accountId: "b", value: -50, quantity: -50 },
     ];
-    const { container, getByText, getByRole } = render(
+    const { container, findByText, getByRole } = render(
       <RegisterTabs splits={splits} accounts={accounts} tabs={["b"]} active="b" onTabs={vi.fn()} />,
     );
     await expectNoCrash(container);
-    expect(getByText("Market")).toBeTruthy();
+    expect(await findByText("Market")).toBeTruthy();
     getByRole("button", { name: "Detailed" }).click();
     await expectNoCrash(container);
   });
