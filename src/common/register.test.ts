@@ -3,6 +3,7 @@ import {
   buildRegister,
   columnKeys,
   registerCsv,
+  sideTone,
   registerMatcher,
   registerTotals,
   type RegisterAccount,
@@ -140,5 +141,16 @@ describe("columns and search", () => {
     const [row] = buildRegister(odd, "bank", accounts);
     expect(row).toMatchObject({ unbalanced: true, shares: 2, quantity: 2 });
     expect(buildRegister(splits, "bank", accounts).every((r) => !r.unbalanced)).toBe(true);
+  });
+});
+
+describe("sideTone", () => {
+  it("colours deposits and income green, spending red", () => {
+    expect(sideTone("BANK", "left")).toBe("good");
+    expect(sideTone("BANK", "right")).toBe("bad");
+    expect(sideTone("EXPENSE", "left")).toBe("bad");
+    expect(sideTone("INCOME", "right")).toBe("good");
+    expect(sideTone("LIABILITY", "left")).toBe("good");
+    expect(sideTone("EQUITY", "left")).toBe("neutral");
   });
 });

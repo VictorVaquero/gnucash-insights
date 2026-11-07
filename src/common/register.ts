@@ -247,3 +247,29 @@ export const registerCsv = (rows: RegisterRow[]): string => {
   );
   return [header.join(","), ...lines].join("\n");
 };
+
+export type Tone = "good" | "bad" | "neutral";
+
+/**
+ * Whether money on one side of the register is good news (green) or bad (red): deposits,
+ * income, rebates and loan payments are good; withdrawals, spending and new debt are bad.
+ */
+export const sideTone = (type: string, side: "left" | "right"): Tone => {
+  switch (type) {
+    case "BANK":
+    case "CASH":
+    case "ASSET":
+    case "STOCK":
+    case "MUTUAL":
+    case "RECEIVABLE":
+    case "LIABILITY":
+    case "CREDIT":
+    case "PAYABLE":
+      return side === "left" ? "good" : "bad";
+    case "INCOME":
+    case "EXPENSE":
+      return side === "right" ? "good" : "bad";
+    default:
+      return "neutral";
+  }
+};

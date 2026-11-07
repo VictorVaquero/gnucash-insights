@@ -5,7 +5,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DateTime } from "luxon";
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -14,6 +14,8 @@ import {
   registerCsv,
   registerMatcher,
   registerTotals,
+  sideTone,
+  type Tone,
   type RegisterAccount,
   type RegisterRow,
   type RegisterSplit,
@@ -32,9 +34,69 @@ const inputCls =
 const btnCls =
   "inline-flex h-8 items-center gap-1.5 rounded border border-border px-2.5 text-sm hover:bg-accent disabled:opacity-40 disabled:hover:bg-transparent";
 
+const TONE: Record<Tone, string> = {
+  good: "text-emerald-700 dark:text-emerald-400",
+  bad: "text-red-700 dark:text-red-400",
+  neutral: "text-foreground",
+};
+
+const TYPE_DOT: Record<string, string> = {
+  INCOME: "bg-emerald-500",
+  EXPENSE: "bg-red-500",
+  BANK: "bg-sky-500",
+  CASH: "bg-sky-500",
+  ASSET: "bg-sky-500",
+  STOCK: "bg-violet-500",
+  MUTUAL: "bg-violet-500",
+  LIABILITY: "bg-amber-500",
+  CREDIT: "bg-amber-500",
+  PAYABLE: "bg-amber-500",
+  RECEIVABLE: "bg-teal-500",
+  EQUITY: "bg-slate-400",
+};
+
+const monthLabel = (date: string, locale: string) =>
+  DateTime.fromISO(date).setLocale(locale).toFormat("LLLL yyyy");
+const dayLabel = (date: string, locale: string) =>
+  DateTime.fromISO(date).setLocale(locale).toFormat("dd LLL yyyy");
+
+/** Account path with the leaf name emphasised and a dot coloured by account type. */
+const AccountLabel = (props: {
+  path: string | undefined;
+  type: string | undefined;
+  id: string | undefined;
+  onGo: (id: string, opts?: { newTab?: boolean }) => void;
+}) => {
+  const path = props.path ?? "";
+  const cut = path.lastIndexOf(":");
+  const parent = cut >= 0 ? path.slice(0, cut + 1) : "";
+  const leaf = cut >= 0 ? path.slice(cut + 1) : path;
+  return (
+    <span className="inline-flex items-baseline gap-2">
+      <span
+        aria-hidden
+        className={cn(
+          "inline-block size-2 shrink-0 translate-y-px rounded-full",
+          TYPE_DOT[props.type ?? ""] ?? "bg-slate-400",
+        )}
+      />
+      <TransferLink
+        id={props.id}
+        label={
+          <>
+            <span className="text-xs text-muted-foreground">{parent}</span>
+            <span className="font-medium text-foreground">{leaf}</span>
+          </>
+        }
+        onGo={props.onGo}
+      />
+    </span>
+  );
+};
+
 const TransferLink = (props: {
   id: string | undefined;
-  label: string | undefined;
+  label: ReactNode;
   onGo: (id: string, opts?: { newTab?: boolean }) => void;
 }) => {
   const { t } = useTranslation();
@@ -62,13 +124,19 @@ const TransferLink = (props: {
   );
 };
 
-const Reconciled = ({ flag }: { flag: string }) => (
-  <span
-    className={cn("font-mono text-xs", flag === "y" ? "text-emerald-600" : "text-muted-foreground")}
-  >
-    {flag === "n" || !flag ? "" : flag.toUpperCase()}
-  </span>
-);
+const Reconciled = ({ flag }: { flag: string }) =>
+  flag === "n" || !flag ? null : (
+    <span
+      className={cn(
+        "inline-flex size-5 items-center justify-center rounded-full text-[11px] font-bold",
+        flag === "y"
+          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
+          : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
+      )}
+    >
+      {flag === "y" ? "✓" : flag.toUpperCase()}
+    </span>
+  );
 
 export type ViewMode = "simple" | "detailed";
 
@@ -304,126 +372,158 @@ export const RegisterView = ({
         </CardContent>
       </Card>
 
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+      <div className="max-h-[78vh] overflow-auto rounded-lg border border-border bg-card shadow-sm">
         <table
-          className="w-full min-w-[44rem] border-collapse text-sm"
+          className="w-full min-w-[48rem] border-collapse text-[15px]"
           data-testid="register-table"
         >
-          <thead className="sticky top-0 bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="sticky top-0 z-10 bg-muted text-xs font-semibold uppercase tracking-wide text-foreground/70 shadow-[0_1px_0_var(--color-border)]">
             <tr>
-              <th className="px-2 py-1.5 text-left font-medium">{t("register.date")}</th>
-              <th className="px-2 py-1.5 text-left font-medium">{t("register.num")}</th>
-              <th className="px-2 py-1.5 text-left font-medium">{t("register.description")}</th>
-              <th className="px-2 py-1.5 text-left font-medium">{t("register.transfer")}</th>
-              <th className="px-2 py-1.5 text-center font-medium">R</th>
-              <th className="px-2 py-1.5 text-right font-medium">
-                {t(`register.cols.${leftKey}`)}
-              </th>
-              <th className="px-2 py-1.5 text-right font-medium">
-                {t(`register.cols.${rightKey}`)}
-              </th>
-              <th className="px-2 py-1.5 text-right font-medium">{t("register.balance")}</th>
+              <th className="px-3 py-2.5 text-left">{t("register.date")}</th>
+              <th className="px-2 py-2.5 text-left">{t("register.num")}</th>
+              <th className="px-3 py-2.5 text-left">{t("register.description")}</th>
+              <th className="px-3 py-2.5 text-left">{t("register.transfer")}</th>
+              <th className="px-2 py-2.5 text-center">R</th>
+              <th className="px-3 py-2.5 text-right">{t(`register.cols.${leftKey}`)}</th>
+              <th className="px-3 py-2.5 text-right">{t(`register.cols.${rightKey}`)}</th>
+              <th className="px-3 py-2.5 text-right">{t("register.balance")}</th>
             </tr>
           </thead>
           <tbody>
             {visible.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-2 py-6 text-center text-muted-foreground">
+                <td colSpan={8} className="px-2 py-8 text-center text-muted-foreground">
                   {t("register.empty")}
                 </td>
               </tr>
             )}
-            {visible.map((r, i) => (
-              <Fragment key={r.splitId}>
-                <tr
-                  className={cn(
-                    "border-t border-border align-top",
-                    i % 2 === 1 && "bg-muted/30",
-                    mode === "detailed" && "bg-muted/50 font-medium",
-                    r.isSplit && mode === "simple" && "cursor-pointer hover:bg-accent/60",
+            {visible.map((r, i) => {
+              const newMonth = i === 0 || visible[i - 1].date.slice(0, 7) !== r.date.slice(0, 7);
+              const typeOf = (id: string | undefined) => accountMap.get(id ?? "")?.accountType;
+              const other = r.splits.find((x) => !x.isThis);
+              return (
+                <Fragment key={r.splitId}>
+                  {newMonth && (
+                    <tr className="bg-primary/10">
+                      <td
+                        colSpan={8}
+                        className="border-t border-border px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
+                      >
+                        {monthLabel(r.date, locale)}
+                      </td>
+                    </tr>
                   )}
-                  onClick={mode === "simple" && r.isSplit ? () => toggle(r.splitId) : undefined}
-                >
-                  <td className="whitespace-nowrap px-2 py-1 tabular-nums">{r.date}</td>
-                  <td className="px-2 py-1 text-muted-foreground">{r.num}</td>
-                  <td className="px-2 py-1">
-                    {r.description}
-                    {mode === "detailed" && r.notes && (
-                      <span className="block text-xs font-normal italic text-muted-foreground">
-                        {r.notes}
-                      </span>
-                    )}
-                    {mode === "detailed" && (
-                      <span className="block font-mono text-[10px] font-normal text-muted-foreground">
-                        {r.transactionId}
-                        {r.unbalanced && (
-                          <span className="ml-2 font-sans text-red-600">
-                            {t("register.unbalanced")}
-                          </span>
-                        )}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-2 py-1 text-muted-foreground">
-                    {r.isSplit ? (
-                      <span className="italic">{t("register.splitTransaction")}</span>
-                    ) : (
-                      <TransferLink
-                        id={r.splits.find((x) => !x.isThis)?.accountId}
-                        label={r.transfers[0]}
-                        onGo={onOpenAccount}
-                      />
-                    )}
-                  </td>
-                  <td className="px-2 py-1 text-center">
-                    <Reconciled flag={r.reconciled} />
-                  </td>
-                  <td className="px-2 py-1 text-right tabular-nums">{money(r.debit)}</td>
-                  <td className="px-2 py-1 text-right tabular-nums">{money(r.credit)}</td>
-                  <td
+                  <tr
                     className={cn(
-                      "px-2 py-1 text-right tabular-nums",
-                      r.balance < 0 && "text-red-600",
+                      "border-t border-border/70 align-top hover:bg-accent/60",
+                      i % 2 === 1 && "bg-muted/40",
+                      mode === "detailed" && "bg-muted/60",
+                      r.isSplit && mode === "simple" && "cursor-pointer",
+                      r.unbalanced && "bg-red-50 dark:bg-red-950/30",
                     )}
+                    onClick={mode === "simple" && r.isSplit ? () => toggle(r.splitId) : undefined}
                   >
-                    {formatCurrency(r.balance, locale)}
-                  </td>
-                </tr>
-                {showSplits(r) &&
-                  (r.isSplit || mode === "detailed") &&
-                  r.splits.map((s) => (
-                    <tr
-                      key={s.splitId}
+                    <td className="whitespace-nowrap px-3 py-2.5 font-medium tabular-nums">
+                      {dayLabel(r.date, locale)}
+                    </td>
+                    <td className="px-2 py-2.5 text-muted-foreground">{r.num}</td>
+                    <td className="px-3 py-2.5">
+                      <span className="font-semibold text-foreground">{r.description}</span>
+                      {mode === "detailed" && r.notes && (
+                        <span className="block text-sm italic text-muted-foreground">
+                          {r.notes}
+                        </span>
+                      )}
+                      {mode === "detailed" && (
+                        <span className="block font-mono text-[11px] text-muted-foreground">
+                          {r.transactionId}
+                          {r.unbalanced && (
+                            <span className="ml-2 rounded bg-red-600 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase text-white">
+                              {t("register.unbalanced")}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {r.isSplit ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-sm italic text-foreground/80">
+                          {t("register.splitTransaction")} · {r.splits.length}
+                        </span>
+                      ) : (
+                        <AccountLabel
+                          path={r.transfers[0]}
+                          type={typeOf(other?.accountId)}
+                          id={other?.accountId}
+                          onGo={onOpenAccount}
+                        />
+                      )}
+                    </td>
+                    <td className="px-2 py-2.5 text-center">
+                      <Reconciled flag={r.reconciled} />
+                    </td>
+                    <td
                       className={cn(
-                        "text-xs",
-                        s.isThis ? "bg-primary/5" : "bg-muted/20",
-                        "text-muted-foreground",
+                        "whitespace-nowrap px-3 py-2.5 text-right text-base font-semibold tabular-nums",
+                        TONE[sideTone(account?.accountType ?? "", "left")],
                       )}
                     >
-                      <td />
-                      <td className="px-2 py-0.5">{s.action}</td>
-                      <td className="px-2 py-0.5 pl-6 italic">{s.memo}</td>
-                      <td className={cn("px-2 py-0.5", s.isThis && "font-medium text-foreground")}>
-                        {s.isThis ? (
-                          s.accountPath
-                        ) : (
-                          <TransferLink
-                            id={s.accountId}
-                            label={s.accountPath}
-                            onGo={onOpenAccount}
-                          />
-                        )}
-                      </td>
-                      <td className="px-2 py-0.5 text-center">
-                        <Reconciled flag={s.reconciled} />
-                      </td>
-                      <td className="px-2 py-0.5 text-right tabular-nums">{money(s.debit)}</td>
-                      <td className="px-2 py-0.5 text-right tabular-nums">{money(s.credit)}</td>
-                      <td />
-                    </tr>
-                  ))}
-              </Fragment>
-            ))}
+                      {money(r.debit)}
+                    </td>
+                    <td
+                      className={cn(
+                        "whitespace-nowrap px-3 py-2.5 text-right text-base font-semibold tabular-nums",
+                        TONE[sideTone(account?.accountType ?? "", "right")],
+                      )}
+                    >
+                      {money(r.credit)}
+                    </td>
+                    <td
+                      className={cn(
+                        "whitespace-nowrap px-3 py-2.5 text-right font-medium tabular-nums",
+                        r.balance < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
+                      )}
+                    >
+                      {formatCurrency(r.balance, locale)}
+                    </td>
+                  </tr>
+                  {showSplits(r) &&
+                    (r.isSplit || mode === "detailed") &&
+                    r.splits.map((s) => (
+                      <tr
+                        key={s.splitId}
+                        className={cn("text-sm", s.isThis ? "bg-primary/10" : "bg-muted/30")}
+                      >
+                        <td className="border-l-4 border-primary/50" />
+                        <td className="px-2 py-1.5 text-muted-foreground">{s.action}</td>
+                        <td className="px-3 py-1.5 pl-6 italic text-muted-foreground">{s.memo}</td>
+                        <td className="px-3 py-1.5">
+                          {s.isThis ? (
+                            <span className="font-semibold text-foreground">{s.accountPath}</span>
+                          ) : (
+                            <AccountLabel
+                              path={s.accountPath}
+                              type={typeOf(s.accountId)}
+                              id={s.accountId}
+                              onGo={onOpenAccount}
+                            />
+                          )}
+                        </td>
+                        <td className="px-2 py-1.5 text-center">
+                          <Reconciled flag={s.reconciled} />
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-foreground/80">
+                          {money(s.debit)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-foreground/80">
+                          {money(s.credit)}
+                        </td>
+                        <td />
+                      </tr>
+                    ))}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
