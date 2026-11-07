@@ -1,4 +1,5 @@
-import { useMemo, useRef } from "react";
+import { DateTime } from "luxon";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -17,6 +18,7 @@ import { formatCurrency, twStyles, useIsNarrowViewport } from "@/common/utils.ts
 import { ChartKeyValue } from "@/components/charts/ChartKeyValue";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { useChartScrubber } from "@/hooks/useChartScrubber";
+import { cn } from "@/lib/utils";
 import { useLocale } from "@/hooks/useLocale";
 import { FinePeriodicity } from "@/types/domain";
 import { FullTransaction } from "..";
@@ -39,6 +41,33 @@ const PERIOD_FORMATS: Record<FinePeriodicity, string> = {
   monthly: "yyyy-LL",
   quarterly: "yyyy-qq",
   yearly: "yyyy",
+};
+
+const UNIT = {
+  daily: "day",
+  weekly: "week",
+  monthly: "month",
+  quarterly: "quarter",
+  yearly: "year",
+} as const;
+
+/** The first and last day covered by a chart label such as `2024-03`, `2024-02` (quarter) or `2024-W09`. */
+export const periodRange = (
+  label: string,
+  periodicity: FinePeriodicity,
+): { from: DateTime; to: DateTime } | null => {
+  const start =
+    periodicity === "quarterly"
+      ? DateTime.fromObject({
+          year: Number(label.slice(0, 4)),
+          month: (Number(label.slice(5)) - 1) * 3 + 1,
+        })
+      : DateTime.fromFormat(label, PERIOD_FORMATS[periodicity]);
+  if (!start.isValid) return null;
+  return {
+    from: start.startOf(UNIT[periodicity]),
+    to: start.endOf(UNIT[periodicity]).startOf("day"),
+  };
 };
 
 const marginDesktop = { top: 28, right: 20, bottom: 0, left: 50 };
@@ -101,9 +130,12 @@ const PlotLegend = () => {
 export const TransactsPlot = ({
   data,
   periodicity,
+  onPeriodSelect,
 }: {
   data: FullTransaction[];
   periodicity: FinePeriodicity;
+  /** Called with the period's date range when a bar is clicked. */
+  onPeriodSelect?: (range: { from: DateTime; to: DateTime }) => void;
 }) => {
   const isNarrowViewport = useIsNarrowViewport();
   const { locale } = useLocale();
@@ -134,13 +166,59 @@ export const TransactsPlot = ({
   });
   const scrubbedPoint = activeIndex != null ? chartData[activeIndex] : undefined;
 
+  // A mouse click selects the period under the pointer; a drag (scrubbing) or a touch tap
+  // (which pins the tooltip instead) must not. The scrubber captures the pointer, so the click
+  // lands on the container rather than on the chart and the bar is found from the x position,
+  // the same way the scrubber does it. Native listeners keep this out of React's render path.
+  const selection = useRef({ chartData, margin, periodicity, onPeriodSelect });
+  useEffect(() => {
+    selection.current = { chartData, margin, periodicity, onPeriodSelect };
+  });
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+    let pressedAt: number | null = null;
+    const onDown = (e: PointerEvent) => {
+      pressedAt = e.pointerType === "mouse" ? e.clientX : null;
+    };
+    const onClick = (e: globalThis.MouseEvent) => {
+      const {
+        chartData: rows,
+        margin: m,
+        periodicity: p,
+        onPeriodSelect: select,
+      } = selection.current;
+      if (!select || rows.length === 0 || pressedAt === null || Math.abs(e.clientX - pressedAt) > 5)
+        return;
+      const rect = node.getBoundingClientRect();
+      const fraction =
+        (e.clientX - rect.left - m.left) / Math.max(rect.width - m.left - m.right, 1);
+      const index =
+        rows.length <= 1 ? 0 : Math.round(Math.min(Math.max(fraction, 0), 1) * (rows.length - 1));
+      const range = periodRange(rows[index].dateLabel, p);
+      if (range) select(range);
+    };
+    node.addEventListener("pointerdown", onDown);
+    node.addEventListener("click", onClick);
+    return () => {
+      node.removeEventListener("pointerdown", onDown);
+      node.removeEventListener("click", onClick);
+    };
+  }, []);
+
   const yTickFormatter = useMemo(
     () => (value: number) => formatCurrency(value, locale, { compact: true }),
     [locale],
   );
 
   return (
-    <div ref={containerRef} className="relative w-full h-64 md:h-full touch-none">
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative w-full h-64 md:h-full touch-none",
+        onPeriodSelect && "cursor-pointer",
+      )}
+    >
       <PlotLegend />
       {latest && (
         <ChartKeyValue
