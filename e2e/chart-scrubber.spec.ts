@@ -20,11 +20,16 @@ test("dragging across a chart's plot area scrubs a crosshair and updates the liv
   const x1 = box.x + box.width * 0.25;
   const x2 = box.x + box.width * 0.75;
 
-  const referenceLine = page.locator("line.recharts-reference-line-line");
+  // Only vertical lines count as the crosshair; the horizontal y=0 baseline is always there.
+  const lines = page.locator("line.recharts-reference-line-line");
+  const crosshairs = () =>
+    lines.evaluateAll(
+      (els) => els.filter((e) => e.getAttribute("x1") === e.getAttribute("x2")).length,
+    );
   const tooltipWrapper = page.locator(".recharts-tooltip-wrapper");
 
   // Idle: no crosshair rendered yet.
-  await expect(referenceLine).toHaveCount(0);
+  await expect.poll(crosshairs).toBe(0);
 
   // A real mouse move (dispatched via CDP, not a synthetic in-page event) triggers
   // Recharts' own hover tracking, showing the live tooltip at x1.
@@ -40,12 +45,12 @@ test("dragging across a chart's plot area scrubs a crosshair and updates the liv
   // A vertical <line> (x1 === x2) has a zero-width bounding box, so Playwright's
   // `toBeVisible()` actionability check reports it as hidden even though it's genuinely
   // rendered -- assert presence via count instead.
-  await expect(referenceLine).toHaveCount(1);
+  await expect.poll(crosshairs).toBe(1);
   await expect(tooltipWrapper).toBeVisible();
   const label2 = await tooltipWrapper.innerText();
   expect(label2).not.toBe(label1);
 
   // Releasing resets the scrubber's activeIndex to null -- the crosshair disappears.
   await page.mouse.up();
-  await expect(referenceLine).toHaveCount(0);
+  await expect.poll(crosshairs).toBe(0);
 });
