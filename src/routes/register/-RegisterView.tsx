@@ -536,14 +536,14 @@ export const RegisterView = ({
         className="max-h-[78vh] overflow-auto rounded-lg border border-border bg-card shadow-sm"
       >
         <table
-          className="w-full min-w-[56rem] table-fixed border-collapse text-[15px]"
+          className="w-full min-w-[74rem] table-fixed border-collapse text-[15px]"
           data-testid="register-table"
         >
           <colgroup>
             <col className="w-32" />
             <col className="w-16" />
             <col />
-            <col className="w-[22rem]" />
+            <col className="w-[20rem]" />
             <col className="w-12" />
             <col className="w-32" />
             <col className="w-32" />

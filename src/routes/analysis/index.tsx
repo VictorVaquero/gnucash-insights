@@ -173,7 +173,7 @@ const Analysis = () => {
         showClear={rowSelection !== null}
         onClear={handleClearSelection}
       />
-      <div className="grid gap-6 md:grid-cols-[1fr_max-content]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[1fr_max-content]">
         <ChartCard title={t("routes.analysis.title")} className="md:h-80">
           {filteredTransactions.length !== 0 ? (
             <TransactsPlot data={filteredTransactions} periodicity={chartPeriodicity} />

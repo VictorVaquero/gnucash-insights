@@ -21,7 +21,10 @@ export const SegmentedControl = <T extends string>({
   <div
     role="group"
     aria-label={label}
-    className={cn("inline-flex w-fit shrink-0 gap-0.5 rounded-lg bg-muted p-0.5", className)}
+    className={cn(
+      "inline-flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-lg bg-muted p-0.5",
+      className,
+    )}
   >
     {options.map((o) => (
       <button
@@ -30,8 +33,8 @@ export const SegmentedControl = <T extends string>({
         aria-pressed={value === o.value}
         onClick={() => onChange(o.value)}
         className={cn(
-          "rounded-md font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
-          size === "sm" ? "h-7 px-2.5 text-xs" : "h-8 px-3.5 text-sm",
+          "shrink-0 rounded-md font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+          size === "sm" ? "h-7 px-2.5 text-xs" : "h-8 px-2.5 text-sm sm:px-3.5",
           value === o.value
             ? "bg-background text-foreground shadow-sm ring-1 ring-border"
             : "text-muted-foreground hover:text-foreground",
